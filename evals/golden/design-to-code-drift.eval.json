@@ -1,7 +1,7 @@
 {
   "id": "design-to-code-drift",
   "skill": "penpot-design-to-code-review",
-  "fixture": "fixtures/state: a Board named 'button-primary' containing a flex Board (40px height, 120px width, borderRadius=8, fill=#0066FF, text 'Submit' centered, color=#FFFFFF) with NO tokens bound (raw values everywhere). Token sets exist with color.action.primary.bg=#0066FF, color.text.inverse=#FFFFFF, radius.control=8, spacing.inset.sm=12. User supplies no code source (graceful degradation mode).",
+  "fixture": "fixtures/state: a Board named 'button-primary' containing a flex Board (40px height, 120px width, borderRadius=8, padding=12, fill=#0066FF, text 'Submit' centered, color=#FFFFFF) with NO tokens bound (raw values everywhere). Token sets exist with color.action.primary.bg=#0066FF, color.text.inverse=#FFFFFF, radius.control=8, spacing.inset.sm=12. User supplies no code source (graceful degradation mode).",
   "expected": {
     "must_detect": [
       "all four raw values (#0066FF fill, #FFFFFF text, borderRadius 8, spacing/padding) that have EXACT matching tokens available",

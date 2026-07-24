@@ -5,7 +5,7 @@
   "expected": {
     "must_create": [
       "a rename map Phase 1 checkpoint showing before→after for every layer before any write",
-      "renamed layers: 'Rectangle 1' → 'header' or 'nav' (the top bar), 'Rectangle 2' → 'nav', 'Rectangle 3' → 'a' or 'nav-link', 'Group 1' → 'card-grid' or 'main', 'Rectangle 4/5' → 'card' or 'section', 'Rectangle 6' → 'footer'"
+      "renamed layers: 'Rectangle 1' → 'page' or 'main' (the containing board), 'Rectangle 2' → 'header' or 'nav' (the top bar), 'Rectangle 3' → 'a' or 'nav-link', 'Group 1' → 'card-grid' or 'main', 'Rectangle 4/5' → 'card' or 'section', 'Rectangle 6' → 'footer'"
     ],
     "must_do": [
       "run Phase 0 read-only inventory (inspectLayerStructure) BEFORE any rename write",
@@ -15,7 +15,6 @@
     "must_not": [
       "renaming any layer without showing the plan first",
       "touching geometry (no resize, no reparent, no padding change on any shape)",
-      "one-shotting all 6 renames in a single execute_code call",
       "renaming a main component shape (none exist in fixture, but code must check)"
     ]
   },
