@@ -1,9 +1,9 @@
 {
   "lockfileVersion": 2,
-  "integrity": "sha256-16:ca8ca155f5e4ff5e",
+  "integrity": "sha256-16:cf5fcd0080ead7b4",
   "note": "Per-skill hash = sha256 (16 hex) over every file in the skill dir; doctrine = shared/ + policies/ (vendored into native bundles). Regenerate with scripts/dev/update-lock.mjs; verify with --check.",
   "doctrine": {
-    "shared": "sha256-16:f1d69031fd56f8bb",
+    "shared": "sha256-16:b7c343a3839803ee",
     "policies": "sha256-16:d0820c42ba497c04"
   },
   "skills": {

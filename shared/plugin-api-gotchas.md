@@ -160,3 +160,31 @@ self-sizing (`board.verticalSizing = "auto"`) works directly. Related session tr
 async — `penpot.currentPage` reflects the new page only on the *next* `execute_code` call; after a
 plugin-session restart `storage` is wiped and focus resets — re-find shapes by name and re-`openPage`
 before continuing.
+
+## 16. `layoutChild` "fill" expansion can set a spontaneous `flipX = true` — the subtree renders MIRRORED
+Observed live (2026-08-10, Penpot 2.17.0, remote MCP): a row board created at the default 100×100,
+populated with children wider than itself, then stretched via `row.layoutChild.horizontalSizing =
+"fill"` came out with **`flipX = true` on the board** — the entire subtree rendered horizontally
+mirrored (glyphs reversed, child order visually flipped, `→` arrows pointing `←`). It reproduced
+twice in one session on two different sections. Likely mechanism: the layout reflow applies a
+negative-width scale during the fill expansion, which Penpot records as a flip.
+
+Why it's dangerous:
+- **`shapeStructure` looks perfectly normal** — names, order, and layout read fine; only reading
+  `shape.flipX` or *looking at an export* reveals it. This is exactly the class of defect the
+  visual self-review exists to catch (`shared/visual-self-review.md`).
+- Children report `flipX = true` by **inheritance**; the actual flag usually lives on one subtree
+  root. Clearing the root clears the whole mirror (a fix sweep may report "1 cleared" while dozens
+  of descendants *read* as flipped).
+
+**Detect + fix** — cheap defensive sweep after building any section that uses fill-sizing:
+
+```js
+const clear = (sh) => { if (sh.flipX) sh.flipX = false; (sh.children || []).forEach(clear); };
+clear(sectionBoard);   // idempotent; safe to run after every section build
+```
+
+**Prevention:** size boards to a realistic width (`resize`) *before* appending wide children and
+before switching them to `fill`, rather than relying on fill to expand a 100px default. And always
+export + look before the checkpoint — the mirror is unmissable in the image and invisible in the
+structure read.
