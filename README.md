@@ -133,6 +133,9 @@ what's next. You're never surprised.
   unnamed layer). It will never restructure components or delete shared assets without asking.
 - **It prefers your existing components and tokens** over inventing new ones, so results stay on-brand
   and editable.
+- **It grades its own design work.** Before declaring a screen done, it scores the result on seven
+  design axes (hierarchy, composition, type, color, spacing, content, distinctiveness) against
+  numeric targets — and revises weak spots instead of shipping “technically correct but bland”.
 - **If something looks off**, ask it to explain what it did or to undo the last step.
 
 ---
@@ -141,7 +144,7 @@ what's next. You're never surprised.
 - **AGENTS.md** — the assistant's “house rules” (use the system, never hardcode, ask first).
 - **Skills** (`skills/`) — focused how-to recipes for specific jobs (tokens, components, audits, …).
 - **Workflows** (`workflows/`) — multi-step recipes that chain skills (e.g. *design a screen, then keep
-  improving it until it passes accessibility*).
+  improving it until it passes both accessibility and the design-quality bar*).
 - A built-in **router** reads your request and picks the right skill — so you don't have to.
 
 For the full picture, see [`docs/architecture.md`](docs/architecture.md).
@@ -164,7 +167,7 @@ but only trivially-safe changes (like renaming `Rectangle 12`).
 |-------|--------------|----------------------|
 | ✏️ `penpot-foundations` | Sets up your design tokens: color/spacing/type scales, semantic tiers, **light & dark themes** — or infers tokens from an existing design. | *“Set up a starter token system for this file.”* |
 | ✏️ `penpot-component-factory` | Builds components with the **complete** variant matrix — sizes, hierarchies, hover/pressed/focus/disabled — fully tokenized. | *“Create a Button with all its states.”* |
-| ✏️ `penpot-build-screen` | Designs a screen from a written brief, **section by section**, reusing your tokens and components. | *“Design a settings page from this brief.”* |
+| ✏️ `penpot-build-screen` | Designs a screen from a written brief, **section by section**, reusing your tokens and components — then **scores its own result** against the kit's design-quality bar (hierarchy, composition, type, color, spacing…) and revises what's weak. | *“Design a settings page from this brief.”* |
 | ✏️ `penpot-build-from-code` | Rebuilds an existing app page/component **from its code**, bound to your design system. | *“Turn this React page into a Penpot screen.”* |
 | ✏️ `penpot-document-handoff` | Documents a design for **handoff**: a hideable annotation layer beside it — context card (the “How might we”, business rules, links, status), numbered pins on the UI, matching observation/recommendation notes, tooltips. Never touches the design. | *“Document this screen for handoff.”* |
 
@@ -189,7 +192,7 @@ but only trivially-safe changes (like renaming `Rectangle 12`).
 
 | Workflow | The recipe | Ask for it like… |
 |----------|------------|-------------------|
-| `brief-to-screen` | build a screen → audit accessibility → **fix and repeat until AA passes** | *“Take this brief and ship an accessible screen.”* |
+| `brief-to-screen` | build a screen → score design quality + audit accessibility → **fix and repeat until both pass** | *“Take this brief and ship an accessible screen.”* |
 | `design-system-bootstrap` | tokens → core components → governance audit → clean naming | *“Bootstrap a full design system in this file.”* |
 | `code-to-penpot-sync` | build from code → drift review → reconcile, in a loop | *“Keep this Penpot file in sync with the repo.”* |
 | `figma-migration` | migrate → reconcile tokens → accessibility + governance audits | *“Migrate our whole Figma project, end to end.”* |
@@ -246,7 +249,7 @@ AGENTS.md (instructions)
         → policies/ (suggest / review / autofix + safe set)
           → evals/ (golden tests)
 shared/ = single source of truth (tool reference, API gotchas, token schema, naming, state, modes,
-          visual self-review, report schemas, pipeline schema, capability probe)
+          visual self-review, design quality, report schemas, pipeline schema, capability probe)
 ```
 
 ### Repository layout
@@ -254,7 +257,7 @@ shared/ = single source of truth (tool reference, API gotchas, token schema, nam
 AGENTS.md            instructions layer
 INSTALL.md           conversational installer playbook ("Install this Penpot AI Kit")
 scripts/install/     installer helpers (install one-shot + detect-client, install-seed, write-mcp-config, install-behavior, update one-step, check-updates, lib)
-shared/              single source of truth (tool ref, gotchas, token schema, naming, state, modes, SKILL template, visual self-review, report-schemas/, pipeline.schema.json, scripts/capability-probe.js)
+shared/              single source of truth (tool ref, gotchas, token schema, naming, state, modes, SKILL template, visual self-review, design-quality.md, report-schemas/, pipeline.schema.json, scripts/capability-probe.js)
 skills/              11 skills, each: SKILL.md + references/ (progressive disclosure) + scripts/ (execute_code templates)
 workflows/           6 orchestration recipes (README.md prose + pipeline.json)
 prompts/             token-aware brief templates

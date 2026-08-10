@@ -2,7 +2,7 @@
   "$schema": "../../shared/pipeline.schema.json",
   "id": "brief-to-screen",
   "pattern": "evaluator-optimizer",
-  "description": "Generate a screen and iterate against an accessibility evaluator until AA passes.",
+  "description": "Generate a screen and iterate against two evaluators — accessibility (AA) and design quality (shared/design-quality.md §8) — until both gates pass.",
   "maxIterations": 4,
   "steps": [
     {
@@ -30,14 +30,15 @@
     {
       "id": "decide",
       "type": "branch",
-      "if": "evaluate.highOrMedium == 0",
+      "if": "evaluate.highOrMedium == 0 && generate.designQuality.belowThreshold == 0",
       "thenNext": "done",
       "elseNext": "generate",
       "elseInputs": [
-        "fixIssues:evaluate.findings"
+        "fixIssues:evaluate.findings",
+        "fixDesign:generate.designQuality.findings"
       ]
     }
   ],
-  "exit": "AA pass (no High/Medium) OR maxIterations reached -> present remaining issues",
-  "output": "report: { screenId, iterations, finalA11y }"
+  "exit": "AA pass (no High/Medium) AND design-quality pass (no axis < 3) OR maxIterations reached -> present remaining issues + weak axes",
+  "output": "report: { screenId, iterations, finalA11y, finalDesignQuality }"
 }

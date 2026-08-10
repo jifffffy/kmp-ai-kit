@@ -22,7 +22,7 @@
     },
     {
       "name": "penpot-build-screen",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "path": "skills/penpot-build-screen/SKILL.md",
       "description": "Design production-grade screens from a brief, reusing the system, section by section."
     },

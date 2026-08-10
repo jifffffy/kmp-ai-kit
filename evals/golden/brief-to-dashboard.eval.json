@@ -3,16 +3,23 @@
   "workflow": "brief-to-screen",
   "fixture": "fixtures: filled prompts/design-brief.md for a simple analytics dashboard (nav, KPI row, chart card, table), desktop 1440, Modern SaaS profile, reusing an existing token+component system",
   "expected": {
+    "must_do": [
+      "state the style profile AND a named screen skeleton (shared/design-quality.md §5) at the Phase 0 checkpoint",
+      "score the final export 1-5 on the seven design-quality axes and emit the JSON report per shared/report-schemas/design-quality-report.schema.json, with evidence per axis"
+    ],
     "must_create": [
       "a screen Board with column flex containing the briefed sections",
       "component instances reused for nav/buttons where available",
-      "all colors/spacing/type bound to semantic tokens"
+      "all colors/spacing/type bound to semantic tokens",
+      "a dashboard with a dominant primary visualization (not a uniform grid of equal tiles)"
     ],
     "must_not": [
       "a one-shot single execute_code that builds the whole screen",
       "hardcoded colors/spacing",
-      "remaining High/Medium accessibility issues at exit"
+      "remaining High/Medium accessibility issues at exit",
+      "a named tell from shared/design-quality.md §7 present in the final screen without being reported in the design-quality findings",
+      "an axis scored < 3 at exit without being explicitly presented to the user"
     ]
   },
-  "pass_criteria": "Built section by section with checkpoints; penpot-audit-accessibility reports 0 High/Medium at loop exit (or surfaces an explained blocker)."
+  "pass_criteria": "Built section by section with checkpoints; penpot-audit-accessibility reports 0 High/Medium at loop exit AND the design-quality report has belowThreshold == 0 (or surfaces an explained blocker / explicitly named weak axes)."
 }

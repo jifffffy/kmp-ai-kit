@@ -2,7 +2,7 @@
 name: penpot-build-screen
 description: "Design production-grade screens in Penpot from a brief, as a senior visual designer — reusing the existing design system (tokens + components) and assembling section by section, never one-shot. Use to create a screen/page/landing/dashboard from a description. NOT for translating existing code (use penpot-build-from-code). Triggers: 'design a dashboard', 'create a landing page', 'design this app screen', 'build a UI from this brief', 'design a settings page', 'mock up a screen in Penpot'."
 disable-model-invocation: false
-version: 0.2.0
+version: 0.3.0
 audiences: [product-designer]
 mode-default: review
 requires:
@@ -13,6 +13,8 @@ requires:
   - shared/state-management.md
   - shared/modes-and-policies.md
   - shared/visual-self-review.md
+  - shared/design-quality.md
+  - shared/report-schemas/design-quality-report.schema.json
 ---
 
 # penpot-build-screen — brief to on-system screen
@@ -49,8 +51,8 @@ Gotcha numbers refer to `shared/plugin-api-gotchas.md`.
 - **Context** — product, audience, platform, brand mood.
 - **Objective** — the single screen and its primary user goal.
 - **Inputs** — content/sections, existing tokens & components, style profile, viewport size.
-- **Constraints** — use existing components; on-grid spacing; semantic tokens only; forbidden patterns.
-- **Acceptance Criteria** — clear hierarchy; 4px rhythm; AA contrast; reuses system; responsive intent stated.
+- **Constraints** — use existing components; on-grid spacing; semantic tokens only; forbidden patterns; none of the named tells in `shared/design-quality.md` §7.
+- **Acceptance Criteria** — clear hierarchy; 4px rhythm; AA contrast; reuses system; responsive intent stated; **design-quality score ≥ 3 on all seven axes** (`shared/design-quality.md` §8) or the weak axes explicitly presented.
 
 Act as a **senior product/visual designer** who makes deliberate aesthetic decisions, not generic ones.
 
@@ -61,13 +63,13 @@ Act as a **senior product/visual designer** who makes deliberate aesthetic decis
 > just built, inspect the image yourself against the checklist, fix visible defects (max 2
 > iterations), and present that same export with any remaining defects named.
 
-**Phase 0 — Discovery.** `high_level_overview`; inventory tokens/components (`scripts/setupOrReuseSystem.js`); analyze the brief (`references/01-brief-analysis.md`); pick a style profile (`references/02-style-profiles.md`). ✋ Checkpoint: confirm brief + style + section list.
+**Phase 0 — Discovery.** `high_level_overview`; inventory tokens/components (`scripts/setupOrReuseSystem.js`); analyze the brief (`references/01-brief-analysis.md`); pick a style profile (`references/02-style-profiles.md`) **and a named screen skeleton** (`shared/design-quality.md` §5) — check the ledger for prior screens this session and apply the variety rule (differ on ≥ 1 axis, say which). ✋ Checkpoint: confirm brief + style + skeleton + section list.
 
 **Phase 1 — Frame.** Create the screen Board with flex (`scripts/setupOrReuseSystem.js` returns ids). Set viewport size. ✋ Checkpoint.
 
 **Phase 2..N — Sections.** Build each section as a tokenized flex Board reusing components (`scripts/buildSection.js`). One section per `execute_code` call. ✋ Checkpoint after each (`export_shape`).
 
-**Phase N+1 — Assemble & critique.** `scripts/assembleScreen.js` composes sections; `scripts/auditScreenQuality.js` checks **layout coverage (every board has flex/grid)**, token binding, on-grid spacing, naming (`references/05-critique-framework.md`). A non-empty `boardsWithoutLayout` fails the gate — add a layout to each flagged board before reporting done. Report.
+**Phase N+1 — Assemble & critique.** `scripts/assembleScreen.js` composes sections; `scripts/auditScreenQuality.js` checks **layout coverage (every board has flex/grid)**, token binding, on-grid spacing, naming. A non-empty `boardsWithoutLayout` fails the gate — add a layout to each flagged board before reporting done. Then run the **scored critique** (`references/05-critique-framework.md`): score the final export 1–5 on the seven axes of `shared/design-quality.md` §8; any axis < 3 → targeted revision (max 2 passes), then emit the design-quality report (Markdown + JSON per `shared/report-schemas/design-quality-report.schema.json`, mirrored to the ledger). Report.
 
 ## 7. Critical Rules
 1. **Flex by default — every container is a layout Board.** The instant you create a Board, give it a
@@ -91,15 +93,15 @@ grouped, whitespace on the spacing scale, type from the semantic type tokens.
 Default **review**. Geometry/layout changes always require a checkpoint (`shared/modes-and-policies.md`).
 
 ## 10. State Management
-Ledger under `RUN_ID`: `phase`, `screenBoardId`, `sections:[{name,id,done}]`, `styleProfile`. Resume by re-reading structure.
+Ledger under `RUN_ID`: `phase`, `screenBoardId`, `sections:[{name,id,done}]`, `styleProfile`, `skeleton`, `designQuality` (the §8 report object). Resume by re-reading structure.
 
 ## 11. User Checkpoints
 | After phase | Artifacts | Ask |
 |-------------|-----------|-----|
-| 0 | brief + style + sections | Approve direction? |
+| 0 | brief + style + skeleton + sections | Approve direction? |
 | 1 | empty frame `export_shape` | Approve frame/viewport? |
 | each section | section `export_shape` | Approve section? |
-| assemble | full screen `export_shape` + critique | Approve / iterate? |
+| assemble | full screen `export_shape` + scored critique (7 axes) | Approve / iterate? |
 
 ## 12. Naming Conventions
 `shared/naming-conventions.md`: layers semantic HTML (`header`, `main`, `section`, `nav`, `button`); screen Board named for the view (`Dashboard`).

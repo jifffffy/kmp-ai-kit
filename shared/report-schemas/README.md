@@ -12,12 +12,14 @@ the run ledger per `shared/state-management.md`).
 | `accessibility-report.schema.json` | `penpot-audit-accessibility` | `brief-to-screen` (`evaluate.highOrMedium`), `accessibility-gate` |
 | `token-governance-report.schema.json` | `penpot-audit-tokens` | `design-system-bootstrap`, `figma-migration`, `accessibility-gate` |
 | `drift-report.schema.json` | `penpot-design-to-code-review` | `code-to-penpot-sync` (`review.drift`) |
+| `design-quality-report.schema.json` | `penpot-build-screen` (scored critique, `shared/design-quality.md` §8) | `brief-to-screen` (`generate.designQuality.belowThreshold`) |
 
 ## Derived fields used by pipeline branch conditions
 
 - `highOrMedium` (accessibility report) = `count of findings where severity ∈ {High, Medium}`.
 - `drift` (drift report) = `summary.drift + summary.designOnly + summary.codeOnly` (everything
   that is not a `match`).
+- `belowThreshold` (design-quality report) = `count of axes with score < 3`.
 
 These are **computed and included** in the report object by the producing skill so the branch
 check is a field read, not a re-count.

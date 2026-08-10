@@ -48,7 +48,7 @@
     {
       "id": "penpot-build-screen",
       "name": "penpot-build-screen",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "path": "skills/penpot-build-screen/SKILL.md",
       "mode": "review",
       "audiences": [
