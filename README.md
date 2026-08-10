@@ -19,6 +19,12 @@ The kit is meant to be adapted. You can shape it around your team’s workflow, 
 
 ---
 
+## Watch this video
+
+[![Watch the video](https://github.com/user-attachments/assets/a67258b9-06c9-4b87-b632-92b3e61990ed)](https://www.youtube.com/watch?v=l-dsgHiycIY)
+
+---
+
 ## What you can ask it to do
 
 Just describe what you want in plain language. The kit figures out the right tool for the job.
