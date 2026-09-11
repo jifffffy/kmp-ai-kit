@@ -2,7 +2,7 @@
 name: penpot-foundations
 description: "Build and govern the token + library foundation of a Penpot design system: primitive/semantic/component token tiers, themes (light/dark), and inferring a token system from an existing hardcoded design. Use BEFORE building components or screens, or when a design has raw values that should become tokens. Triggers: 'set up design tokens', 'create a token system', 'build the design system foundation', 'add dark mode tokens', 'infer tokens from this design', 'tokenize this file', 'create semantic tokens', 'apply tokens to these shapes'."
 disable-model-invocation: false
-version: 0.2.0
+version: 0.2.1
 audiences: [design-system, design-engineer]
 mode-default: review
 requires:
@@ -195,3 +195,5 @@ return { ok: true };
 | `bindTokensToElements.js` | auto-bind tokens to unbound elements by value (chunked + verify) — enables theming |
 | `createThemes.js` | light/dark themes |
 | `validateTokens.js` | orphans, unresolved refs, off-grid |
+
+**Doctrine paths.** `shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file.

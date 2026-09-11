@@ -110,16 +110,14 @@ Cursor reads MCP servers from `~/.cursor/mcp.json` (global) or `.cursor/mcp.json
 {
   "mcpServers": {
     "penpot": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://design.penpot.app/mcp/stream?userToken=YOUR_MCP_KEY"
-      ]
+      "url": "https://design.penpot.app/mcp/stream?userToken=YOUR_MCP_KEY"
     }
   }
 }
 ```
+
+Cursor supports streamable-HTTP natively, so no proxy is needed. stdio-only clients use the
+`mcp-remote` proxy form shown for Claude Desktop above.
 
 1. Save the file with your key substituted.
 2. Open **Cursor Settings → MCP** and confirm `penpot` is enabled and green.

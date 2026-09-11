@@ -27,11 +27,14 @@
  *   { kind:"rect",      sizing:{ w:48, h:48 }, tokens:{ fill:"color.surface.subtle", borderRadius:"radius.control" } }
  *
  * OUTPUT
- *   return { section, sectionId, created:[...], bound:[...], proposed:[...], usedComponents }.
+ *   return { section, sectionId, created:[...], bound:[...], proposed:[...], usedComponents, flipCleared }.
  *
  * NOTE
  *   Verify unfamiliar signatures with penpot_api_info (e.g. "LibraryComponent" instance,
  *   "Shape" applyToken / switchVariant) before relying on them.
+ *   switchVariant takes a property POSITION (index into variants.properties), not an axis name (gotcha #9).
+ *   layoutChild.* is set only AFTER appendChild (gotcha #15). A clearFlip sweep runs before the return —
+ *   fill-sized children can come back with flipX=true (gotcha #16).
  */
 
 const RUN_ID  = "RUN_ID_HERE";
@@ -53,8 +56,8 @@ if (!section) {
   board.appendChild(section);                // append BEFORE configuring flex children
   section.addFlexLayout();
   section.flex.dir = FLEXDIR;
-  section.layoutChild = section.layoutChild || {};
-  section.layoutChild.horizontalSizing = "fill";   // stretch across the screen column
+  // gotcha #15: layoutChild only exists once the shape is a child of a layout board — set AFTER append
+  if (section.layoutChild) section.layoutChild.horizontalSizing = "fill";   // stretch across the screen column
   created = true;
 }
 // FILL POLICY (gotchas #11): a section is structural by default — clear Penpot's default opaque white
@@ -96,9 +99,12 @@ for (const node of NODES) {
         const txt = penpotUtils.findShape(s => s.type === "text", inst);
         if (txt) txt.characters = node.text;
       }
-      // map code intent -> variant axes discovered in Phase 0
+      // map code intent -> variant axes discovered in Phase 0 (switchVariant is POSITION-based, gotcha #9)
       if (node.variants) for (const axis in node.variants) {
-        try { inst.switchVariant(axis, node.variants[axis]); } catch (e) { proposed.push({ note: "variant axis", axis, value: node.variants[axis] }); }
+        const value = node.variants[axis];
+        const pos = (cat.axes || []).indexOf(axis);
+        if (pos < 0) { proposed.push({ note: "variant axis", axis, value, reason: "axis not found on component" }); continue; }
+        try { inst.switchVariant(pos, value); } catch (e) { proposed.push({ note: "variant axis", axis, value, pos, reason: String(e && e.message || e) }); }
       }
       usedComponents++;
       createdList.push({ kind: "instance", role: node.role, id: inst.id });
@@ -121,6 +127,11 @@ for (const node of NODES) {
   }
 }
 
+// --- gotcha #16: fill-sized children can come back with flipX=true — sweep the section ----------
+// Canonical helper lives in shared/visual-effects.md.
+const clearFlip = (sh) => { let n = 0; const walk = (s) => { if (s.flipX) { s.flipX = false; n++; } (s.children || []).forEach(walk); }; walk(sh); return n; };
+const flipCleared = clearFlip(section);
+
 // --- ledger --------------------------------------------------------------
 const raw = penpot.currentFile.getSharedPluginData("penpot-ai", `${RUN_ID}.ledger`);
 const ledger = raw ? JSON.parse(raw) : { runId: RUN_ID, phase: 2, boardId: board.id, created: [], sectionsBuilt: [], proposedTokens: [], exceptions: [] };
@@ -138,5 +149,6 @@ return {
   created: createdList,
   bound: boundList,
   proposed,
-  usedComponents
+  usedComponents,
+  flipCleared
 };

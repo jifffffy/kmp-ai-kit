@@ -1,0 +1,20 @@
+name: validate
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm run validate
+      - run: npm run lock:check
+      - name: JSON manifests parse
+        run: |
+          node -e '
+            const fs=require("fs"), path=require("path");
+            const files=[".claude-plugin/plugin.json",".claude-plugin/marketplace.json","skills.json",".well-known/agent-skills/index.json"];
+            for (const d of fs.readdirSync("workflows",{withFileTypes:true})) if (d.isDirectory() && fs.existsSync(path.join("workflows",d.name,"pipeline.json"))) files.push(path.join("workflows",d.name,"pipeline.json"));
+            for (const f of fs.readdirSync("evals/golden")) if (f.endsWith(".eval.json")) files.push(path.join("evals/golden",f));
+            for (const f of files) { JSON.parse(fs.readFileSync(f,"utf8")); console.log("ok", f); }
+          '

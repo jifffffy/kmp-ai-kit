@@ -9,7 +9,7 @@
 | **Token** | Variable | `set.addToken({type,name,value})`; value may reference `{another.token}`. |
 | **Theme** | Variable mode | `tokens.addTheme({ group, name })` (object arg); toggles the matching `modes/*` set (e.g. Light/Dark). |
 | **Component** | Component | `library.createComponent(shapes)`; `component.instance()`. |
-| **Variant container** | Component set | `createVariantFromComponents(mainInstances)` — there is **no** `combineAsVariants`; switch via `switchVariant`. ⚠️ Mutating variant components corrupts files (gotchas #12). |
+| **Variant container** | Component set | Prefer `penpotUtils.createVariantContainer([{shape, properties}])` (Penpot ≥ 2.17); `penpot.createVariantFromComponents(mainInstances)` is the low-level path; `Board.combineAsVariants(ids)` is listed by `penpot_api_info('Board')` on 2.17 but unverified live — do not rely on it. Switch via `switchVariant`. ⚠️ Mutating variant components corrupts files (gotchas #12). |
 | **Instance** | Instance | `comp.instance()`; `detach()` to break the link (never on a variant — gotchas #12). |
 | **Library (local/connected)** | Library | `penpot.library.local` / `.connected`. |
 | **Shared plugin data** | (plugin data) | `setSharedPluginData(ns, key, value)` — persisted in the file; our run ledger. |

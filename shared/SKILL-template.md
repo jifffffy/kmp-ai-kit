@@ -19,6 +19,17 @@ requires:                            # shared files this skill depends on
 ```
 
 The `description` is what the model uses to decide activation. Make it sharp and trigger-rich.
+**Budget:** target ≤ 300 characters, hard cap 1024 (the Agent Skills spec limit); Claude Code truncates
+`description` + `when_to_use` at 1536. Put *all* when-to-use information here — the body never
+decides activation.
+
+**Kit extensions vs. the open spec.** The Agent Skills spec (agentskills.io) recognises only `name`,
+`description`, `license`, `compatibility`, `metadata`, `allowed-tools`. This kit's extra keys
+(`version`, `audiences`, `mode-default`, `requires`, `disable-model-invocation`) are tolerated by
+Claude Code, the Node installer and the plugin loader, but a strict validator (claude.ai skill
+upload, `package_skill.py`) rejects unknown keys. Keep them for now — `scripts/dev/validate-kit.mjs`
+and `skills.json` depend on them; if a strict target is needed, fold them under `metadata:` in one
+coordinated pass (template, validator, lock, manifests).
 
 ## Body sections (in this exact order)
 
@@ -40,7 +51,7 @@ The `description` is what the model uses to decide activation. Make it sharp and
 13. **Anti-Rationalization Table** — columns: *Excuse the LLM makes* | *Why it's wrong* | *Deterministic countermeasure that halts the flow*. At least 3 rows, domain-specific (e.g. "I'll add a temp style to move fast" → "temp styles become orphans" → "Stop. Use an approved semantic token or propose one for review.").
 14. **Helper Code Snippets** — short, real, `execute_code`-ready JS using the actual API.
 15. **Reference Resources** — `penpot_api_info` pointers, external doc links.
-16. **Supporting Files** — tables indexing `references/` (progressive-disclosure deep dives) and `scripts/` (paste-into-`execute_code` templates).
+16. **Supporting Files** — tables indexing `references/` (progressive-disclosure deep dives) and `scripts/` (paste-into-`execute_code` templates). End the section with the standard **Doctrine paths** line: "`shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file." (`validate-kit.mjs` checks it exists.)
 
 ## Scripts convention (`scripts/*.js`)
 - Header comment: purpose, usage ("paste into an `execute_code` call"), inputs, output.

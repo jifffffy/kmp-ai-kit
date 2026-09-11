@@ -2,7 +2,7 @@
 name: penpot-build-from-code
 description: "Translate an existing application page, view, or component code into a Penpot screen that is bound to the existing design system — mapping code styles onto semantic tokens and reusing library components instead of raw shapes. Use when the user has real code/markup and wants it reconstructed in Penpot, section by section, on-system. Triggers: 'build this in Penpot from code', 'turn this React/HTML/CSS into a Penpot screen', 'recreate this view in Penpot', 'port this page to Penpot', 'translate this component to Penpot bound to our tokens', 'code to Penpot'."
 disable-model-invocation: false
-version: 0.2.0
+version: 0.3.0
 audiences: [design-engineer, product-designer]
 mode-default: review
 requires:
@@ -13,6 +13,8 @@ requires:
   - shared/state-management.md
   - shared/modes-and-policies.md
   - shared/visual-self-review.md
+  - shared/design-quality.md
+  - shared/visual-effects.md
 ---
 
 # Build From Code — Translate App Code into an On-System Penpot Screen
@@ -40,6 +42,12 @@ The gotchas that bite this skill, as one-liners — full text in `shared/plugin-
 - **#5 `width`/`height` and `parentX`/`parentY` are read-only** — use `shape.resize(w, h)` and `penpotUtils.setParentXY(shape, x, y)`.
 - **#6 Detach before mutating an instance's internals** — `detach()` first and report it.
 - **#7 Append or it isn't on the canvas** — `container.appendChild(child)` (or `penpot.currentPage.root`).
+- **#8 Padding tokens** — padding tokens bind on ≥ 2.17; `createScreenWrapper.js` falls back to mirrored numbers + a ledger exception on older instances.
+- **#9 `switchVariant(pos, value)`** — `pos` is the index into `variants.properties` (see `storage.run.ds.componentsByRole[role].axes`), never the axis name.
+- **#13b Exact font match** — `penpot.fonts.all.find(f => f.name === "…")`; `findByName` is a substring search.
+- **#15 `layoutChild` after append** — set `layoutChild.*` only once the child is inside a layout board; `openPage` is async.
+- **#16 flipX after fill sizing** — run the `clearFlip` sweep after every section that uses fill sizing (`shared/visual-effects.md`).
+- **#17 Layout geometry** — `await board.waitForLayoutUpdate()` before reading geometry (replaces the sleep-100ms idiom).
 - Verify any unfamiliar signature with `penpot_api_info(type, member)` before using it.
 
 ## 5. Token-Aware Brief Contract
@@ -69,7 +77,7 @@ Before any mutation, restate the request as this contract. Act as **a senior des
 
 ### Phase 1 — Screen wrapper
 **Goal:** create the screen Board with the right flex container and a `RUN_ID` ledger entry. 
-1. `execute_code`: run `scripts/createScreenWrapper.js` (idempotent by board name) → Board sized to the viewport, `addFlexLayout('column')`, padding/gap bound to spacing tokens.
+1. `execute_code`: run `scripts/createScreenWrapper.js` (idempotent by board name) → Board sized to the viewport, `addFlexLayout('column')`, gap + padding bound to spacing tokens (padding mirrored + `padding-mirrors-token` exception on 2.16.x).
 **Exit criterion:** one empty, correctly-sized, flex column Board exists; its id is in the ledger.
 **✋ Checkpoint:** `export_shape` the empty board; confirm dimensions/orientation before filling.
 
@@ -201,3 +209,5 @@ return { role, usedComponent: !!cat, id: node.id };
 | `scripts/createScreenWrapper.js` | 1 | Idempotently create the screen Board with flex column and token-bound padding/gap. |
 | `scripts/buildSection.js` | 2 | Build one section from a code fragment: instance components, create bespoke shapes, bind tokens. |
 | `scripts/validateScreen.js` | 3 | Compute token coverage, list orphan raw values, check structure sanity (flex, names, instances). |
+
+**Doctrine paths.** `shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file.

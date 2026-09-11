@@ -1,0 +1,11 @@
+{
+  "_comment": "Describes the canvas state the eval operator must have open: a MATURE file. The router eval sends the ambiguous request below and expects one disambiguation question, one route, no mutation.",
+  "file": {
+    "pages": ["Design system", "Screens"],
+    "tokenSets": ["primitives", "semantic", "modes/light", "modes/dark"],
+    "components": ["Button", "Input", "Card", "Nav"],
+    "topLevelBoards": ["Dashboard", "Login"]
+  },
+  "request": "make a page for onboarding",
+  "candidates": ["a Penpot page (a new page in the file)", "a UI screen for onboarding (penpot-build-screen)", "an onboarding slide/deck (penpot-build-deck)"]
+}

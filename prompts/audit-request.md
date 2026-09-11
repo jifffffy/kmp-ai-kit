@@ -1,3 +1,8 @@
+---
+description: Audit request — drives the audit skills / accessibility-gate
+argument-hint: "[a11y|tokens] [scope]"
+---
+
 # Audit request
 
 > Drives `penpot-audit-accessibility`, `penpot-audit-tokens`, or the `accessibility-gate` workflow.

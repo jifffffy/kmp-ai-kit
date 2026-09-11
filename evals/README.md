@@ -16,11 +16,18 @@ Each `golden/*.eval.json` is:
     "must_do": ["..."],            // procedural contract (checkpoints honored, one step per call, approvals awaited)
     "must_not": ["..."]            // guardrails
   },
-  "pass_criteria": "human-readable pass bar"
+  "pass_criteria": "human-readable pass bar",
+  "triggers": {                     // optional — description-trigger check (not executed by run-eval yet)
+    "should": ["phrasings that must activate the skill"],
+    "should_not": ["phrasings that must NOT activate it"]
+  }
 }
 ```
 
-All four `expected` arrays are optional; use only the ones that fit the target. `must_create`
+All four `expected` arrays are optional; use only the ones that fit the target. `fixture` is either
+a prose description or a path under `evals/fixtures/` — `run-eval.mjs` inlines the file when it
+exists. `triggers` records should/should-not phrasings for a future `trigger-eval.mjs` that asks a
+headless agent which skill it would pick; `validate-kit.mjs` accepts the key today, nothing runs it. `must_create`
 asserts on the resulting canvas/library state; `must_do` asserts on the *process* (visible in the
 transcript), which is how checkpoint/approval behavior gets tested.
 
@@ -57,3 +64,7 @@ Treat a PASS as strong signal, not proof — spot-check FAILs by hand before bla
 | `build-from-code-card` | penpot-build-from-code | code → on-system Board with token bindings; component instances; sectioned build |
 | `design-to-code-drift` | penpot-design-to-code-review | drift report detects untokenized values matching existing tokens; canvas not mutated |
 | `rename-layers-semantic` | penpot-rename-layers | auto-generated → semantic HTML names; plan before write; batched; no geometry touch |
+| `build-screen-direct` | penpot-build-screen | frame via createScreenFrame.js with token-bound gap/padding; sectioned; assemble + structural gate; scored critique |
+| `router-dispatch` | penpot-router | ambiguous "make a page" → one question, one route, one contract; zero mutations |
+| `design-system-bootstrap` | workflow design-system-bootstrap | tokens → components → governance → naming with checkpoints; variant gate honoured; 0 High |
+| `brief-to-deck` | workflow brief-to-deck | six 1920×1080 slides one per call; style freeze; deck tokens; flow "Deck"; structural gate pass; AA on slides |

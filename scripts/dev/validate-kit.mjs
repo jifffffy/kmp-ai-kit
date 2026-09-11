@@ -11,6 +11,8 @@
  *     (step ids unique, next/branch targets resolve, referenced skills exist)
  *   - eval JSONs with unknown keys or references to nonexistent skills/workflows
  *   - dangling `penpot-*` name mentions in any shipped .md (skills that don't exist)
+ *   - prompts/*.md without slash-command frontmatter; plugin.json / marketplace.json version drift
+ *   - SKILL.md files missing the §16 "Doctrine paths" line, or with over-long descriptions
  *
  * Usage:  node scripts/dev/validate-kit.mjs        exit 0 = clean, 1 = problems (listed)
  */
@@ -85,6 +87,8 @@ for (const name of skillDirs) {
   for (const req of fm.requires) {
     if (!existsSync(join(ROOT, req))) bad(rel, `requires '${req}' does not exist`);
   }
+  if (fm.description && fm.description.length > 1024) bad(rel, `description is ${fm.description.length} chars (spec cap 1024)`);
+  if (!readFileSync(join(ROOT, rel), "utf8").includes("**Doctrine paths.**")) bad(rel, "missing the §16 'Doctrine paths' line (shared/SKILL-template.md)");
   const entry = manifestSkills.get(name);
   if (entry) {
     if (entry.version !== fm.version) bad(rel, `version ${fm.version} != skills.json ${entry.version}`);
@@ -157,7 +161,7 @@ for (const wf of workflowDirs) {
 }
 
 // ---------- 4. evals ----------
-const EVAL_KEYS = new Set(["id", "skill", "workflow", "fixture", "expected", "pass_criteria"]);
+const EVAL_KEYS = new Set(["id", "skill", "workflow", "fixture", "expected", "pass_criteria", "triggers"]);
 const EXPECTED_KEYS = new Set(["must_detect", "must_create", "must_do", "must_not"]);
 if (existsSync(join(ROOT, "evals/golden"))) {
   for (const f of readdirSync(join(ROOT, "evals/golden")).filter((n) => n.endsWith(".eval.json"))) {
@@ -169,6 +173,9 @@ if (existsSync(join(ROOT, "evals/golden"))) {
     if (e.skill && !skillDirs.includes(e.skill)) bad(rel, `references nonexistent skill '${e.skill}'`);
     if (e.workflow && !workflowDirs.includes(e.workflow)) bad(rel, `references nonexistent workflow '${e.workflow}'`);
     if (!e.skill && !e.workflow) bad(rel, "needs a skill or workflow target");
+    if (typeof e.fixture === "string" && /^fixtures\/[\w.-]+$/.test(e.fixture) && !existsSync(join(ROOT, "evals", e.fixture)))
+      bad(rel, `fixture file '${e.fixture}' does not exist under evals/`);
+    if (e.triggers) for (const k of Object.keys(e.triggers)) if (!["should", "should_not"].includes(k)) bad(rel, `unknown triggers key '${k}'`);
   }
 }
 
@@ -200,6 +207,48 @@ for (const rel of mdFiles) {
     }
   }
 }
+
+// ---------- 6. prompts/ frontmatter (slash commands) ----------
+if (existsSync(join(ROOT, "prompts"))) {
+  for (const f of readdirSync(join(ROOT, "prompts")).filter((n) => n.endsWith(".md") && n !== "README.md")) {
+    const rel = `prompts/${f}`;
+    const text = readFileSync(join(ROOT, rel), "utf8");
+    if (!text.startsWith("---\n")) { bad(rel, "must start with YAML frontmatter (description, argument-hint)"); continue; }
+    const fm = frontmatter(text);
+    if (!fm || !fm.description) bad(rel, "frontmatter missing 'description:'");
+  }
+}
+
+// ---------- 7. Claude Code plugin manifests ----------
+let plugin = null, market = null, pkg = null;
+try { pkg = readJSON("package.json"); } catch (e) { bad("package.json", `unparseable: ${e.message}`); }
+if (existsSync(join(ROOT, ".claude-plugin/plugin.json"))) {
+  try { plugin = readJSON(".claude-plugin/plugin.json"); } catch (e) { bad(".claude-plugin/plugin.json", `unparseable: ${e.message}`); }
+  try { market = readJSON(".claude-plugin/marketplace.json"); } catch (e) { bad(".claude-plugin/marketplace.json", `unparseable: ${e.message}`); }
+  if (plugin) {
+    if (pkg && plugin.version !== pkg.version) bad(".claude-plugin/plugin.json", `version ${plugin.version} != package.json ${pkg.version}`);
+    if (manifest && plugin.version !== manifest.version) bad(".claude-plugin/plugin.json", `version ${plugin.version} != skills.json ${manifest.version}`);
+    const listed = new Set();
+    for (const c of plugin.commands || []) {
+      if (!existsSync(join(ROOT, c))) bad(".claude-plugin/plugin.json", `command '${c}' does not exist`);
+      listed.add(c.replace(/^\.\//, ""));
+    }
+    for (const f of readdirSync(join(ROOT, "prompts")).filter((n) => n.endsWith(".md") && n !== "README.md"))
+      if (!listed.has(`prompts/${f}`)) bad(".claude-plugin/plugin.json", `prompts/${f} is not listed in commands[]`);
+  }
+  if (market) {
+    const entry = (market.plugins || [])[0];
+    if (!entry) bad(".claude-plugin/marketplace.json", "plugins[] is empty");
+    else {
+      if (entry.source !== "./") bad(".claude-plugin/marketplace.json", `plugins[0].source must be "./" (got '${entry.source}')`);
+      if (plugin && entry.version && entry.version !== plugin.version) bad(".claude-plugin/marketplace.json", `plugins[0].version ${entry.version} != plugin.json ${plugin.version}`);
+      if (plugin && entry.name !== plugin.name) bad(".claude-plugin/marketplace.json", `plugins[0].name '${entry.name}' != plugin.json name '${plugin.name}'`);
+    }
+  }
+} else {
+  bad(".claude-plugin/plugin.json", "missing (the kit ships as a Claude Code plugin since 0.4.0)");
+}
+if (pkg && manifest && pkg.version !== manifest.version) bad("package.json", `version ${pkg.version} != skills.json ${manifest.version}`);
 
 // ---------- report ----------
 if (problems.length) {

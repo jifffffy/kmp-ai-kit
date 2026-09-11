@@ -1,3 +1,8 @@
+---
+description: Migration brief (Figma → Penpot) — drives penpot-migrate
+argument-hint: "[figma url] [scope]"
+---
+
 # Migration brief (Figma → Penpot)
 
 > Drives `penpot-migrate` / the `figma-migration` workflow.

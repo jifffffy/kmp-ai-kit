@@ -12,6 +12,13 @@
 > **Last live probe (2026-07-09, Penpot 2.17.0 PRE):** #8 padding binding **fixed** · #13
 > `applyToText` **fixed** · `["all"]` **still broken** · direct property set does **NOT** clear a
 > token binding (the 2.17 MCP overview claims it does — the overview is wrong; #2 stands).
+>
+> **Last API sweep (2026-09-10, Penpot 2.17 PRE, `penpot_api_info`):** `Page.createFlow` /
+> `shape.addInteraction` (flows, `navigate-to`, `slide`/`dissolve`/`push` animations),
+> `Board.waitForLayoutUpdate()` (#17), `Board.showInViewMode`, `Board.backgroundBlur`,
+> `Gradient` fills and `penpot.uploadMediaUrl` (#18) are all **documented**; `Board.combineAsVariants(ids)`
+> is **listed** on the Board interface but was not exercised live (#9). Documented ≠ verified — the
+> deck/screen builders verify each in their first live run and record verdicts in the ledger.
 
 ## 1. Style arrays are immutable item-by-item — replace the whole array
 `fills`, `strokes`, `shadows` are arrays whose **individual items cannot be mutated**. To change a
@@ -81,10 +88,21 @@ its verdict for the connected instance.
 
 ## 9. Components are created from shapes, instantiated from the library
 `penpot.library.local.createComponent(shapes)` makes a component; `component.instance()` creates a
-new instance; `component.mainInstance()` returns the main shape. Variant groups are created with
-`penpot.createVariantFromComponents(mainInstances: Board[])` (there is **no** `combineAsVariants`);
-the `Variants` object exposes `addVariant()`, `addProperty()`, `renameProperty(pos, name)`,
-`variantComponents()`; switch an instance with `instance.switchVariant(pos, value)`.
+new instance; `component.mainInstance()` returns the main shape.
+
+**Variant groups — three entry points, one preferred:**
+- **Preferred (Penpot ≥ 2.17):** `penpotUtils.createVariantContainer([{ shape: mainBoard, properties:
+  { Size: "Medium", State: "Hover" } }, …])` — one call does the whole grouping + property naming.
+  Verify with `penpot_api_info("PenpotUtils", "createVariantContainer")` and gate it behind the
+  duplicate-file check in #12.
+- **Low-level:** `penpot.createVariantFromComponents(mainInstances: Board[])`, then
+  `container.variants.renameProperty(0, name)`, `addProperty()`, and per component
+  `setVariantProperty(pos, value)` — the exact mutation path that poisoned files on 2.16 (#12).
+- **`Board.combineAsVariants(ids: string[])`** is *listed* by `penpot_api_info("Board")` on 2.17 but
+  has not been exercised live — do not use it until a probe on a throwaway file confirms it.
+
+`instance.switchVariant(pos: number, value: string)` takes the **property position** (index in
+`container.variants.properties`), not the axis name — resolve `pos` with `indexOf(axis)` first.
 
 ## 10. Verify signatures, don't guess
 Method names differ from other design tools (Penpot uses `createBoard`, not `createFrame`). When
@@ -161,6 +179,19 @@ async — `penpot.currentPage` reflects the new page only on the *next* `execute
 plugin-session restart `storage` is wiped and focus resets — re-find shapes by name and re-`openPage`
 before continuing.
 
+**Page-targeting protocol (two calls, no exceptions).** `createBoard()` lands on the page Penpot
+considers current *at creation time*, and a board on the wrong page **cannot be moved**: cross-page
+`otherPage.root.appendChild(shape)` returns without error and does nothing
+(`docs/mcp-api-findings.md` Finding 9). So, whenever work must live on a specific page (decks, scratch
+pages, documentation pages):
+1. **Call A** — `const page = penpotUtils.getPageByName(NAME) || penpot.createPage(); page.name = NAME;
+   penpot.openPage(page); storage.pageId = page.id; return { pageId: page.id };`
+2. **Call B** — `if (penpot.currentPage.id !== storage.pageId) return { ok: false, currentPage:
+   penpot.currentPage.name, action: "ask the user to open the page in the UI, then re-run" };` — only
+   after this returns `ok: true` may you `createBoard()`.
+A board that still ends up on the wrong page is deleted (`remove()`) and recreated after B passes —
+never "moved".
+
 ## 16. `layoutChild` "fill" expansion can set a spontaneous `flipX = true` — the subtree renders MIRRORED
 Observed live (2026-08-10, Penpot 2.17.0, remote MCP): a row board created at the default 100×100,
 populated with children wider than itself, then stretched via `row.layoutChild.horizontalSizing =
@@ -188,3 +219,26 @@ clear(sectionBoard);   // idempotent; safe to run after every section build
 before switching them to `fill`, rather than relying on fill to expand a 100px default. And always
 export + look before the checkpoint — the mirror is unmissable in the image and invisible in the
 structure read.
+
+## 17. `Board.waitForLayoutUpdate()` replaces the "sleep 100 ms" idiom for layout geometry
+Penpot ≥ 2.17 exposes `board.waitForLayoutUpdate(timeout?: number): Promise<void>` on layout boards.
+After appending children / changing gaps, padding or sizing, `await board.waitForLayoutUpdate()`
+**before** reading `width`/`height`/`bounds`/`textBounds` of the board or its children in the same
+`execute_code` call. Guard it (`if (typeof board.waitForLayoutUpdate === "function")`) so scripts
+still run on older instances, where the fallback is the classic two-call read. This is for **layout
+geometry only** — token application (#2) stays asynchronous across calls regardless. `execute_code`
+supports top-level `await`; if a connected server rejects it, drop the `await` and read geometry in
+the next call.
+
+## 18. Image fills — `uploadMediaUrl` is async, fallible, and only verifiable in the NEXT call
+`const img = await penpot.uploadMediaUrl(name, url); shape.fills = [{ fillOpacity: 1, fillImage: img }];`
+is the whole recipe (remote mode; `import_image` exists only in local mode). Traps:
+- The **server** fetches the URL: private hosts, hot-link protection, CORS-restricted or oversized
+  files fail — sometimes with a rejected promise, sometimes with an empty `fillImage`. Wrap in
+  try/catch, **verify in the next call** (`shape.fills[0] && shape.fills[0].fillImage`) and with an
+  `export_shape`, and on failure fall back to a labeled placeholder (`shared/visual-effects.md` §5)
+  recorded as an `exceptions` entry — never a silent swap.
+- **Only user-supplied URLs.** Never guess a public image URL; a "plausible" stock URL is fabricated
+  content (`shared/design-quality.md` §6).
+- `import_image` (local mode) and `uploadMediaData(name, Uint8Array, mime)` are alternatives when the
+  bytes are already at hand; the verification rule is the same.

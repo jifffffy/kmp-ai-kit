@@ -1,8 +1,8 @@
 ---
 name: penpot-audit-accessibility
-description: "Audit a Penpot design against WCAG 2.1/2.2 AA (optionally AAA) and produce a structured severity report: color contrast, touch/target sizes, text alternatives, heading hierarchy, and keyboard/focus order. Proposes fixes — does not auto-apply. Also serves as the Evaluator in the brief-to-screen loop. Triggers: 'check accessibility', 'accessibility audit', 'WCAG check', 'contrast audit', 'a11y review', 'check color contrast', 'is this accessible'."
+description: "Audit a Penpot design against WCAG 2.1/2.2 AA (optionally AAA) and produce a structured severity report: color contrast, touch/target sizes, text alternatives, heading hierarchy, and keyboard/focus order. Proposes fixes — does not auto-apply. Also serves as the Evaluator in the brief-to-screen and brief-to-deck loops (scope:deck = slide contrast rules). Triggers: 'check accessibility', 'accessibility audit', 'WCAG check', 'contrast audit', 'a11y review', 'check color contrast', 'is this accessible'."
 disable-model-invocation: false
-version: 0.2.0
+version: 0.3.0
 audiences: [design-system, product-designer, design-engineer, migration]
 mode-default: suggest
 requires:
@@ -44,6 +44,13 @@ Gotcha numbers refer to `shared/plugin-api-gotchas.md`:
 - **Inputs** — target shapes, conformance level, any known exceptions.
 - **Constraints** — read-only; no canvas mutation.
 - **Acceptance Criteria** — every interactive element checked; contrast 4.5:1 (normal) / 3:1 (large & UI); targets ≥24×24 (WCAG 2.2; note 44×44 for primary); headings ordered; report complete.
+
+**`scope:deck` (slides built by `penpot-build-deck`, evaluator in `brief-to-deck`).** The scope is the
+deck page; every top-level board named `NN-…` is one slide. Adjust the rules: text ≥ 24 px, or
+≥ 18.67 px with `fontWeight ≥ 700`, is *large* → 3:1; smaller text → 4.5:1 (check body copy and
+captions especially on gradient/glass surfaces — average the stops and flag the result as heuristic).
+Skip target-size checks (a deck has no interactive controls beyond navigation). Heading hierarchy =
+exactly one `h1` per slide. Report `scope` as the deck page name and name the slide in every finding.
 
 Act as an **accessibility specialist**.
 
@@ -114,3 +121,5 @@ return { example: Number(ratio('#101114','#F7F8FA').toFixed(2)) }; // ~ AA pass
 ## 16. Supporting Files
 **references/**: `01-inspection.md`, `02-contrast-checks.md`, `03-sizing-checks.md`, `04-report-generation.md`.
 **scripts/**: `collectAccessibilityData.js`, `checkColorContrast.js`, `checkTouchTargets.js`, `generateReport.js`.
+
+**Doctrine paths.** `shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file.

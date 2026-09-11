@@ -2,7 +2,7 @@
 name: penpot-migrate
 description: "Migrate a Figma design into Penpot with high fidelity: Figma Auto Layout → Penpot flex/grid, Figma Variables → Penpot tokens, Figma component sets → Penpot variants, preserving hierarchy. Reads via the Figma MCP, writes via the Penpot MCP, through an intermediate representation (IR). Degrades to manually-pasted Figma data if the Figma MCP is absent. Triggers: 'migrate from Figma', 'import this Figma file into Penpot', 'move our Figma library to Penpot', 'recreate this Figma design in Penpot', 'Figma to Penpot'."
 disable-model-invocation: false
-version: 0.2.0
+version: 0.2.1
 audiences: [migration]
 mode-default: review
 requires:
@@ -41,7 +41,7 @@ treat them as producing raw data the IR normalizes).
 Gotcha numbers refer to `shared/plugin-api-gotchas.md`.
 - Penpot uses **Boards** (not Frames); Auto Layout maps to Board **flex** (`dir`, gaps, padding, sizing fill/auto/fix) or **grid**.
 - Figma Variables → Penpot tokens via `addToken({type,name,value})` with the real type strings (`shared/tokens-schema.json`). Map Figma modes → Penpot themes.
-- **#9** Figma component sets/variants → Penpot variant containers via `penpot.createVariantFromComponents(mainInstances)` (no `combineAsVariants` method). Beware **#12** — variant *mutation* corrupts the file; prefer create-then-group, never edit a variant container in place.
+- **#9** Figma component sets/variants → Penpot variant containers: prefer `penpotUtils.createVariantContainer([{ shape: mainInstance, properties }])` (≥ 2.17); `penpot.createVariantFromComponents(mainInstances)` is the low-level fallback; `Board.combineAsVariants(ids)` is listed on 2.17 but unverified — do not use. Beware **#12** — variant *mutation* corrupts the file; prefer create-then-group, never edit a variant container in place.
 - **#2** token application is async — apply in one call, verify `resolvedValue`/`shape.tokens` in a LATER call; **#4** flex overrides child x/y; **#6** detach before mutating instance internals.
 - Verify unfamiliar signatures with `penpot_api_info` first.
 
@@ -142,3 +142,5 @@ return { ok: true };
 ## 16. Supporting Files
 **references/**: `01-figma-analysis.md`, `02-ir-building.md`, `03-token-migration.md`, `04-component-migration.md`, `05-layout-translation.md`, `06-screen-migration.md`, `07-validation.md`, `08-error-recovery.md`.
 **scripts/**: `analyzeFigmaStructure.js`, `buildIR.js`, `migrateTokens.js`, `migrateComponent.js`, `migrateScreen.js`, `validateFidelity.js`.
+
+**Doctrine paths.** `shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file.

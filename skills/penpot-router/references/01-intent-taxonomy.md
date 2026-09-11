@@ -23,11 +23,13 @@
 | 1 | Establish/extend foundations: token scales (color, spacing, type, radius), themes | `penpot-foundations` | "set up our design tokens", "create a color scale", "add a spacing scale", "add a dark theme", "define our type ramp", "bootstrap foundations" | "set up our design system" (route to `design-system-bootstrap` workflow if also components/docs are implied) |
 | 2 | Build/extend reusable components & variant matrices | `penpot-component-factory` | "make a Button component", "build an Input with states", "add a Size axis", "turn this selection into a component", "create variants for hover/disabled" | "make a button" (a one-off shape vs. a component — confirm reuse intent) |
 | 3 | Assemble a screen/view from a brief using the existing system | `penpot-build-screen` | "design a settings screen", "lay out a dashboard", "build the pricing page from this brief", "create a profile view" | "make a page" (could be a Penpot page vs. a UI screen — confirm) |
+| 3b | Design a presentation / slide deck from a brief | `penpot-build-deck` | "create a presentation", "build a slide deck", "pitch deck", "keynote", "slides for this talk", "turn this outline into slides" | "make a page/slide" (a Penpot page vs. a UI screen vs. a slide — confirm) |
 | 4 | Build a screen/view from code/markup | `penpot-build-from-code` | "create this React page in Penpot", "push this JSX to a board", "build the screen to match this component code", "here's the HTML, make the design" | "build this in Penpot" *with code attached* → from-code; without code → `penpot-build-screen` |
 | 4b | Document/annotate a design for handoff | `penpot-document-handoff` | "document this design", "annotate this screen", "prepare this for handoff", "add observation notes", "create a critique card", "explain this flow for devs", "spec this for handoff" | "prepare for handoff" (annotation layer vs. `penpot-rename-layers` for semantic names — confirm: explaining intent → document-handoff; tidy layer names → rename-layers) |
 | 5 | Accessibility audit (WCAG 2.1/2.2) | `penpot-audit-accessibility` | "check accessibility", "WCAG AA audit", "contrast check", "are touch targets ≥ 44px", "heading hierarchy review", "a11y report" | "review this design" (could be a11y, tokens, or code-drift — see tie-breakers) |
 | 6 | Token governance audit | `penpot-audit-tokens` | "find hardcoded colors", "audit token usage", "what's off the 4px grid", "find orphan/unused tokens", "are we using semantic tokens" | "clean up this design" (tokens vs. layer naming — confirm) |
 | 7 | Design-vs-code drift review | `penpot-design-to-code-review` | "does this design match the code", "design-to-code review", "find drift between Penpot and the component", "is the implementation faithful" | "review against the repo" (drift vs. `code-to-penpot-sync` workflow — one board vs. ongoing sync) |
+| 7b | Portable DESIGN.md spec file | `penpot-design-md` | "generate a DESIGN.md", "design guidelines as markdown", "style guide file for our coding agent" | "document our design system" (in-file annotations → document-handoff; a portable markdown file → design-md) |
 | 8 | Import/migrate from Figma | `penpot-migrate` | "migrate this Figma file", "import from Figma", "bring our Figma library into Penpot", *(a figma.com URL is present)* | "move our designs over" (confirm source is Figma) |
 | 9 | Rename layers semantically | `penpot-rename-layers` | "rename these layers", "clean up layer names", "semantic HTML layer names", "fix Rectangle 12 names", "prepare layers for handoff" | "clean up this file" (naming vs. token audit — confirm) |
 
@@ -41,6 +43,7 @@
 | W3 | Keep Penpot in sync with code | `code-to-penpot-sync` | "sync our components to code", "reconcile Penpot with the repo", "keep design and code aligned" | design-to-code-review → build-from-code → audit-tokens |
 | W4 | Full Figma → Penpot migration program | `figma-migration` | "migrate our entire Figma project", "full Figma import with tokens, components, screens" | migrate → foundations → component-factory → rename-layers |
 | W5 | Accessibility gate before handoff | `accessibility-gate` | "block handoff until a11y passes", "run the accessibility gate", "validate before we ship" | audit-accessibility (+ rename-layers if heading hierarchy is unreadable) |
+| W6 | Brief → finished, playable deck | `brief-to-deck` | "turn this outline into a polished deck", "design and validate this presentation end to end" | build-deck → audit-accessibility (scope:deck) loop |
 
 ---
 
@@ -60,6 +63,10 @@
 - **"prepare this for handoff"** → wants explanatory annotations (intent, flows, business rules, notes)
   → `penpot-document-handoff`; wants only clean semantic layer names → `penpot-rename-layers`. If both,
   rename first (cleaner pin targets), then document.
+- **"make a page / make a slide"** → words *slide / deck / presentation / talk / keynote* →
+  `penpot-build-deck`; a page/screen/view of a product → `penpot-build-screen`; a literal Penpot page → ask.
+- **"document this…"** → annotations on the canvas → `penpot-document-handoff`; a portable markdown
+  spec file → `penpot-design-md`.
 - **Single skill vs. its workflow** → if the user wants *just that step*, route the skill; if they
   describe an end-to-end outcome spanning steps, route the workflow.
 
@@ -71,6 +78,8 @@ When a request bundles intents ("set up tokens, build a Button, and check contra
 3. After the primary's downstream skill checkpoints out, re-enter the router for the next queued intent.
 4. If the bundle *is* a known workflow shape (e.g. tokens → components → audit = `design-system-bootstrap`),
    route the **workflow** instead of splitting.
+5. "design system + deck" → foundations first (`penpot-foundations` / `design-system-bootstrap`), then
+   `penpot-build-deck` on top of the resulting tokens.
 
 ## Fallbacks (no clean match)
 1. **Empty/near-empty file + vague ask** → suggest `design-system-bootstrap` or `penpot-foundations`

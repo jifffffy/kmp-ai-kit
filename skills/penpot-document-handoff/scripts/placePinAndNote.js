@@ -4,7 +4,7 @@
  *          matching Chip Note in the right-hand notes column. The design is NOT modified.
  * Usage:   paste into execute_code. ONE annotation per call. Run once per pin in the brief's pin list.
  * Input:   PIN below (n, regionId, title, observation, recommendation?). Reads storage.dh.
- * Output:  { n, pinId, noteId, nextY }.
+ * Output:  { n, pinId, noteId, nextY, exceptions }.
  * Notes:   Pin overlays the region (sibling/elevated, never a child of the design's layout). Note bg is a
  *          SURFACE (bind to color.annotation.surface); inner sections structural (fills=[]). Text auto-height
  *          needs ~100ms to reflow before reading height — we track nextY conservatively. Verify members with
@@ -26,6 +26,7 @@ if (!region) return { error: `region ${PIN.regionId} not found.` };
 const tok = n => (n ? penpotUtils.findTokenByName(n) : null);
 const T = dh.tokens || {};
 const PIN_L = 40, NOTE_W = 484, NOTE_GAP = 24;
+const exceptions = [];
 
 // guard: no duplicate number
 dh.pins = dh.pins || [];
@@ -70,10 +71,12 @@ if (!note) {
   const accent = tok(T.accent), body = tok(T.body);
   // VALIDATED: family+weight via Font API (fontFamilies token does NOT apply via applyToken);
   // fontSize/fill via tokens. See references/04 "Validated API gotchas".
-  const ws = penpot.fonts.findByName("Work Sans");
-  const vReg = ws.variants.find(v => v.fontWeight == "400"), vMed = ws.variants.find(v => v.fontWeight == "500");
+  // gotcha #13b: findByName is a SUBSTRING search — use an exact match; if the font is absent keep the default.
+  const ws = penpot.fonts.all.find(f => f.name === "Work Sans") || null;
+  if (!ws) exceptions.push({ kind: "font-fallback", wanted: "Work Sans" });
+  const vReg = ws ? ws.variants.find(v => v.fontWeight == "400") : null, vMed = ws ? ws.variants.find(v => v.fontWeight == "500") : null;
   const mkText = (chars, { size, medium, upper, fill } = {}) => { const t = penpot.createText(String(chars == null ? "" : chars));
-    t.growType = "auto-height"; ws.applyToText(t, medium ? vMed : vReg);
+    t.growType = "auto-height"; if (ws) ws.applyToText(t, medium ? vMed : vReg);
     const s = tok(size); if (s) t.applyToken(s, ["fontSize"]); if (upper) t.textTransform = "uppercase";
     const f = tok(fill); if (f) t.applyToken(f, ["fill"]); return t; };
   // header: small pin badge + uppercase title
@@ -121,4 +124,4 @@ dh.notesNextY = Math.round(note.y + (note.height || 167) + NOTE_GAP);
 dh.pins.push({ n: PIN.n, regionId: PIN.regionId, pinId: pin.id, noteId: note.id });
 dh.pinCounter = Math.max(dh.pinCounter || 0, PIN.n);
 storage.dh = dh;
-return { n: PIN.n, pinId: pin.id, noteId: note.id, nextY: dh.notesNextY };
+return { n: PIN.n, pinId: pin.id, noteId: note.id, nextY: dh.notesNextY, exceptions };

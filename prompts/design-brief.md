@@ -1,3 +1,8 @@
+---
+description: Design brief (screen) — drives penpot-build-screen / brief-to-screen
+argument-hint: "[product] [screen] [viewport]"
+---
+
 # Design brief (screen)
 
 > Fill every section. Vague briefs produce generic UI. Paste into your agent to drive `penpot-build-screen`.

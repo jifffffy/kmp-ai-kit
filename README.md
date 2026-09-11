@@ -34,6 +34,7 @@ Just describe what you want in plain language. The kit figures out the right too
 | “Set up a color, spacing and type system (design tokens) for this file.” | Builds a clean, themeable token system (incl. light/dark). |
 | “Create a Button with all its states — hover, pressed, focus, disabled.” | Builds a real component with a complete set of variants, fully tokenized. |
 | “Design a dashboard (or landing page) from this brief.” | Builds the screen section by section, using your existing system. |
+| “Build a 12-slide pitch deck from this outline.” | Designs the deck slide by slide (1920×1080 boards), wires it into a playable flow, ready to export as PDF. |
 | “Turn this app screen / code into a Penpot design.” | Recreates it in Penpot, wired to your tokens. |
 | “Check this screen for accessibility problems.” | Audits contrast, tap-target sizes, headings (WCAG AA) and reports issues. |
 | “Find hardcoded colors that should be tokens.” | Audits the file for off-system values and suggests fixes. |
@@ -85,6 +86,24 @@ safe to re-run:
 | “Clean up old penpot skills” | Finds stale `penpot-*` skills from older kit generations that shadow the current ones, and removes them after you confirm. |
 | “Verify the Penpot connection” | Live check: `high_level_overview` + a read-only probe of your open file. |
 | “Uninstall the Penpot AI Kit” | Removes everything the install manifest recorded: wired files, the `penpot` MCP entry, the installed copy. |
+
+## Install as a Claude Code plugin
+
+The kit also ships as a **Claude Code plugin** (manifests in `.claude-plugin/`). In Claude Code:
+
+```
+/plugin marketplace add elhombretecla/penpot-ai-kit
+/plugin install penpot-ai-kit@penpot-ai-kit
+```
+
+Then configure the Penpot MCP separately — follow [`docs/setup-remote.md`](docs/setup-remote.md) or run
+`node scripts/install/write-mcp-config.mjs` from a clone. Skills appear namespaced as
+`penpot-ai-kit:penpot-*`, and the brief templates as `/penpot-ai-kit:design-brief`,
+`/penpot-ai-kit:deck-brief`, etc.
+
+> ⚠️ **Don't combine the plugin with the Node installer for Claude Code** — the same skills would
+> trigger twice. If you used the installer, run `node scripts/install/uninstall.mjs --yes` first;
+> or skip the plugin and keep the installer, whichever you prefer.
 
 ---
 
@@ -176,6 +195,7 @@ but only trivially-safe changes (like renaming `Rectangle 12`).
 | ✏️ `penpot-build-screen` | Designs a screen from a written brief, **section by section**, reusing your tokens and components — then **scores its own result** against the kit's design-quality bar (hierarchy, composition, type, color, spacing…) and revises what's weak. | *“Design a settings page from this brief.”* |
 | ✏️ `penpot-build-from-code` | Rebuilds an existing app page/component **from its code**, bound to your design system. | *“Turn this React page into a Penpot screen.”* |
 | ✏️ `penpot-document-handoff` | Documents a design for **handoff**: a hideable annotation layer beside it — context card (the “How might we”, business rules, links, status), numbered pins on the UI, matching observation/recommendation notes, tooltips. Never touches the design. | *“Document this screen for handoff.”* |
+| ✏️ `penpot-build-deck` | Designs a **presentation deck** from a brief: 1920×1080 slide boards built one slide at a time, a committed deck style, varied slide layouts (cover, agenda, big-number, comparison, bento, quote, timeline, image-bleed…), tokenized, wired into a **playable View-mode flow** and exportable to PDF. | *“Build a pitch deck from this outline.”* |
 
 ### Skills — audit & review (they report; they never change your file)
 
@@ -199,6 +219,7 @@ but only trivially-safe changes (like renaming `Rectangle 12`).
 | Workflow | The recipe | Ask for it like… |
 |----------|------------|-------------------|
 | `brief-to-screen` | build a screen → score design quality + audit accessibility → **fix and repeat until both pass** | *“Take this brief and ship an accessible screen.”* |
+| `brief-to-deck` | build a deck → accessibility on slides + deck-quality score → **fix and repeat until both pass** | *“Turn this outline into a polished, playable deck.”* |
 | `design-system-bootstrap` | tokens → core components → governance audit → clean naming | *“Bootstrap a full design system in this file.”* |
 | `code-to-penpot-sync` | build from code → drift review → reconcile, in a loop | *“Keep this Penpot file in sync with the repo.”* |
 | `figma-migration` | migrate → reconcile tokens → accessibility + governance audits | *“Migrate our whole Figma project, end to end.”* |
@@ -215,6 +236,8 @@ precisely. In **Claude Code** they're slash commands; in other clients, open the
 |----------|-------|---------------|
 | `/penpot-design-brief` | build-screen | you want a screen and can describe audience, sections, constraints |
 | `/penpot-component-spec` | component-factory | you know exactly which axes/states the component needs |
+| `/penpot-handoff-brief` | document-handoff | you're annotating a screen for devs and want the context card + pins pre-filled |
+| `/penpot-deck-brief` | build-deck | you want a presentation and can describe audience, occasion, outline and style |
 | `/penpot-migration-brief` | migrate | you're scoping a Figma migration (fidelity, mapping rules) |
 | `/penpot-audit-request` | the audits | you want a formal, scoped audit (level, exceptions, scope) |
 | `/penpot-resume-continuation` | any long run | a multi-phase run got interrupted and must resume safely |
@@ -237,12 +260,12 @@ Install, update, verify, multi-client, cleanup, uninstall — all in plain langu
 - **Design engineers** — design↔code bridge, token mapping, drift review.
 - **Teams migrating to Penpot** — from Figma, with fidelity.
 
-Built on open standards (Anthropic Agent Skills, Agent Skills Discovery, MCP). It is **content only** —
+Built on open standards (Anthropic Agent Skills, Agent Skills Discovery, MCP, Claude Code plugins). It is **content only** —
 files and manifests, no build step.
 
 ### Skill catalog
 The single inventory of skills, workflows and brief templates lives in
-[**The catalog**](#-the-catalog--everything-the-kit-can-do) above (one source — it won't drift).
+[**The catalog**](#the-catalog--everything-the-kit-can-do) above (one source — it won't drift).
 Per-skill default modes are pinned in [`policies/modes.json`](policies/modes.json); audiences per
 skill are recorded in [`skills.json`](skills.json).
 
@@ -264,14 +287,15 @@ AGENTS.md            instructions layer
 INSTALL.md           conversational installer playbook ("Install this Penpot AI Kit")
 scripts/install/     installer helpers (install one-shot + detect-client, install-seed, write-mcp-config, install-behavior, update one-step, check-updates, lib)
 shared/              single source of truth (tool ref, gotchas, token schema, naming, state, modes, SKILL template, visual self-review, design-quality.md, report-schemas/, pipeline.schema.json, scripts/capability-probe.js)
-skills/              11 skills, each: SKILL.md + references/ (progressive disclosure) + scripts/ (execute_code templates)
-workflows/           6 orchestration recipes (README.md prose + pipeline.json)
+skills/              13 skills, each: SKILL.md + references/ (progressive disclosure) + scripts/ (execute_code templates)
+workflows/           7 orchestration recipes (README.md prose + pipeline.json)
 prompts/             token-aware brief templates
 templates/           MCP client configs (remote/local) + local-model calibration
 policies/            modes (suggest/review/autofix), safe set, approval checkpoints
 evals/               golden tests + fixtures
 docs/                setup, troubleshooting, architecture, glossary, mcp-api-findings (dev feedback)
 skills.json          aggregate manifest · .well-known/agent-skills/index.json discovery index · skills.lock version pins
+.claude-plugin/     Claude Code plugin + marketplace manifests (optional install path)
 ```
 
 ### Contributing a skill

@@ -17,10 +17,12 @@ Prose carries nuance; JSON carries the deterministic dispatch. Approval gates fo
 | `routing/` | Routing | dispatch only | all |
 | `design-system-bootstrap/` | Sequential | foundations → component-factory → audit-tokens → rename-layers | DS teams |
 | `brief-to-screen/` | Evaluator-Optimizer | build-screen ↔ audit-accessibility | product designers |
+| `brief-to-deck/` | Evaluator-Optimizer | build-deck ↔ audit-accessibility (scope:deck) + deck-quality score | product designers |
 | `code-to-penpot-sync/` | Reconcile loop | build-from-code → design-to-code-review | design engineers |
 | `figma-migration/` | Pipeline | migrate → foundations → audits | migrating teams |
 | `accessibility-gate/` | Parallelization | audit-accessibility ∥ audit-tokens → aggregate → fix-with-review | all |
 
 Skill ids referenced: `penpot-router`, `penpot-foundations`, `penpot-component-factory`,
-`penpot-build-screen`, `penpot-build-from-code`, `penpot-audit-accessibility`, `penpot-audit-tokens`,
+`penpot-build-screen`, `penpot-build-from-code`, `penpot-document-handoff`, `penpot-design-md`,
+`penpot-build-deck`, `penpot-audit-accessibility`, `penpot-audit-tokens`,
 `penpot-design-to-code-review`, `penpot-migrate`, `penpot-rename-layers`.

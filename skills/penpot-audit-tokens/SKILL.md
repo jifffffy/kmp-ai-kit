@@ -2,7 +2,7 @@
 name: penpot-audit-tokens
 description: "Audit a Penpot design for design-system / token GOVERNANCE issues (distinct from accessibility): hardcoded colors where a token exists, off-grid spacing, orphan/unresolved/unused tokens, duplicated values, and detached parts that should be component instances. Produces a severity report and suggests semantic-token swaps. Triggers: 'audit tokens', 'find hardcoded colors', 'token governance', 'check design system consistency', 'find off-grid spacing', 'detect raw values', 'are we using tokens correctly'."
 disable-model-invocation: false
-version: 0.2.0
+version: 0.2.1
 audiences: [design-system, design-engineer]
 mode-default: suggest
 requires:
@@ -115,3 +115,5 @@ return { ok: true };
 ## 16. Supporting Files
 **references/**: `01-inspection.md`, `02-hardcoded-value-detection.md`, `03-orphan-and-grid-checks.md`, `04-report-generation.md`.
 **scripts/**: `collectStyleUsage.js`, `detectHardcodedValues.js`, `checkGridAndOrphans.js`, `generateTokenReport.js`.
+
+**Doctrine paths.** `shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file.

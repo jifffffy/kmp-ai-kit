@@ -2,7 +2,7 @@
 name: penpot-rename-layers
 description: "Semantically rename Penpot layers to HTML element names (nav, header, main, section, article, button, input, label, h1-h6, p, ul, li, img) or kebab-case role names, replacing auto-generated names like 'Rectangle 12'. Use to clean up layer naming, prepare a file for handoff, or as a precondition for accessibility audits (heading hierarchy) and design-to-code review (semantic mapping). Triggers: 'rename layers', 'semantic layer names', 'rename to HTML elements', 'clean up layer names', 'fix layer naming', 'add semantic names to layers', 'prepare layers for handoff'."
 disable-model-invocation: false
-version: 0.2.0
+version: 0.2.1
 audiences: [design-system, product-designer, design-engineer, migration]
 mode-default: autofix
 requires:
@@ -203,3 +203,5 @@ return result;
 |--------|-------|---------|
 | `scripts/inspectLayerStructure.js` | 0 | Read-only inventory with `nameStatus` + inference signals. |
 | `scripts/renameLayer.js` | 2 | Apply the approved `RENAME_MAP` idempotently; skip main components; return before/after. |
+
+**Doctrine paths.** `shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file.

@@ -1,0 +1,22 @@
+{
+  "id": "router-dispatch",
+  "skill": "penpot-router",
+  "fixture": "fixtures/router-ambiguous.state.json",
+  "expected": {
+    "must_do": [
+      "call high_level_overview (or confirm it ran) and perform the two read-only Phase 0 reads (pages/selection/topLevel and tokenOverview)",
+      "recognise 'make a page for onboarding' as ambiguous and ask exactly ONE disambiguating question offering: a Penpot page, a UI screen (penpot-build-screen), or a slide deck (penpot-build-deck)",
+      "after the answer, name exactly one target and emit the Token-Aware Brief Contract (Context / Objective / Inputs / Constraints / Acceptance Criteria)"
+    ],
+    "must_not": [
+      "any mutating execute_code call (createBoard, createPage, applyToken, addSet …)",
+      "any export_shape call",
+      "routing to two targets, or starting the target skill's work inside the router"
+    ]
+  },
+  "pass_criteria": "One question, one route, one contract; zero mutations; the route matches the user's clarification (screen → penpot-build-screen, deck → penpot-build-deck, page → ask what goes on it).",
+  "triggers": {
+    "should": ["where do I start with this Penpot file", "help me with Penpot", "which skill should I use"],
+    "should_not": ["rename these layers", "check accessibility on this screen"]
+  }
+}

@@ -33,9 +33,9 @@ design system. This kit supplies the missing layers — instructions, governance
 policies, evals — on top of Penpot's open data + MCP.
 
 ## Mandatory skill set (and why)
-Twelve skills (eleven canonical + the router utility) cover the four audiences (DS teams, product designers,
+Thirteen skills (twelve canonical + the router utility) cover the four audiences (DS teams, product designers,
 design engineers, migrating teams): `penpot-router`, `penpot-foundations`, `penpot-component-factory`,
-`penpot-build-screen`, `penpot-build-from-code`, `penpot-document-handoff`, `penpot-design-md`,
+`penpot-build-screen`, `penpot-build-from-code`, `penpot-build-deck`, `penpot-document-handoff`, `penpot-design-md`,
 `penpot-audit-accessibility`, `penpot-audit-tokens`, `penpot-design-to-code-review`, `penpot-migrate`,
 + `penpot-rename-layers`.
 
@@ -50,7 +50,7 @@ design engineers, migrating teams): `penpot-router`, `penpot-foundations`, `penp
    shared libraries via `penpot.library.connected` — discovery, instancing, and governance across
    library boundaries.
 4. **Prototyping/interactions**: flows and interactions exist in the Plugin API; a skill (or a
-   `penpot-build-screen` extension) could wire navigation between the screens the kit builds.
+   `penpot-build-screen` extension) could wire navigation between the screens the kit builds — partially delivered by `penpot-build-deck` (flows + navigate-to interactions for decks).
 5. **Parallel audit orchestration (Claude Code)**: `accessibility-gate`'s two suggest-mode audits are
    the one safely parallelizable pair — run them as two read-only subagents and merge, halving the
    gate's wall-clock. Never parallelize mutating skills on one file.

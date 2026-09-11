@@ -5,7 +5,8 @@
  *   Enumerate the EXISTING Penpot design system so code values have somewhere to land:
  *     - every token (name, type, resolvedValue, set)
  *     - a REVERSE index keyed by normalized resolved value  (codeValue -> token name)
- *     - the component library, catalogued by inferred ROLE  (button/input/card/...)
+ *     - the component library, catalogued by inferred ROLE  (button/input/card/...), incl. ordered
+ *       variant `axes` (switchVariant(pos, value) needs the INDEX into variants.properties — gotcha #9)
  *   Caches everything into storage.run.ds for later phases and resume.
  *
  * USAGE
@@ -75,11 +76,15 @@ const componentsAll = [];
 const comps = penpot.library.local.components || [];
 for (const c of comps) {
   let variants = null;
+  let axes = [];
   try { variants = c.variants || (c.variantProperties ? c.variantProperties : null); } catch (e) { variants = null; }
-  const entry = { id: c.id, name: c.name, variants: variants };
+  // variant components expose `variants`; `.properties` is the ORDERED axis list — switchVariant(pos, value)
+  // takes the index into it, never the axis name (gotcha #9)
+  try { axes = (c.variants && Array.isArray(c.variants.properties)) ? c.variants.properties.slice() : []; } catch (e) { axes = []; }
+  const entry = { id: c.id, name: c.name, variants: variants, axes };
   componentsAll.push(entry);
   const role = inferRole(c.name);
-  if (role && !componentsByRole[role]) componentsByRole[role] = entry; // first match wins
+  if (role && !componentsByRole[role]) componentsByRole[role] = entry; // first match wins -> storage.run.ds.componentsByRole[role].axes
 }
 
 // --- cache for later phases / resume ------------------------------------

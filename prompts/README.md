@@ -10,11 +10,13 @@ because each instruction acts as a contract that constrains the model and mitiga
 3. **Focal direction for visual refs** — tell the model exactly what to look at in an attached image and what to ignore.
 4. **Incremental transformations** — sequence small changes; avoid "redesign it all at once".
 5. **Mandatory justified explanations** — require the agent to state why each change was made and what it rejected.
+6. **Slash-command frontmatter** — every template starts with YAML frontmatter (`description`, `argument-hint`) that Claude Code uses for the slash command; other clients ignore it.
 
 ## Templates
 | File | Use |
 |------|-----|
 | `design-brief.md` | brief → screen (drives `penpot-build-screen` / `brief-to-screen`) |
+| `deck-brief.md` | outline → presentation deck (drives `penpot-build-deck` / `brief-to-deck`) |
 | `component-spec.md` | a component + its variant axes (drives `penpot-component-factory`) |
 | `handoff-brief.md` | annotate a design for handoff (drives `penpot-document-handoff`) |
 | `migration-brief.md` | Figma → Penpot scope & fidelity (drives `penpot-migrate`) |

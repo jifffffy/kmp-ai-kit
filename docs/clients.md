@@ -21,6 +21,7 @@ A read-only guard (`assertOutsideKit`) refuses any write that resolves inside th
 | Client | MCP config (user/global) | Config dialect | Behavior pointer | Prompts |
 |--------|--------------------------|----------------|------------------|---------|
 | **Claude Code** | `~/.claude.json` | JSON `mcpServers` (stdio proxy) | **B3: native self-contained skills** in `~/.claude/skills/` + slim `~/.claude/CLAUDE.md` pointer | copied → `~/.claude/commands/penpot-*.md` |
+| **Claude Code (plugin)** | configured separately (`write-mcp-config.mjs` or `docs/setup-remote.md`) | JSON `mcpServers` (stdio proxy) | `.claude-plugin/plugin.json`; skills auto-discovered from `skills/`, namespaced `penpot-ai-kit:*`; doctrine (`shared/`, `policies/`) read from the plugin root, not vendored | `/penpot-ai-kit:<name>` |
 | **Claude Desktop** | macOS `~/Library/Application Support/Claude/claude_desktop_config.json` · Win `%APPDATA%\Claude\claude_desktop_config.json` · Linux `~/.config/Claude/claude_desktop_config.json` | JSON `mcpServers` (stdio proxy) | `~/.penpot-ai-kit/dist/penpot-kit.instructions.md` → paste into a Project | inside that file |
 | **Cursor** | `~/.cursor/mcp.json` | JSON `mcpServers` (**native HTTP** `url`) | per-project `<project>/.cursor/rules/penpot-kit.mdc` (`alwaysApply`) | `@~/.penpot-ai-kit/prompts/<name>.md` |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | JSON `mcpServers` (stdio proxy) | per-project `<project>/.windsurfrules` | referenced |

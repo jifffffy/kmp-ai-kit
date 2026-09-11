@@ -11,9 +11,14 @@ Verify all of this with `penpot_api_info` before relying on exact shapes — var
 
 ## Creating variants
 1. Build each variant as its own component Board (clone the base, restyle with state tokens, rename `Property=Value`).
-2. Combine them with `penpot.createVariantFromComponents(mainInstances: Board[])` → a `VariantContainer`.
-   (There is **no** `combineAsVariants` method.) To add another variant to an existing group later,
-   `variantContainer.appendChild(mainInstance)` then `setVariantProperty(pos, value)`.
+2. **Preferred (≥ 2.17):** `penpotUtils.createVariantContainer([{ shape: mainInstance, properties: { Size: "Medium", State: "Default" } }, …])`
+   → a `VariantContainer` with axes and per-component values set in one call. Guard with
+   `typeof penpotUtils.createVariantContainer === "function"`.
+   **Low-level fallback:** `penpot.createVariantFromComponents(mainInstances: Board[])` → a container with one
+   auto property (`Property 1`); then `renameProperty`/`addProperty`/`setVariantProperty(pos, value)`.
+   `Board.combineAsVariants(ids)` is listed by `penpot_api_info` on 2.17 but **unverified — do not use**.
+   To add another variant to an existing group later, `variantContainer.appendChild(mainInstance)` then
+   `setVariantProperty(pos, value)`.
 3. Inspect: `container.isVariantContainer()`, `container.variants` → `Variants` with `.properties` and `.variantComponents()`.
 
 ## Variant properties
@@ -24,7 +29,7 @@ Verify all of this with `penpot_api_info` before relying on exact shapes — var
 ## Switching on an instance
 ```js
 const inst = comp.instance();
-inst.switchVariant(0, "Large");   // (position, value) — confirm signature with penpot_api_info
+inst.switchVariant(0, "Large");   // (position = index in variants.properties, value) — confirm with penpot_api_info
 ```
 
 ## Naming

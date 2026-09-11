@@ -13,20 +13,23 @@ the run ledger per `shared/state-management.md`).
 | `token-governance-report.schema.json` | `penpot-audit-tokens` | `design-system-bootstrap`, `figma-migration`, `accessibility-gate` |
 | `drift-report.schema.json` | `penpot-design-to-code-review` | `code-to-penpot-sync` (`review.drift`) |
 | `design-quality-report.schema.json` | `penpot-build-screen` (scored critique, `shared/design-quality.md` §8) | `brief-to-screen` (`generate.designQuality.belowThreshold`) |
+| `deck-quality-report.schema.json` | `penpot-build-deck` (structural gate + scored critique, `references/07-critique-framework.md`) | `brief-to-deck` (`generate.deckQuality.belowThreshold`, `generate.deckQuality.structuralGate.pass`) |
 
 ## Derived fields used by pipeline branch conditions
 
 - `highOrMedium` (accessibility report) = `count of findings where severity ∈ {High, Medium}`.
 - `drift` (drift report) = `summary.drift + summary.designOnly + summary.codeOnly` (everything
   that is not a `match`).
-- `belowThreshold` (design-quality report) = `count of axes with score < 3`.
+- `belowThreshold` (design-quality and deck-quality reports) = `count of axes with score < 3`.
+- `structuralGate.pass` (deck-quality report) = the `auditDeckQuality.js` verdict (dims, ≥ 1 visual
+  per slide, type floor, safe area, flow wired, no consecutive identical archetypes).
 
 These are **computed and included** in the report object by the producing skill so the branch
 check is a field read, not a re-count.
 
 ## Diffing between iterations
 
-Loop workflows (`brief-to-screen`, `code-to-penpot-sync`) should diff the current report's
+Loop workflows (`brief-to-screen`, `brief-to-deck`, `code-to-penpot-sync`) should diff the current report's
 `findings[].id` set against the previous iteration's (kept in the run ledger) and call out: fixed,
 still-open, and **newly introduced** findings. A loop that only re-counts can silently trade one
 violation for another.

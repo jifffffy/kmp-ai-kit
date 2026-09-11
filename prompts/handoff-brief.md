@@ -1,3 +1,8 @@
+---
+description: Handoff brief — drives penpot-document-handoff
+argument-hint: "[board or selection]"
+---
+
 # Handoff brief (annotate a design)
 
 > Fill every section. Vague briefs produce generic annotations. Paste into your agent to drive

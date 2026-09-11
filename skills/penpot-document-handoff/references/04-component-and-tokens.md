@@ -57,10 +57,12 @@ they exist to be instanced and text-overridden.
 ## Validated API gotchas (from a live run)
 Confirmed against the real Penpot MCP — bake these into any text you create:
 - **Don't apply a `fontFamilies` token with `applyToken(tok, ["fontFamilies"])`** — it throws
-  `Field message is invalid`. Set the family+weight with the Font API instead:
-  `const ws = penpot.fonts.findByName("Work Sans"); ws.applyToText(text, variant)` where `variant` is
-  `ws.variants.find(v => v.fontWeight == "500")` (or `"400"`). `fontSize` and `fill` tokens DO apply
-  fine via `applyToken(tok, ["fontSize"])` / `["fill"]`.
+  `Field message is invalid`. Set the family+weight with the Font API instead, with an EXACT name match
+  (gotcha #13b — `findByName` is a substring search):
+  `const ws = penpot.fonts.all.find(f => f.name === "Work Sans") || null; if (ws) ws.applyToText(text, variant)`
+  where `variant` is `ws.variants.find(v => v.fontWeight == "500")` (or `"400"`). If `ws` is null, keep the
+  default font and push `{ kind: "font-fallback", wanted: "Work Sans" }` to the script's returned
+  `exceptions`. `fontSize` and `fill` tokens DO apply fine via `applyToken(tok, ["fontSize"])` / `["fill"]`.
 - **`text.fontWeight = "500"` throws** unless the current font has that weight. Set the family first via
   `ws.applyToText` with the chosen variant; don't set `fontWeight` on the default font.
 - **Auto-height text won't wrap** until you give it width: after appending to a flex parent, set

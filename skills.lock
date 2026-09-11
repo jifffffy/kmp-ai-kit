@@ -1,59 +1,63 @@
 {
   "lockfileVersion": 2,
-  "integrity": "sha256-16:cf5fcd0080ead7b4",
+  "integrity": "sha256-16:265b115247a71c27",
   "note": "Per-skill hash = sha256 (16 hex) over every file in the skill dir; doctrine = shared/ + policies/ (vendored into native bundles). Regenerate with scripts/dev/update-lock.mjs; verify with --check.",
   "doctrine": {
-    "shared": "sha256-16:b7c343a3839803ee",
-    "policies": "sha256-16:d0820c42ba497c04"
+    "shared": "sha256-16:66aea29f42d39e92",
+    "policies": "sha256-16:42e3b9a037cadf31"
   },
   "skills": {
     "penpot-router": {
-      "version": "0.2.0",
-      "hash": "sha256-16:623044b12f1f2c7b"
+      "version": "0.3.0",
+      "hash": "sha256-16:b38bcf409b3bb414"
     },
     "penpot-foundations": {
-      "version": "0.2.0",
-      "hash": "sha256-16:8d56a1a44330d546"
+      "version": "0.2.1",
+      "hash": "sha256-16:6c6233de92aa85b3"
     },
     "penpot-component-factory": {
-      "version": "0.2.0",
-      "hash": "sha256-16:0f316e36ab103bbe"
+      "version": "0.3.0",
+      "hash": "sha256-16:57051ae24d927a56"
     },
     "penpot-build-screen": {
-      "version": "0.3.0",
-      "hash": "sha256-16:6b4236970122c363"
+      "version": "0.4.0",
+      "hash": "sha256-16:ed15d895c98e9297"
     },
     "penpot-build-from-code": {
-      "version": "0.2.0",
-      "hash": "sha256-16:054a9e2e4f43f0fe"
+      "version": "0.3.0",
+      "hash": "sha256-16:86f8226140582c72"
+    },
+    "penpot-build-deck": {
+      "version": "0.1.0",
+      "hash": "sha256-16:ac37bffccb90e63b"
     },
     "penpot-document-handoff": {
-      "version": "0.2.0",
-      "hash": "sha256-16:e646a18058585635"
+      "version": "0.2.1",
+      "hash": "sha256-16:a04ad0e40bd572a8"
     },
     "penpot-audit-accessibility": {
-      "version": "0.2.0",
-      "hash": "sha256-16:bd63c1e117592445"
+      "version": "0.3.0",
+      "hash": "sha256-16:ee8fc0a854132363"
     },
     "penpot-audit-tokens": {
-      "version": "0.2.0",
-      "hash": "sha256-16:ab1beb7fcd2f5ce6"
+      "version": "0.2.1",
+      "hash": "sha256-16:5a21d0ad04e0ffb6"
     },
     "penpot-design-to-code-review": {
-      "version": "0.2.0",
-      "hash": "sha256-16:5da10f92e00ce072"
+      "version": "0.2.1",
+      "hash": "sha256-16:ae10390de02f93d0"
     },
     "penpot-migrate": {
-      "version": "0.2.0",
-      "hash": "sha256-16:2a5c41277ca75ce8"
+      "version": "0.2.1",
+      "hash": "sha256-16:bfb25201f952c34e"
     },
     "penpot-rename-layers": {
-      "version": "0.2.0",
-      "hash": "sha256-16:c482db0c2561abea"
+      "version": "0.2.1",
+      "hash": "sha256-16:8ceb7657791d35d2"
     },
     "penpot-design-md": {
-      "version": "0.2.0",
-      "hash": "sha256-16:0fabe0533dc634b8"
+      "version": "0.2.1",
+      "hash": "sha256-16:0d4ed4ac4a8c9aa9"
     }
   }
 }

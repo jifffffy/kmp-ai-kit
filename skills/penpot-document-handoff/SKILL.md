@@ -1,8 +1,8 @@
 ---
 name: penpot-document-handoff
-description: "Document a Penpot design for handoff by building a clean annotation layer BESIDE the design (never on top of it): a left context card (the 'How might we' goal, business rules, links, status, feedback wanted/not), numbered pin markers on the UI, matching observation/recommendation note cards on the right, and optional tooltips — all wrapped in a single hideable group so the clean design can be revealed. Reuses an annotation component kit + tokens if present; proposes and creates a minimal one if missing. NOT for auditing (use penpot-audit-*) or renaming layers (use penpot-rename-layers). Triggers: 'document this design', 'annotate this screen', 'prepare this for handoff', 'add design annotations', 'explain this flow for devs', 'add observation notes', 'create a critique card', 'spec this screen for handoff'."
+description: "Document a Penpot design for handoff with a hideable annotation layer BESIDE the design (never on top of it): a context card (goal, business rules, links, status), numbered pins on the UI, matching observation/recommendation notes, optional tooltips. Reuses or proposes an annotation component kit + tokens. NOT for auditing (penpot-audit-*) or renaming layers (penpot-rename-layers). Triggers: 'document this design', 'annotate this screen', 'prepare this for handoff', 'add observation notes', 'create a critique card', 'spec this screen for handoff'."
 disable-model-invocation: false
-version: 0.2.0
+version: 0.2.1
 audiences: [product-designer, design-engineer, design-system]
 mode-default: review
 requires:
@@ -19,9 +19,12 @@ requires:
 
 ## 1. Title + How it works
 `penpot-document-handoff` turns a finished (or in-progress) design into a self-explaining handoff:
-a **context card** to its left, **numbered pins** on the UI regions, **matching note cards** to its
-right, and optional **tooltips** for transient states — every annotation living in one **hideable
-group** so reviewers can toggle back to the clean design. Every mutation goes through `execute_code`;
+a **context card** to its left (the "How might we" goal, business rules, links, designer(s), status,
+feedback wanted / not wanted), **numbered pins** on the UI regions, **matching observation /
+recommendation note cards** to its right, and optional **tooltips** for transient states — every
+annotation living in one **hideable group** so reviewers can toggle back to the clean design with one
+click. It reuses an existing annotation component kit + `annotation.*` tokens when present and proposes
+a minimal one (human-approved) when missing. Every mutation goes through `execute_code`;
 validate visually with `export_shape`; read structure with `penpotUtils.shapeStructure` (full tool
 surface: `shared/penpot-mcp-tool-reference.md`). It first discovers the target
 design + any existing annotation component kit and tokens, then builds the annotation layer
@@ -61,6 +64,8 @@ Gotcha numbers refer to `shared/plugin-api-gotchas.md`.
   keeping the literal white is off-system (never themes). **Fill policy:** note/context cards and
   tooltips are genuine **surfaces** → bind their bg to `color.annotation.surface` (never a literal);
   inner section boards and wrappers are **structural** → clear with `board.fills = []`.
+- **#13b exact font match** — `penpot.fonts.all.find(f => f.name === "Work Sans") || null` with a null-guard;
+  `findByName` is a substring search. If the font is absent, keep the default and report `font-fallback`.
 - Wrap-to-hide: collect every annotation shape and `group()` them under one named group; hiding =
   `group.hidden = true`. Verify `group()` / grouping signature with `penpot_api_info` before relying on it.
 
@@ -255,3 +260,5 @@ return {
 | `scripts/placePinAndNote.js` | 4 | Add ONE numbered pin on a region + its matching Chip Note. |
 | `scripts/addTooltipCallout.js` | 4 | Add an optional Tooltip callout for a transient/hover state. |
 | `scripts/finalizeHandoff.js` | 5 | Wrap annotations in the hideable group and run the parity/untouched/token audit. |
+
+**Doctrine paths.** `shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file.

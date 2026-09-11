@@ -38,6 +38,13 @@ message so agents self-correct." They're ordered by impact on agent reliability.
   - Finding 10 (variant mutation) was **not** re-probed (destructive by nature). Positive signal:
     2.17 ships a first-class `penpotUtils.createVariantContainer()` helper — manual re-verification
     on a duplicated file is the next step before lifting the kit's variant restriction.
+- **Re-verification pass (2026-09-10, Penpot 2.17 PRE, `PenpotRemotePRE`, `penpot_api_info` sweep of
+  `Page` / `Board` / `Interaction` / `Flow` / `Gradient` / `Penpot.uploadMediaUrl`):** documented
+  surface for prototyping (`createFlow`, `addInteraction` with `navigate-to` + `slide`/`dissolve`/`push`),
+  `Board.waitForLayoutUpdate()`, `showInViewMode`, `backgroundBlur`, gradient fills and media upload —
+  all consumed by the kit's new deck builder (`penpot-build-deck`). **Finding 14** (the `flipX`
+  mirroring observed 2026-08-10) is written up below; Finding 6 is amended (`combineAsVariants` is
+  now *listed* on `Board`).
 
 Impact legend: **High** = blocks a common agent task with a confusing failure · **Med** = wastes a
 retry / is non-obvious · **Low** = cosmetic or doc-only.
@@ -175,6 +182,14 @@ rename/relabel" sequence is several non-obvious steps; the auto-naming behavior 
 - **API ergonomics (optional):** a convenience that accepts `(components, { axes })` or that sets
   property names/values in one call would remove a lot of agent boilerplate.
 - **No action** required on `combineAsVariants` — it correctly doesn't exist.
+
+**Update 2026-09-10 (2.17 PRE).** `penpot_api_info('Board')` now lists
+`combineAsVariants(ids: string[]): VariantContainer` on the `Board` interface, and the 2.17
+`high_level_overview` documents `penpotUtils.createVariantContainer([{ shape, properties }])`. That is
+three entry points for one operation (`createVariantFromComponents`, `combineAsVariants`,
+`createVariantContainer`). The kit uses the `penpotUtils` helper and treats `combineAsVariants` as
+documented-but-unverified. **Recommendation:** state which entry point is canonical in the overview
+and mark the others as low-level or deprecated.
 
 ---
 
@@ -326,6 +341,29 @@ asynchrony.
 
 ---
 
+## Finding 14 — Flex "fill" expansion can record a spontaneous `flipX = true` (subtree mirrored)  ·  **Med-High**
+
+**Observed** (2026-08-10, Penpot 2.17.0, remote MCP). A row board created at the default 100×100,
+populated with children wider than itself, then stretched with
+`row.layoutChild.horizontalSizing = "fill"` came out with **`flipX = true` on the board** — the whole
+subtree rendered horizontally mirrored (glyphs reversed, child order visually flipped, `→` arrows
+pointing `←`). Reproduced twice in one session on two different sections. Likely mechanism: the
+reflow applies a negative-width scale during the fill expansion, which is recorded as a flip.
+
+**Agent impact.** Med-High. `penpotUtils.shapeStructure` reads perfectly normal — names, order and
+layout are intact; only `shape.flipX` or an actual `export_shape` reveals the mirror. Children report
+`flipX = true` by inheritance, so a naive fix sweep "clears" dozens of descendants while the flag lives
+on one subtree root. The kit now runs a `clearFlip()` sweep after every built unit
+(`shared/visual-effects.md` §7) and sizes boards before appending wide children.
+
+**Recommendation:**
+- **API:** a layout reflow should never persist a flip on the container; clamp the intermediate
+  negative scale, or normalise `flipX` after the reflow.
+- **Docs:** until fixed, note in the overview that `fill` sizing on an undersized board can mirror the
+  subtree, and that `flipX` must be checked after fill expansion.
+
+---
+
 ## Things that need NO action (verified correct)
 - `addSet({ name })`, `addToken({ type, name, value })`, and the token `type` enum — all correct and
   consistent between the overview and `penpot_api_info`.
@@ -360,6 +398,7 @@ asynchrony.
 | 12 | Absolute layout children use page coords (docs say relative) | Med | Fix the overview's coordinate-space claim |
 | 6 | Variant flow non-obvious | Med | Worked example in docs; optional convenience API |
 | 7 | `export_shape("page")` http error | Low | Repro + specific error |
+| 14 | Flex `fill` expansion records `flipX = true`; subtree renders mirrored | Med-High | Normalise `flipX` after reflow; document the check |
 
 **One-line takeaway:** the biggest wins for agent reliability are fixing the **file-corrupting variant
 mutation** (Finding 10), **specific error messages** (Finding 3), **clarifying token-set activation**

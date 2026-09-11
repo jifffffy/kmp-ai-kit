@@ -3,8 +3,9 @@
  * Purpose: build ONE section as a tokenized flex Board, reusing components where possible.
  * Usage:   paste into execute_code (Phase 2..N). One section per call.
  * Input:   SECTION_NAME, PARENT_ID (screen board), token names, component names to instance.
- * Output:  { sectionId, children }.
+ * Output:  { sectionId, children, flipCleared }.
  * Note:    flex positions children; bind tokens (async); name layers semantically.
+ *          A clearFlip sweep runs before the return — fill-sized children can come back with flipX=true (gotcha #16).
  */
 const SECTION_NAME = "nav";        // REPLACE-ME (semantic)
 const PARENT_ID = storage.bs && storage.bs.screenBoardId; // or "SCREEN_BOARD_ID"
@@ -50,4 +51,9 @@ function flexContainer(name, parentBoard, { dir = "row", gap = 16, alignItems = 
 }
 // e.g. const stats = flexContainer("stats", section, { dir: "row", gap: 24 });
 
-return { sectionId: section.id, children };
+// gotcha #16: fill-sized children can come back with flipX=true — sweep the section before reporting.
+// Canonical helper lives in shared/visual-effects.md.
+const clearFlip = (sh) => { let n = 0; const walk = (s) => { if (s.flipX) { s.flipX = false; n++; } (s.children || []).forEach(walk); }; walk(sh); return n; };
+const flipCleared = clearFlip(section);
+
+return { sectionId: section.id, children, flipCleared };

@@ -28,9 +28,13 @@ Code passed to `execute_code` runs with these globals in scope:
 - Create shapes: `createRectangle()`, `createBoard()`, `createEllipse()`, `createPath()`, `createText(str)`, `createBoolean(type, shapes)`, `createShapeFromSvg(svg)`, `createShapeFromSvgWithImages(svg)` (async).
 - Group/variants: `group(shapes)`, `ungroup(group, ...)`, `createVariantFromComponents(boards)`.
 - Align/distribute: `alignHorizontal(shapes, "center"|"left"|"right")`, `alignVertical(shapes, "center"|"top"|"bottom")`, `distributeHorizontal(shapes)`, `distributeVertical(shapes)`.
-- Pages: `createPage()`, `openPage(page, newWindow?)`.
+- Pages: `createPage()`, `openPage(page, newWindow?)` — `openPage` is async; target a page with the two-call protocol (`plugin-api-gotchas.md` #15).
+- Prototyping (decks, flows): `page.createFlow(name, startBoard): Flow`, `page.flows`, `flow.remove()`; `shape.addInteraction(trigger, action, delay?)` with trigger `"click" | "mouse-enter" | "mouse-leave" | "after-delay"` and action `{ type: "navigate-to", destination: board, preserveScrollPosition?, animation? }` (also `"previous-screen"`, `"open-url"`, overlay actions); animation `{ type: "dissolve" | "slide" | "push", duration, easing?, direction?, way? }`; `shape.interactions`, `removeInteraction()`. A `navigate-to` on a board not yet in a flow auto-creates one.
+- Board extras: `waitForLayoutUpdate(timeout?)` (async, gotcha #17), `showInViewMode`, `clipContent`, `addGridLayout()` → `board.grid.appendChild(shape, row, col)` (1-based), `addRulerGuide(orientation, value)`.
+- Effects (surfaces only — `shared/visual-effects.md`): `shadows`, `blur`, `backgroundBlur` (Board), `blendMode`, gradient fills via `fills = [{ fillOpacity, fillColorGradient: { type: "linear" | "radial", startX, startY, endX, endY, width, stops: [{ color, opacity?, offset }] } }]`.
 - Code gen: `generateStyle(shapes, opts?)`, `generateMarkup(shapes, opts?)`, `generateFontFaces(shapes)` (async).
-- Media: `uploadMediaUrl(name, url)` (async), `uploadMediaData(name, Uint8Array, mime)` (async).
+- Media: `uploadMediaUrl(name, url)` (async), `uploadMediaData(name, Uint8Array, mime)` (async) → `fills = [{ fillOpacity: 1, fillImage }]`; verify in the next call (gotcha #18).
+- Fonts: `penpot.fonts.all` — resolve by **exact** name (`fonts.all.find(f => f.name === "Inter")`, gotcha #13b), then `font.applyToText(text, variant)` and re-assert size/line-height.
 - Color: `shapesColors(shapes)`, `replaceColor(shapes, old, new)`, `flatten(shapes)`.
 
 ### `penpotUtils` — helpers (prefer these for navigation/analysis)

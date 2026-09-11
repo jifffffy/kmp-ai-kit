@@ -2,7 +2,7 @@
 name: penpot-build-screen
 description: "Design production-grade screens in Penpot from a brief, as a senior visual designer — reusing the existing design system (tokens + components) and assembling section by section, never one-shot. Use to create a screen/page/landing/dashboard from a description. NOT for translating existing code (use penpot-build-from-code). Triggers: 'design a dashboard', 'create a landing page', 'design this app screen', 'build a UI from this brief', 'design a settings page', 'mock up a screen in Penpot'."
 disable-model-invocation: false
-version: 0.3.0
+version: 0.4.0
 audiences: [product-designer]
 mode-default: review
 requires:
@@ -15,6 +15,7 @@ requires:
   - shared/visual-self-review.md
   - shared/design-quality.md
   - shared/report-schemas/design-quality-report.schema.json
+  - shared/visual-effects.md
 ---
 
 # penpot-build-screen — brief to on-system screen
@@ -45,6 +46,11 @@ Gotcha numbers refer to `shared/plugin-api-gotchas.md`.
 - **#4 flex overrides child x/y** — use `layoutChild` for stretch/margins.
 - Bind colors/spacing/radius/type to **semantic tokens**, never hardcoded.
 - **#11 every new Board is born with an OPAQUE WHITE fill — this skill's critical failure mode.** `createBoard()` ships `fills = [{ fillColor: "#FFFFFF", fillOpacity: 1 }]`; left in place, a structural wrapper's square white corners poke out behind rounded children (radius looks broken), and layout boards keeping the literal white never flip in dark mode (no token, off-system). **Fill policy:** decide per board — a **structural** board (layout-only chrome: sections, rows, wrappers) gets `board.fills = []`; a **surface** (screen bg, card, sheet, button) binds a `color.bg.*` token, never a literal. Default layout containers to transparent (`shared/modes-and-policies.md`).
+- **#13b exact font match** — `penpot.fonts.all.find(f => f.name === "…")`; `findByName` is a substring search.
+- **#15** — set `layoutChild.*` only AFTER `appendChild`; `openPage` is async (two-call protocol: create+open, then assert `currentPage.id` before any `createBoard`).
+- **#16** — run `clearFlip` after every section (fill-sized children can come back with `flipX = true`; canonical helper in `shared/visual-effects.md`).
+- **#17** — `await board.waitForLayoutUpdate()` before reading geometry (replaces the sleep-100ms idiom).
+- **#18** — image fills: `const img = await penpot.uploadMediaUrl(name, url); shape.fills = [{ fillOpacity: 1, fillImage: img }]`, verified in the next call — see `shared/visual-effects.md`.
 - Verify unfamiliar signatures with `penpot_api_info` first.
 
 ## 5. Token-Aware Brief Contract
@@ -65,7 +71,7 @@ Act as a **senior product/visual designer** who makes deliberate aesthetic decis
 
 **Phase 0 — Discovery.** `high_level_overview`; inventory tokens/components (`scripts/setupOrReuseSystem.js`); analyze the brief (`references/01-brief-analysis.md`); pick a style profile (`references/02-style-profiles.md`) **and a named screen skeleton** (`shared/design-quality.md` §5) — check the ledger for prior screens this session and apply the variety rule (differ on ≥ 1 axis, say which). ✋ Checkpoint: confirm brief + style + skeleton + section list.
 
-**Phase 1 — Frame.** Create the screen Board with flex (`scripts/setupOrReuseSystem.js` returns ids). Set viewport size. ✋ Checkpoint.
+**Phase 1 — Frame.** Create the screen Board with `scripts/createScreenFrame.js` (idempotent; returns ids; binds bg/gap/padding tokens). Set viewport size. ✋ Checkpoint.
 
 **Phase 2..N — Sections.** Build each section as a tokenized flex Board reusing components (`scripts/buildSection.js`). One section per `execute_code` call. ✋ Checkpoint after each (`export_shape`).
 
@@ -125,22 +131,32 @@ const screen = penpot.createBoard();
 screen.name = "Dashboard";
 screen.resize(1440, 1024);
 const flex = screen.addFlexLayout();
-flex.dir = "column"; flex.rowGap = 24;
-flex.topPadding = flex.bottomPadding = 32; flex.leftPadding = flex.rightPadding = 32;
+flex.dir = "column";
 flex.horizontalSizing = "fix"; flex.verticalSizing = "auto";
+penpot.currentPage.root.appendChild(screen);         // append first (#7); layoutChild only after append (#15)
+// SPACING: bind tokens, never literals (#8: padding tokens bind on ≥ 2.17; numeric mirror + ledger exception otherwise)
+const gap = penpotUtils.findTokenByName("spacing.24");
+if (gap) screen.applyToken(gap, ["rowGap"]); else flex.rowGap = 24;
+const pad = penpotUtils.findTokenByName("spacing.32");
+const FLEX_PROP = { paddingTop: "topPadding", paddingBottom: "bottomPadding", paddingLeft: "leftPadding", paddingRight: "rightPadding" };
+for (const side of Object.keys(FLEX_PROP)) {
+  try { if (!pad) throw new Error("no token"); screen.applyToken(pad, [side]); }
+  catch (e) { flex[FLEX_PROP[side]] = pad ? Number(pad.resolvedValue) : 32; }   // record { kind: "padding-mirrors-token" } in the ledger
+}
 // FILL POLICY (gotchas #11): the screen root is THE one surface — bind its bg to a token so it flips in
 // dark mode. Every section nested inside stays transparent (buildSection.js clears their default white).
 screen.fills = [];                                   // drop Penpot's default opaque #FFFFFF
 const bg = penpotUtils.findTokenByName("color.bg.default");
 if (bg) screen.applyToken(bg, ["fill"]);             // bound surface, not a literal
-penpot.currentPage.root.appendChild(screen);
 storage.bs = { screenBoardId: screen.id };
-return { screen: screen.id, bgBound: !!bg };
+return { screen: screen.id, bgBound: !!bg, gapBound: !!gap, padBound: !!pad };
 ```
 
 ## 15. Reference Resources
 - `penpot_api_info('Board')`, `penpot_api_info('LibraryComponent')`, `penpot_api_info('Text')`.
 
 ## 16. Supporting Files
-**references/**: `01-brief-analysis.md`, `02-style-profiles.md`, `03-layout-composition.md`, `04-component-recipes.md`, `05-critique-framework.md`, `06-anti-rationalization.md`, `07-error-recovery.md`.
-**scripts/**: `setupOrReuseSystem.js`, `buildSection.js`, `assembleScreen.js`, `auditScreenQuality.js`.
+**references/**: `01-brief-analysis.md`, `02-style-profiles.md`, `03-layout-composition.md`, `04-component-recipes.md`, `05-critique-framework.md`, `06-anti-rationalization.md`, `07-error-recovery.md`; effects, image placeholders, gradients: `shared/visual-effects.md`.
+**scripts/**: `setupOrReuseSystem.js`, `createScreenFrame.js` (Phase 1 frame: idempotent, token-bound bg/gap/padding, ledger), `buildSection.js`, `assembleScreen.js`, `auditScreenQuality.js`.
+
+**Doctrine paths.** `shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file.

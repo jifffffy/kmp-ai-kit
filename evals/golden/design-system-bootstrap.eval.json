@@ -1,0 +1,25 @@
+{
+  "id": "design-system-bootstrap",
+  "workflow": "design-system-bootstrap",
+  "fixture": "fixtures/state: an EMPTY file (one page, no tokens, no components). Brief: brand color #2563EB, neutral gray ramp, 4px spacing scale, Minor Third type scale, light + dark modes; core components: Button (Primary/Secondary × Default/Hover/Pressed/Focus/Disabled) and Input (Default/Focus/Error/Disabled).",
+  "expected": {
+    "must_do": [
+      "checkpoint after the tokens step (primitives, semantic, modes/light, modes/dark) before any component is built",
+      "checkpoint after the components step with exports of the state matrices",
+      "run penpot-audit-tokens (govern) and report, then penpot-rename-layers (name) on auto-named layers only",
+      "gate variant grouping behind the duplicate-file confirmation (gotchas #12) and prefer penpotUtils.createVariantContainer"
+    ],
+    "must_create": [
+      "token sets primitives, semantic, modes/light (active) and modes/dark (inactive) following shared/modes-and-policies.md",
+      "a Button with all five states and an Input with its four states, tokenized (fills/strokes/radius/gaps bound, paddings bound or mirrored-with-exception)",
+      "a token-governance report with 0 High findings"
+    ],
+    "must_not": [
+      "a one-shot execute_code that creates the whole token system or the whole component set",
+      "numeric token values (must be strings) or reference tokens created while the referenced set is inactive",
+      "variant mutation (setVariantProperty/renameProperty) without the duplicate-file gate",
+      "renaming meaningful, user-authored layer names"
+    ]
+  },
+  "pass_criteria": "Tokens → components → governance → naming with the three checkpoints honoured; governance report has 0 High; components are complete and tokenized; no variant-mutation path taken without the gate."
+}

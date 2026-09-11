@@ -44,6 +44,16 @@
     },
     {
       "intent": [
+        "create a presentation",
+        "build a slide deck",
+        "pitch deck",
+        "slides for this talk",
+        "turn this outline into slides"
+      ],
+      "target": "skill:penpot-build-deck"
+    },
+    {
+      "intent": [
         "check accessibility",
         "wcag",
         "contrast audit"
@@ -109,6 +119,13 @@
         "brief to a polished accessible screen"
       ],
       "target": "workflow:brief-to-screen"
+    },
+    {
+      "intent": [
+        "brief to a polished, playable deck",
+        "design and validate this presentation end to end"
+      ],
+      "target": "workflow:brief-to-deck"
     },
     {
       "intent": [

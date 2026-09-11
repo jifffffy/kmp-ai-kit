@@ -32,6 +32,13 @@ if (!evalPath || !existsSync(evalPath)) {
 const spec = JSON.parse(readFileSync(evalPath, "utf8"));
 const target = spec.skill ? `skill \`${spec.skill}\`` : `workflow \`${spec.workflow}\``;
 
+// A fixture may be a prose description or a path under evals/fixtures/ — inline the file when it exists.
+let fixtureText = spec.fixture;
+if (typeof spec.fixture === "string" && /^fixtures\/[\w.-]+$/.test(spec.fixture)) {
+  const fixturePath = resolve(dirname(evalPath), "..", spec.fixture);
+  if (existsSync(fixturePath)) fixtureText = `(file: ${fixtureText})\n\n` + readFileSync(fixturePath, "utf8");
+}
+
 const list = (arr, label) => (arr && arr.length)
   ? `\n### ${label}\n` + arr.map((x, i) => `${i + 1}. ${x}`).join("\n") : "";
 

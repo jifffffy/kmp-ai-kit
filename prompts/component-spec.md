@@ -1,3 +1,8 @@
+---
+description: Component spec — drives penpot-component-factory
+argument-hint: "[component] [axes]"
+---
+
 # Component spec
 
 > Drives `penpot-component-factory`. One component, full variant matrix, fully tokenized.

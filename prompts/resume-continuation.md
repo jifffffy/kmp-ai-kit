@@ -1,3 +1,8 @@
+---
+description: Resume an interrupted multi-phase run by RUN_ID
+argument-hint: "[RUN_ID]"
+---
+
 # Resume a long run
 
 > Use when a multi-phase Penpot run was interrupted (context truncation, session restart). See

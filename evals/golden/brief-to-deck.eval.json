@@ -1,0 +1,35 @@
+{
+  "id": "brief-to-deck",
+  "workflow": "brief-to-deck",
+  "fixture": "fixtures/deck-sample.brief.md",
+  "expected": {
+    "must_do": [
+      "present the outline table (n | archetype | title | key content | visual | tone), the deck style, the tonal arc and the motif at the Phase 0 checkpoint before creating anything",
+      "run createDeckPage.js in two calls (create, then verify) and create no board before verify returns ok:true",
+      "stop at the style-freeze checkpoint after slides 01-03 with one export per slide",
+      "build every slide in its own execute_code call (batches of 3-5 between checkpoints) and report flipCleared per slide",
+      "run wireDeckFlow.js and auditDeckQuality.js before the final checkpoint, then score the seven axes + monotony with evidence per axis and emit JSON per shared/report-schemas/deck-quality-report.schema.json",
+      "give the PDF-export and share-link steps at the final checkpoint"
+    ],
+    "must_create": [
+      "a page named 'Deck — …' holding six 1920×1080 boards named NN-archetype-slug (01-cover-…, 02-agenda-…, 03-big-number-…, 04-two-column-…, 05-image-bleed-…, 06-closing-…)",
+      "a 'deck' token set whose deck.bg.* tokens are bound to every slide background (deck.accent aliased to an existing brand token when one exists)",
+      "a flow named 'Deck' starting at slide 01 with click → navigate-to interactions on slides 01-05",
+      "a hidden 'notes' text layer on every slide",
+      "an uploaded image fill on slide 05 verified in a follow-up call, or a labeled img-placeholder plus an image-upload-failed exception in the report"
+    ],
+    "must_not": [
+      "a single execute_code call that builds more than one slide",
+      "two consecutive slides with the same archetype",
+      "any visible text below 20 px or body text below 28 px",
+      "a number that is not in the brief, or a stat without its source line",
+      "an accent line/bar under a title, a text-only slide, or a slide background left as an unbound literal fill",
+      "a board created on a page other than the verified deck page"
+    ]
+  },
+  "pass_criteria": "Built one slide per call with the style-freeze and batch checkpoints; auditDeckQuality.js reports pass:true; penpot-audit-accessibility (scope:deck) reports 0 High/Medium at loop exit; the deck-quality report has belowThreshold == 0 (or explicitly names the weak axes); the flow plays 01→06 in View mode.",
+  "triggers": {
+    "should": ["build a slide deck for my launch", "make a pitch deck from this outline", "design a presentation in Penpot", "turn these notes into slides"],
+    "should_not": ["design a settings page", "create a landing page from this brief", "audit this screen for contrast"]
+  }
+}

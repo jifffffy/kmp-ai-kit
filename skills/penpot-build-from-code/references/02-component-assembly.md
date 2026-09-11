@@ -14,7 +14,7 @@ stay linked to the main component, inherit updates, and keep handoff parity with
 
 ## Instantiating a library component
 ```js
-const cat = storage.run.ds.componentsByRole.button;            // {id, name, variants}
+const cat = storage.run.ds.componentsByRole.button;            // {id, name, variants, axes}
 const comp = penpot.library.local.components.find(c => c.id === cat.id);
 const inst = comp.instance();                                  // a new instance shape
 container.appendChild(inst);                                   // not on canvas until appended
@@ -26,10 +26,14 @@ container.appendChild(inst);                                   // not on canvas 
 
 ### Setting variant props
 If the component has variant axes (e.g. `Hierarchy`, `Size`, `State`), map the code's intent to a
-variant value and switch:
+variant value and switch. **`switchVariant` takes the property POSITION** (its index in
+`variants.properties`), not the axis name — resolve the index from the Phase 0 catalog (gotcha #9):
 ```js
-inst.switchVariant("Hierarchy", "Primary");                    // pos/value per the axis matrix
-inst.switchVariant("Size", "Medium");
+const axes = cat.axes || [];                                   // ordered, from inspectDesignSystem.js
+const pos = axes.indexOf("Hierarchy");                         // -1 → axis missing: propose, don't guess
+if (pos >= 0) inst.switchVariant(pos, "Primary");
+const sizePos = axes.indexOf("Size");
+if (sizePos >= 0) inst.switchVariant(sizePos, "Medium");
 ```
 The code's class/prop (`variant="primary"`, `size="md"`) drives the value. Verify the exact axis names
 from the catalog you built in Phase 0; verify the method with `penpot_api_info("Shape", "switchVariant")`.

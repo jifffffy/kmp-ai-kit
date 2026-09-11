@@ -2,7 +2,7 @@
 name: penpot-design-md
 description: "Extract a DESIGN.md design-documentation file from a Penpot file: a portable markdown spec (YAML frontmatter with colors/typography/rounded/spacing/components token maps + prose sections: Overview, Colors, Typography, Layout, Shapes, Components, Do's & Don'ts, Iteration Guide, Known Gaps) in the design-md format, grounded in the file's real tokens, library assets, and sampled component styles — never invented. Read-only on the canvas; writes one local markdown file. Triggers: 'generate DESIGN.md', 'create a design.md', 'document the design system as markdown', 'export design guidelines', 'extract design documentation', 'design system spec file', 'make a style guide file from this design'."
 disable-model-invocation: false
-version: 0.2.0
+version: 0.2.1
 audiences: [design-system, design-engineer, product-designer]
 mode-default: suggest
 requires:
@@ -290,3 +290,5 @@ return {
 |--------|---------|
 | `scripts/extractDesignData.js` | Phase 0 — one-call read-only inventory: pages, sets, themes, assets, counts |
 | `scripts/sampleComponentStyles.js` | Phase 2 — batch-sample ≤5 components' resolved styles + bound tokens + variant axes |
+
+**Doctrine paths.** `shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file.

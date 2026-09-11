@@ -27,3 +27,6 @@ How operating modes map to skills, and what may change without asking. Backgroun
 | penpot-design-to-code-review | suggest |
 | penpot-migrate | review |
 | penpot-rename-layers | autofix (safe-set only) |
+| penpot-document-handoff | review |
+| penpot-design-md | suggest |
+| penpot-build-deck | review |

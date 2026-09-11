@@ -49,6 +49,14 @@ if (!seedReady && !dryRun) fail(`--kit-path must be the installed seed (folder w
 const MARK_BEGIN = "<!-- penpot-ai-kit:begin -->";
 const MARK_END = "<!-- penpot-ai-kit:end -->";
 
+const FALLBACK_TEMPLATES = "design-brief, deck-brief, component-spec, handoff-brief, migration-brief, audit-request, resume-continuation";
+function templateList(kp) {
+  const dir = join(kp, "prompts");
+  if (!existsSync(dir)) return FALLBACK_TEMPLATES;
+  const names = readdirSync(dir).filter((n) => n.endsWith(".md") && n !== "README.md").map((n) => basename(n, ".md")).sort();
+  return names.length ? names.join(", ") : FALLBACK_TEMPLATES;
+}
+
 function rulesBody(kp) {
   return `${MARK_BEGIN}
 # Penpot AI Kit — operating rules
@@ -63,7 +71,7 @@ Before ANY Penpot design work:
 - Workflows: ${kp}/workflows/<name>/
 - Doctrine the skills rely on: ${kp}/shared/ and ${kp}/policies/ — consult it; never invent Penpot API calls (verify with \`penpot_api_info\`).
 
-When the user's request is underspecified, open the matching brief template in ${kp}/prompts/ (design-brief, component-spec, migration-brief, audit-request) and fill it WITH the user before acting. To resume an interrupted multi-phase run, use ${kp}/prompts/resume-continuation.md.
+When the user's request is underspecified, open the matching brief template in ${kp}/prompts/ (${templateList(kp)}) and fill it WITH the user before acting. To resume an interrupted multi-phase run, use ${kp}/prompts/resume-continuation.md.
 ${MARK_END}`;
 }
 
@@ -77,7 +85,7 @@ Before ANY Penpot design work:
 1. Read ${kp}/AGENTS.md and follow it (tokens-first; never one-shot; Suggest → Apply-with-review; ask before meaningful changes; the fill policy lives in each skill's bundled shared/modes-and-policies.md).
 2. Your FIRST Penpot tool call each session is \`high_level_overview\` (no arguments).
 3. Let the request trigger the matching penpot-* skill; if it spans several, use the penpot-router skill to pick exactly ONE. Use the /penpot-* slash-commands for structured briefs.
-4. Multi-skill workflows (brief-to-screen, design-system-bootstrap, figma-migration, …) live in the penpot-router skill bundle under workflows/ (also at ${kp}/workflows/) — follow their pipeline.json when the router targets one.
+4. Multi-skill workflows (brief-to-screen, brief-to-deck, design-system-bootstrap, figma-migration, …) live in the penpot-router skill bundle under workflows/ (also at ${kp}/workflows/) — follow their pipeline.json when the router targets one.
 ${MARK_END}`;
 }
 

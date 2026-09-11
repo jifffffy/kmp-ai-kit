@@ -1,8 +1,8 @@
 ---
 name: penpot-router
-description: "Thin dispatcher / entry point for any Penpot request. Use FIRST on any Penpot task to ensure high_level_overview ran, read the user's intent, and route to exactly one target skill or workflow (build a screen, build a design system, audit accessibility, audit tokens, migrate from Figma, rename layers, code review, etc.). Never mutates the canvas. Triggers: 'work on this Penpot file', 'help me with Penpot', 'I want to design/build/audit/migrate in Penpot', 'where do I start', 'which skill should I use', 'route this request', ambiguous Penpot asks."
+description: "Thin dispatcher / entry point for any Penpot request. Use FIRST on any Penpot task to ensure high_level_overview ran, read the user's intent, and route to exactly one target skill or workflow (build a screen, build a slide deck, build a design system, audit accessibility, audit tokens, migrate from Figma, rename layers, code review, extract DESIGN.md, etc.). Never mutates the canvas. Triggers: 'work on this Penpot file', 'help me with Penpot', 'I want to design/build/audit/migrate in Penpot', 'where do I start', 'which skill should I use', 'route this request', ambiguous Penpot asks."
 disable-model-invocation: false
-version: 0.2.0
+version: 0.3.0
 audiences: [design-system, product-designer, design-engineer, migration]
 mode-default: suggest
 requires:
@@ -18,7 +18,8 @@ requires:
 
 ## 1. Title + How it works
 `penpot-router` is a **thin entry point**. It does not draw, tokenize, or restructure anything — it
-reads the user's intent and hands off to exactly one downstream skill or workflow. Every mutation goes
+reads the user's intent and hands off to exactly one downstream skill or workflow (build a screen, build a
+slide deck, build a design system, audit, migrate, extract DESIGN.md, …). Every mutation goes
 through `execute_code`; validate visually with `export_shape`; read structure with
 `penpotUtils.shapeStructure` (full tool surface: `shared/penpot-mcp-tool-reference.md`). This skill only
 ever uses `high_level_overview` plus **read-only** `execute_code` discovery calls (`penpotUtils.shapeStructure`,
@@ -139,10 +140,12 @@ Full phrasing map and fallbacks: `references/01-intent-taxonomy.md`.
 | Build / extend reusable components & variants | `penpot-component-factory` | "make a Button component with variants", "build an Input with states", "turn this into a component", "add a Size axis" |
 | Assemble a screen/view from brief + existing system | `penpot-build-screen` | "design a settings screen", "lay out a dashboard", "build the pricing page from this brief" |
 | Build a screen/view from code/markup | `penpot-build-from-code` | "create this React page in Penpot", "push this component's JSX to a board", "build the screen to match this code" |
+| Design a presentation / slide deck from a brief | `penpot-build-deck` | "create a presentation", "build a slide deck", "pitch deck", "make slides for this talk", "turn this outline into slides" |
 | Document/annotate a design for handoff | `penpot-document-handoff` | "document this design", "annotate this screen", "prepare this for handoff", "add observation notes", "create a critique card", "explain this flow for devs" |
 | Accessibility audit (WCAG) | `penpot-audit-accessibility` | "check accessibility", "WCAG AA audit", "contrast check", "are touch targets big enough", "a11y review" |
 | Token governance audit | `penpot-audit-tokens` | "find hardcoded colors", "audit token usage", "what's off the 4px grid", "find orphan/unused tokens" |
 | Compare design vs. code (drift) | `penpot-design-to-code-review` | "does this design match the code", "design-to-code review", "find drift between Penpot and the component" |
+| Extract a portable DESIGN.md spec from the file | `penpot-design-md` | "generate a DESIGN.md", "export our design guidelines as markdown", "style guide file for our coding agent" |
 | Import / migrate from Figma | `penpot-migrate` | "migrate this Figma file", "import from Figma", "bring our Figma library into Penpot" |
 | Rename layers semantically | `penpot-rename-layers` | "rename these layers", "clean up layer names", "semantic HTML layer names", "fix Rectangle 12 names" |
 
@@ -153,6 +156,7 @@ Full phrasing map and fallbacks: `references/01-intent-taxonomy.md`.
 | Decide where to start (meta) | `routing` | "I don't know which tool I need", "where do I begin", "help me with this Penpot file" |
 | End-to-end design system from scratch/code | `design-system-bootstrap` | "set up a full design system", "tokens + components + docs from our codebase", "bootstrap the whole library" |
 | Brief → finished screen (foundations check → build → a11y) | `brief-to-screen` | "take this brief and ship a screen", "design and validate this page end to end" |
+| Brief → finished, playable deck (build-deck → a11y on slides + deck-quality loop) | `brief-to-deck` | "turn this outline into a polished deck", "design and validate this presentation end to end" |
 | Keep Penpot in sync with code | `code-to-penpot-sync` | "sync our components to code", "reconcile Penpot with the repo", "keep design and code aligned" |
 | Full Figma → Penpot migration program | `figma-migration` | "migrate our entire Figma project", "full Figma import with tokens, components, screens" |
 | Gate a design on accessibility before handoff | `accessibility-gate` | "block handoff until a11y passes", "run the accessibility gate", "validate before we ship" |
@@ -258,8 +262,10 @@ None. The router performs no mutations and needs no reusable mutation templates 
 usage is the inline read-only discovery snippets in §14.
 
 ### workflows/ (vendored in native installs)
-In a native Claude Code install this skill's bundle also carries `workflows/` — the six multi-skill
-pipelines (§8's workflow targets: `routing`, `design-system-bootstrap`, `brief-to-screen`,
+In a native Claude Code install this skill's bundle also carries `workflows/` — the seven multi-skill
+pipelines (§8's workflow targets: `routing`, `design-system-bootstrap`, `brief-to-screen`, `brief-to-deck`,
 `code-to-penpot-sync`, `figma-migration`, `accessibility-gate`), each a `README.md` (prose) +
 `pipeline.json` (deterministic step list). When routing to a workflow, open its files from here; in
 seed-pointer installs they live at the kit root under `workflows/`.
+
+**Doctrine paths.** `shared/…` and `policies/…` resolve inside this bundle in native installs (vendored by the installer); in a Claude Code plugin install they live at the plugin root — `${CLAUDE_PLUGIN_ROOT}/shared/…`, two directories up from this file.

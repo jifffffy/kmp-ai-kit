@@ -159,7 +159,7 @@ export const seedProvenancePath = (seedHome = kitHome()) => join(seedHome, SEED_
 // Assistant-local config dirs (.claude, .cursor, …) are excluded too: clients rewrite them on the fly
 // (e.g. permission grants), which would make the digest flap "stale" with no real kit change.
 export const KIT_EXCLUDE = new Set([
-  ".git", "node_modules", "evals", "dist",
+  ".git", ".github", "node_modules", "evals", "dist",
   ".claude", ".cursor", ".windsurf", ".qwen",
   ".penpot-kit-install.json", "install-manifest.json", SEED_PROVENANCE_FILE,
 ]);

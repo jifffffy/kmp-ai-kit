@@ -2,7 +2,7 @@
 
 ## Mapping
 - Figma **component** → Penpot component (`createComponent([board])`).
-- Figma **component set** (variants) → Penpot variant container via `penpot.createVariantFromComponents(mainInstances)` (no `combineAsVariants` method exists).
+- Figma **component set** (variants) → Penpot variant container: prefer `penpotUtils.createVariantContainer([{ shape: mainInstance, properties: { Size: "Medium" } }])` (≥ 2.17); `penpot.createVariantFromComponents(mainInstances)` as the low-level fallback. `Board.combineAsVariants(ids)` is listed by `penpot_api_info` on 2.17 but unverified — do not use.
 - Figma variant properties → Penpot `Property=Value` (PascalCase).
 
 ## Process

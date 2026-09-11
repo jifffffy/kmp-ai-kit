@@ -5,7 +5,7 @@
  * Usage:   paste into execute_code (one call). Requires storage.dh.designBoardId, storage.dh.brief,
  *          storage.dh.tokens (from setupAnnotationKit.js).
  * Input:   reads storage.dh; CARD_WIDTH, GUTTER below.
- * Output:  { contextCardId, x, y }.
+ * Output:  { contextCardId, x, y, exceptions }.
  * Notes:   Prefer instancing an existing "Critique Card" component (storage.dh.kit.critiqueCardId) and
  *          overriding text. Bind colors/type to annotation tokens; never hardcode. Card is a SURFACE
  *          (bind bg to color.annotation.surface); inner section boards are structural (fills = []).
@@ -21,6 +21,7 @@ if (!design) return { error: "storage.dh.designBoardId not set — run Phase 0 f
 if (!brief)  return { error: "storage.dh.brief not set — run Phase 1 first." };
 const tok = n => (n ? penpotUtils.findTokenByName(n) : null);
 const T = dh.tokens || {};
+const exceptions = [];
 
 // idempotency: don't build a second card
 if (dh.contextCardId && penpotUtils.findShapeById(dh.contextCardId)) {
@@ -45,11 +46,13 @@ if (!card) {
   const sizeLabel = tok(T.labelSize), sizeBody = tok(T.bodySize), sizeTitle = tok(T.titleSize);
   // VALIDATED: set family+weight via the Font API (a fontFamilies token does NOT apply via applyToken),
   // and apply fontSize/fill tokens. See references/04 "Validated API gotchas".
-  const ws = penpot.fonts.findByName("Work Sans");
-  const vReg = ws.variants.find(v => v.fontWeight == "400"), vMed = ws.variants.find(v => v.fontWeight == "500");
+  // gotcha #13b: findByName is a SUBSTRING search — use an exact match; if the font is absent keep the default.
+  const ws = penpot.fonts.all.find(f => f.name === "Work Sans") || null;
+  if (!ws) exceptions.push({ kind: "font-fallback", wanted: "Work Sans" });
+  const vReg = ws ? ws.variants.find(v => v.fontWeight == "400") : null, vMed = ws ? ws.variants.find(v => v.fontWeight == "500") : null;
   function mkText(chars, { size, medium, upper, fill } = {}) {
     const t = penpot.createText(String(chars == null ? "" : chars)); t.growType = "auto-height";
-    ws.applyToText(t, medium ? vMed : vReg);
+    if (ws) ws.applyToText(t, medium ? vMed : vReg);
     const s = tok(size); if (s) t.applyToken(s, ["fontSize"]);
     if (upper) t.textTransform = "uppercase";
     const f = tok(fill); if (f) t.applyToken(f, ["fill"]);
@@ -86,4 +89,4 @@ card.y = design.y;
 dh.contextCardId = card.id;
 storage.dh = dh;
 return { contextCardId: card.id, x: Math.round(card.x), y: Math.round(card.y),
-  reused: !!(dh.kit && dh.kit.critiqueCardId) };
+  reused: !!(dh.kit && dh.kit.critiqueCardId), exceptions };
