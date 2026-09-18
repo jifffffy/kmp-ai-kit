@@ -128,21 +128,24 @@ KMPilot repo at a tag and trimmed the demo features. The kit now owns that.
   from KMPilot's identity to the kit's (`KmpApp` / `dev.kmpapp`). `feature/*`, the demo
   `app/` tiers, `WelcomeScreen` is authored fresh (the empty shell compiles and runs),
   `BaseAppNavHost.kt` is Welcome-only, and `archTest` points at `shared/scripts/kmp_check.py`.
-- `scripts/scaffold/km-init.mjs` — deterministic scaffold, exposed as the `kmp-init` npm
-  bin (`npm run init`, or `npm link` once): copies the template, rewrites its
-  identifiers to the user's name/package (reimplementing `rename.sh`'s two-phase sentinel
-  rewrite and package-dir move, including multi-segment package paths), then wires
-  `.kmp.json`, a local checker copy, `opencode.json`, the KMP subagents, `.gitignore`,
-  OpenSpec (default on; `--no-openspec` opts out), and `git init` + an initial commit
-  (`--no-git` opts out).
+- `scripts/cli.mjs` + `scripts/scaffold/km-init.mjs` — deterministic scaffold, exposed as
+  the `kmp-ai-kit` CLI (`kmp-ai-kit new <Name> <pkg> [dest]`; `npm run init` / the
+  `kmp-init` bin are aliases). It copies the template, rewrites its identifiers to the
+  user's name/package (reimplementing `rename.sh`'s two-phase sentinel rewrite and
+  package-dir move, including multi-segment package paths), then wires `.kmp.json`, a local
+  checker copy, `opencode.json`, the KMP subagents, `.gitignore`, OpenSpec (default on;
+  `--no-openspec` opts out), and `git init` + an initial commit (`--no-git` opts out).
 
-  `opencode.json` references the kit with **relative** paths by default, so the project and
-  the kit stay movable together and a kit update reaches every project. `--vendored` copies
-  the skills, rules, policies, AGENTS.md and the guard plugin into the project instead, for
-  a fully self-contained repo that can be cloned or shared on its own. Linked paths are
-  computed with `realpathSync` on both sides before `relative()` — a lexical relative path
-  resolves against the wrong tree when either side is reached through a symlink
-  (macOS `/tmp` → `/private/tmp`).
+  **Self-contained by default**: the whole runtime (skills, `shared/`, `policies/`,
+  `prompts/`, `workflows/`, `docs/`, `AGENTS.md`, the guard plugin) is copied into the
+  project, and `opencode.json` references only project-local paths — so the app depends on
+  no path outside itself and survives a move, a clone, or being shared. `kmp-init` itself is
+  dropped from the copied skills and its routes are stripped from the copied router and
+  routing table, since scaffolding has no meaning inside an app. `--linked` instead emits
+  thin **relative** references to the kit (single source of truth; project and kit must move
+  together); linked paths are computed with `realpathSync` on both sides before `relative()`,
+  because a lexical relative path resolves against the wrong tree when either side is
+  reached through a symlink (macOS `/tmp` → `/private/tmp`).
 - `skills/kmp-init/` — the skill contract: two inputs, a dry run, a scaffold, a verification,
   and a handoff to `/opsx-propose`.
 

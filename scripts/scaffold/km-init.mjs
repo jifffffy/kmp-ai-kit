@@ -7,9 +7,9 @@
  * + androidApp + iosApp) with no feature modules; the first feature is created later by
  * `kmp-create-feature`.
  *
- *   npm run init -- Atlas com.acme.atlas            # → ./Atlas
- *   npx kmp-init Atlas com.acme.atlas ../Atlas       # installed/linked
- *   node scripts/scaffold/km-init.mjs --name Atlas --pkg com.acme.atlas --dest ./Atlas
+ *   kmp-ai-kit new GithubLeaderboard com.example.demo
+ *   npm run init -- Atlas com.acme.atlas              # from the kit root
+ *   node scripts/scaffold/km-init.mjs Atlas com.acme.atlas
  *
  * Also wires the project for the kit: `.kmp.json`, a local copy of the architecture
  * checker (`shared/scripts/kmp_check.py`) and rules, an `opencode.json` that points at
@@ -60,6 +60,9 @@ for (let i = 0; i < argv.length; i++) {
   if (argv[i].startsWith("-")) continue
   positionals.push(argv[i])
 }
+// Tolerate the subcommand form when this script is invoked directly
+// (`node km-init.mjs new Atlas com.acme.atlas`) rather than through the CLI.
+if (positionals[0] === "new" || positionals[0] === "init") positionals.shift()
 
 const dest = arg("--dest") || positionals[2]
 const name = arg("--name") || positionals[0]
@@ -68,9 +71,11 @@ const dryRun = has("--dry-run")
 // OpenSpec is core to the pipeline, so initializing it is the default;
 // `--no-openspec` opts out.
 const withOpenspec = !has("--no-openspec")
-// Default: reference the kit (single source, portable via relative paths).
-// `--vendored` copies the kit runtime in so the project stands alone.
-const vendored = has("--vendored")
+// Self-contained by default: the project carries its own copy of the kit runtime and
+// references no path outside itself, so it stays valid when moved, cloned, or shared.
+// `--linked` opts into thin relative links to the kit instead (one source of truth,
+// but the project and the kit must move together).
+const linked = has("--linked")
 const noGit = has("--no-git")
 const normalize = has("--normalize")
 
@@ -93,7 +98,7 @@ if (!name || !pkg) {
     "  <pkg>    package prefix, lowercase dotted (e.g. com.acme.atlas)\n" +
     "  [dest]   destination directory (default: next to the kit, i.e. <kit>/../<Name>)\n" +
     "\n" +
-    "flags: --vendored  --dry-run  --force  --no-openspec  --no-git  --normalize",
+    "flags: --linked  --dry-run  --force  --no-openspec  --no-git  --normalize",
   )
   process.exit(2)
 }
@@ -239,11 +244,18 @@ function fileExt(p) {
  */
 function opencodeJson(vendored) {
   if (vendored) {
+    // Fully local: nothing points outside the project, so it survives a move or a clone.
     return JSON.stringify(
       {
         $schema: "https://opencode.ai/config.json",
         instructions: ["AGENTS.md"],
         skills: { paths: ["skills"] },
+        references: {
+          "kmp-kit": {
+            path: "shared",
+            description: "KMP architecture rules (kmp-patterns.md), the deterministic checker, and the state contract",
+          },
+        },
       },
       null,
       2,
@@ -288,17 +300,63 @@ function relToKit(fromDir) {
   return relative(real(fromDir), real(ROOT)).split(sep).join("/") || "."
 }
 
-/** Copy the kit runtime a project needs to stand alone. */
+/**
+ * Copy the kit runtime a project needs to stand alone: skills, the shared doctrine and
+ * checker, policies, prompts, workflows, docs, the instruction layer, and the guard.
+ *
+ * `kmp-init` is dropped: it scaffolds *new* apps from the kit's `templates/`, which has no
+ * meaning inside an app, and its own path references would dangle here. Its route is
+ * removed from the copied router and routing table so nothing points at a missing skill.
+ */
 function vendorKit(dest) {
-  for (const dir of ["skills", "shared", "policies"]) {
+  for (const dir of ["skills", "shared", "policies", "prompts", "workflows", "docs"]) {
     cpSync(join(ROOT, dir), join(dest, dir), { recursive: true, force: true })
   }
-  // `kmp-init` scaffolds *new* apps from the kit's template; it has no meaning inside an
-  // app, and its `scripts/scaffold` + `templates/` paths would dangle here. Drop it.
   rmSync(join(dest, "skills/kmp-init"), { recursive: true, force: true })
+  stripKitOnlyRoutes(join(dest, "skills/kmp-router/SKILL.md"))
+  stripKitOnlyRoutes(join(dest, "workflows/kmp-routing/pipeline.json"))
   cpSync(join(ROOT, "AGENTS.md"), join(dest, "AGENTS.md"))
+  stripKitOnlyInstructions(join(dest, "AGENTS.md"))
   mkdirSync(join(dest, ".opencode/plugins"), { recursive: true })
   cpSync(join(ROOT, ".opencode/plugins/protect-feature.ts"), join(dest, ".opencode/plugins/protect-feature.ts"))
+}
+
+/**
+ * Remove the app-scaffolding instructions from a copied AGENTS.md. `kmp-init` and its
+ * template exist only in the kit; a self-contained app must not instruct its agent to run
+ * a command or read a template it does not have.
+ */
+function stripKitOnlyInstructions(file) {
+  if (!existsSync(file)) return
+  const out = readFileSync(file, "utf8")
+    .replace(/`kmp-init`,\n\s*/, "")
+    .replace(/- \*\*A new app comes from `kmp-init`[\s\S]*?visual intent from Penpot\.\n/, "")
+    .replace(/\n{3,}/g, "\n\n")
+  writeFileSync(file, out)
+}
+
+/**
+ * Remove the `kmp-init` route from a copied routing file. That skill only exists in the
+ * kit, so a self-contained project must not document a route to it. Markdown: drop the
+ * table row and the paragraph explaining the new-app-vs-new-feature check. JSON: drop the
+ * route object targeting it.
+ */
+function stripKitOnlyRoutes(file) {
+  if (!existsSync(file)) return
+  const text = readFileSync(file, "utf8")
+  if (file.endsWith(".json")) {
+    const parsed = JSON.parse(text)
+    if (Array.isArray(parsed.routes)) {
+      parsed.routes = parsed.routes.filter((r) => !String(r.target).endsWith(":kmp-init"))
+    }
+    writeFileSync(file, JSON.stringify(parsed, null, 2) + "\n")
+    return
+  }
+  const out = text
+    .replace(/^\|.*`kmp-init`.*\|\s*$/gm, "")
+    .replace(/"New app" vs\. "new feature"[\s\S]*?it is `kmp-init`\.\n?/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+  writeFileSync(file, out)
 }
 
 /** `git init` + one initial commit. Skipped when git is absent or identity is unset. */
@@ -361,9 +419,9 @@ for (const f of readdirSync(join(ROOT, ".opencode/agent"))) {
 
 // Vendored mode: bring the skills, rules, policies, AGENTS.md and the guard plugin in,
 // so the project is self-contained and safe to clone or share on its own.
-if (vendored) vendorKit(destAbs)
+if (!linked) vendorKit(destAbs)
 
-writeFileSync(join(destAbs, "opencode.json"), opencodeJson(vendored))
+writeFileSync(join(destAbs, "opencode.json"), opencodeJson(!linked))
 
 // Runtime artifacts (run ledger, checker report) are tooling output.
 const gi = join(destAbs, ".gitignore")
@@ -397,7 +455,7 @@ process.stdout.write(
   `  project : ${destAbs}\n` +
   `  name    : ${name}\n` +
   `  package : ${pkg}\n` +
-  `  opencode: ${vendored ? "vendored (self-contained)" : `linked (kit at ${relToKit(destAbs)})`}\n` +
+  `  opencode: ${linked ? `linked (kit at ${relToKit(destAbs)})` : "self-contained (all files copied)"}\n` +
   `  openspec: ${openspecState}\n` +
   `  git     : ${gitState}\n` +
   `\nnext\n` +

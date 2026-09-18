@@ -4,10 +4,11 @@
   "description": "Agentic design skills, workflows and installer for Penpot via the Penpot MCP. Content-only kit: skills + instructions + policies, no build step.",
   "type": "module",
   "bin": {
+    "kmp-ai-kit": "scripts/cli.mjs",
+    "kmp-init": "scripts/scaffold/km-init.mjs",
     "penpot-ai-kit": "scripts/install/install.mjs",
     "penpot-ai-kit-update": "scripts/install/update.mjs",
-    "penpot-ai-kit-uninstall": "scripts/install/uninstall.mjs",
-    "kmp-init": "scripts/scaffold/km-init.mjs"
+    "penpot-ai-kit-uninstall": "scripts/install/uninstall.mjs"
   },
   "scripts": {
     "validate": "node scripts/dev/validate-kit.mjs",
