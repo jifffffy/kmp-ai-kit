@@ -33,19 +33,28 @@ job is to collect the two inputs, run the script, and verify the result.
 
 ## Tool surface
 
-`node scripts/scaffold/km-init.mjs` (run from the kit root, or by absolute path).
-The template is `templates/kmp-project/`. The verifier is
+`kmp-init` — an npm bin, runnable three ways:
+
+```bash
+kmp-init Atlas com.acme.atlas              # linked / installed globally
+npm run init -- Atlas com.acme.atlas       # from the kit root
+npx kmp-init Atlas com.acme.atlas           # ephemeral
+```
+
+Positional form: `<Name> <pkg> [dest]`. Without a `dest` the app is created next to
+the kit (`<kit>/../<Name>`). Flags `--name/--pkg/--dest` still work and win when
+given. The template is `templates/kmp-project/`; the verifier is
 `scripts/dev/e2e-check.mjs`. No MCP.
 
 ## The Token-Aware Brief Contract
 
 Collect exactly these before running anything:
 
-| Field | Flag | Rule |
+| Field | How | Rule |
 |---|---|---|
-| Destination | `--dest` | must be outside the kit; must be empty unless `--force` |
-| Project name | `--name` | PascalCase, `^[A-Za-z][A-Za-z0-9_.-]*$` |
-| Package | `--pkg` | lowercase dotted, at least two segments, e.g. `com.acme.myapp` |
+| Destination | positional 3 (or `--dest`) | must be outside the kit; empty unless `--force`; defaults to `<kit>/../<Name>` |
+| Project name | positional 1 (or `--name`) | PascalCase, `^[A-Za-z][A-Za-z0-9_.-]*$` |
+| Package | positional 2 (or `--pkg`) | lowercase dotted, at least two segments, e.g. `com.acme.myapp` |
 
 Objective: one runnable app. Acceptance criteria: the script reports success; the
 checker passes; no template identifier (`dev.kmpapp`, `KmpApp`) remains anywhere.
@@ -56,10 +65,10 @@ checker passes; no template identifier (`dev.kmpapp`, `KmpApp`) remains anywhere
   destination is empty or absent. Resolve name and package. **✋ Checkpoint:** show
   the two inputs and the destination; wait for an explicit OK. Never scaffold into a
   non-empty directory without the user saying so.
-- **Phase 1 — dry run.** `km-init.mjs --dry-run` and report the file count it would
-  write. **Exit:** the user confirms.
-- **Phase 2 — scaffold.** Run `km-init.mjs` with `--with-openspec`. Report the file
-  count and rewrite count it prints.
+- **Phase 1 — dry run.** `kmp-init <Name> <pkg> --dry-run` and report the file count
+  and destination it would write. **Exit:** the user confirms.
+- **Phase 2 — scaffold.** Run `kmp-init <Name> <pkg> [dest]`. Report the file count and
+  rewrite count it prints. OpenSpec is initialized by default; `--no-openspec` skips it.
 - **Phase 3 — verify.** From the new project:
   `python3 shared/scripts/kmp_check.py --all` (must PASS with zero features), then
   `node <kit>/scripts/dev/e2e-check.mjs --root <dest>` (must be 10/10). Grep the new
@@ -146,13 +155,12 @@ two segments (`com.acme.myapp`). Feature packages nest under it
 ## Helper Code Snippets
 
 ```bash
-# discover the kit root (this file's repo) and dry-run
-node <kit>/scripts/scaffold/km-init.mjs --dest /path/to/MyApp --name MyApp \
-  --pkg com.acme.myapp --dry-run
+# one-time, so `kmp-init` is on PATH (from the kit root)
+npm link
 
-# scaffold for real
-node <kit>/scripts/scaffold/km-init.mjs --dest /path/to/MyApp --name MyApp \
-  --pkg com.acme.myapp --with-openspec
+# dry-run, then scaffold (dest defaults to <kit>/../<Name>)
+kmp-init Atlas com.acme.atlas --dry-run
+kmp-init Atlas com.acme.atlas
 
 # verify (from the new project)
 python3 shared/scripts/kmp_check.py --all

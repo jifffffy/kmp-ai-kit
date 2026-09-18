@@ -7,11 +7,13 @@
  * + androidApp + iosApp) with no feature modules; the first feature is created later by
  * `kmp-create-feature`.
  *
- *   node scripts/scaffold/km-init.mjs --dest ./MyApp --name MyApp --pkg com.acme.myapp
+ *   npm run init -- Atlas com.acme.atlas            # → ./Atlas
+ *   npx kmp-init Atlas com.acme.atlas ../Atlas       # installed/linked
+ *   node scripts/scaffold/km-init.mjs --name Atlas --pkg com.acme.atlas --dest ./Atlas
  *
  * Also wires the project for the kit: `.kmp.json`, a local copy of the architecture
- * checker (`shared/scripts/kmp_check.py`), an `opencode.json` that points at this kit's
- * skills/plugin, the KMP subagents, and (optionally) an initialized `openspec/`.
+ * checker (`shared/scripts/kmp_check.py`) and rules, an `opencode.json` that points at
+ * this kit's skills/plugin, the KMP subagents, and an initialized `openspec/`.
  *
  * Mirrors KMPilot's `scripts/rename.sh` substitution semantics so a scaffolded project
  * compiles: Compose Multiplatform derives its generated `Res` package from
@@ -19,9 +21,9 @@
  * move with the project name.
  */
 
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { execFileSync } from "node:child_process"
-import { basename, dirname, join, relative, resolve, sep } from "node:path"
+import { basename, dirname, join, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)))
@@ -49,11 +51,23 @@ const arg = (name, dflt) => {
 }
 const has = (name) => argv.includes(name)
 
-const dest = arg("--dest")
-const name = arg("--name")
-const pkg = arg("--pkg")
+// Positional form is the ergonomic one: `kmp-init <Name> <com.pkg> [dest]`.
+// `--name/--pkg/--dest` remain supported and take precedence when given.
+const VALUE_FLAGS = new Set(["--dest", "--name", "--pkg"])
+const positionals = []
+for (let i = 0; i < argv.length; i++) {
+  if (VALUE_FLAGS.has(argv[i])) { i++; continue }
+  if (argv[i].startsWith("-")) continue
+  positionals.push(argv[i])
+}
+
+const dest = arg("--dest") || positionals[2]
+const name = arg("--name") || positionals[0]
+const pkg = arg("--pkg") || positionals[1]
 const dryRun = has("--dry-run")
-const withOpenspec = has("--with-openspec")
+// OpenSpec is core to the pipeline, so initializing it is the default;
+// `--no-openspec` opts out.
+const withOpenspec = !has("--no-openspec")
 const normalize = has("--normalize")
 
 // `--normalize` is a maintenance mode for the kit itself: it rewrites the vendored
@@ -66,21 +80,33 @@ if (normalize) {
   process.exit(0)
 }
 
-if (!dest || !name || !pkg) {
-  console.error("usage: km-init.mjs --dest <dir> --name <ProjectName> --pkg <com.acme.app> [--dry-run] [--force] [--with-openspec]")
+if (!name || !pkg) {
+  console.error(
+    "usage: kmp-init <Name> <com.acme.app> [dest]\n" +
+    "       kmp-init --name <Name> --pkg <com.acme.app> [--dest <dir>]\n" +
+    "\n" +
+    "  <Name>   project name, PascalCase (e.g. Atlas)\n" +
+    "  <pkg>    package prefix, lowercase dotted (e.g. com.acme.atlas)\n" +
+    "  [dest]   destination directory (default: next to the kit, i.e. <kit>/../<Name>)\n" +
+    "\n" +
+    "flags: --dry-run  --force  --no-openspec  --normalize",
+  )
   process.exit(2)
 }
 if (!/^[A-Za-z][A-Za-z0-9_.-]*$/.test(name)) {
-  console.error("error: --name must start with a letter and contain only letters, digits, '_', '.' or '-'")
+  console.error("error: project name must start with a letter and contain only letters, digits, '_', '.' or '-'")
   process.exit(2)
 }
 if (!/^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/.test(pkg)) {
-  console.error("error: --pkg must be lowercase dotted, e.g. com.acme.app")
+  console.error("error: package must be lowercase dotted with at least two segments, e.g. com.acme.app")
   process.exit(2)
 }
-const destAbs = resolve(dest)
+// No destination given → create the app next to the kit (the kit lives in the projects
+// directory, so this is the intuitive default regardless of where npm invoked us from).
+// Pass a destination to put it anywhere else.
+const destAbs = resolve(dest || join(ROOT, "..", name))
 if (destAbs === ROOT || destAbs.startsWith(ROOT + sep)) {
-  console.error(`error: --dest must be outside the kit (${ROOT})`)
+  console.error(`error: the destination must be outside the kit (got ${destAbs}; kit is ${ROOT})`)
   process.exit(2)
 }
 if (existsSync(destAbs) && readdirSync(destAbs).length > 0 && !has("--force")) {
@@ -219,7 +245,7 @@ if (dryRun) {
   const count = walkFiles(TEMPLATE).length
   console.log(JSON.stringify({
     ok: true, dryRun: true, template: TEMPLATE, dest: destAbs, name, pkg,
-    files: count, openspec: withOpenspec,
+    files: count, openspec: withOpenspec ? "would initialize" : "skipped",
     note: "would copy the template, rewrite its identifiers, and wire the kit",
   }, null, 2))
   process.exit(0)
@@ -268,15 +294,19 @@ if (withOpenspec) {
 }
 
 const fileCount = walkFiles(destAbs).length
+const openspecState = openspecRan
+  ? "initialized"
+  : withOpenspec
+    ? "NOT initialized — run `openspec init --tools opencode`"
+    : "skipped (--no-openspec)"
 process.stdout.write(
   `\ndone — ${fileCount} files, ${rewritten} rewritten\n` +
   `  project : ${destAbs}\n` +
   `  name    : ${name}\n` +
   `  package : ${pkg}\n` +
-  `  openspec: ${openspecRan ? "initialized" : withOpenspec ? "NOT initialized" : "skipped (--with-openspec to enable)"}\n` +
+  `  openspec: ${openspecState}\n` +
   `\nnext\n` +
-  `  1. openspec init --tools opencode   ${openspecRan ? "(already done)" : ""}\n` +
-  `  2. /opsx-propose                    write the first change's spec\n` +
-  `  3. /kmp-create-feature              build the feature in Kotlin\n` +
-  `  4. ./gradlew archTest               architecture gate\n`,
+  `  1. /opsx-propose                    write the first change's spec\n` +
+  `  2. /kmp-create-feature              build the feature in Kotlin\n` +
+  `  3. ./gradlew archTest               architecture gate\n`,
 )

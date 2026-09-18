@@ -128,11 +128,12 @@ KMPilot repo at a tag and trimmed the demo features. The kit now owns that.
   from KMPilot's identity to the kit's (`KmpApp` / `dev.kmpapp`). `feature/*`, the demo
   `app/` tiers, `WelcomeScreen` is authored fresh (the empty shell compiles and runs),
   `BaseAppNavHost.kt` is Welcome-only, and `archTest` points at `shared/scripts/kmp_check.py`.
-- `scripts/scaffold/km-init.mjs` — deterministic scaffold: copies the template, rewrites its
+- `scripts/scaffold/km-init.mjs` — deterministic scaffold, exposed as the `kmp-init` npm
+  bin (`npm run init`, or `npm link` once): copies the template, rewrites its
   identifiers to the user's name/package (reimplementing `rename.sh`'s two-phase sentinel
   rewrite and package-dir move, including multi-segment package paths), then wires
   `.kmp.json`, a local checker copy, `opencode.json`, the KMP subagents, `.gitignore`, and
-  (optionally) OpenSpec.
+  OpenSpec (default on; `--no-openspec` opts out).
 - `skills/kmp-init/` — the skill contract: two inputs, a dry run, a scaffold, a verification,
   and a handoff to `/opsx-propose`.
 
@@ -151,5 +152,4 @@ Verified by scaffolding fresh projects and running the checker + `e2e-check` aga
    `penpot-design-to-code-review` audit code against a Penpot `DESIGN.md`/tokens instead of
    Stitch HTML.
 4. **Template refresh procedure.** `templates/kmp-project` is a snapshot. To refresh it from
-   upstream: re-copy the trimmed tree, then `node scripts/scaffold/km-init.mjs --normalize`
-   to re-apply the identity rewrite. Worth automating if upstream moves.
+   upstream: re-copy the trimmed tree, then `node scripts/scaffold/km-init.mjs --normalize`   to re-apply the identity rewrite. Worth automating if upstream moves.

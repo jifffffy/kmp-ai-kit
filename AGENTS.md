@@ -115,9 +115,9 @@ The design rules above govern the Penpot layer. The build layer has its own, equ
   `kmp-create-feature`, `kmp-modify-feature`, `kmp-review-feature`,
   `kmp-test-feature`, `kmp-bridge-swift`, `kmp-using-design-system`. Never improvise a
   workflow a skill already defines.
-- **A new app comes from `kmp-init`, never from hand-written Gradle.** It instantiates
-  `templates/kmp-project` via `scripts/scaffold/km-init.mjs`. Requirements for an
-  existing app come from OpenSpec; visual intent from Penpot.
+- **A new app comes from `kmp-init`, never from hand-written Gradle.** The `kmp-init` npm
+  bin (`npm run init -- <Name> <pkg> [dest]`) instantiates `templates/kmp-project`.
+  Requirements for an existing app come from OpenSpec; visual intent from Penpot.
 - **Spec is OpenSpec's; design is Penpot's.** Requirements live only in
   `openspec/specs/<capability>/spec.md` — never write a second spec copy in the code tree. A
   feature is design-aware when a Penpot `DESIGN.md` exists; never invent one.

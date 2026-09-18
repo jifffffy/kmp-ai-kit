@@ -6,13 +6,15 @@
   "bin": {
     "penpot-ai-kit": "scripts/install/install.mjs",
     "penpot-ai-kit-update": "scripts/install/update.mjs",
-    "penpot-ai-kit-uninstall": "scripts/install/uninstall.mjs"
+    "penpot-ai-kit-uninstall": "scripts/install/uninstall.mjs",
+    "kmp-init": "scripts/scaffold/km-init.mjs"
   },
   "scripts": {
     "validate": "node scripts/dev/validate-kit.mjs",
     "lock": "node scripts/dev/update-lock.mjs",
     "lock:check": "node scripts/dev/update-lock.mjs --check",
-    "e2e": "node scripts/dev/e2e-check.mjs"
+    "e2e": "node scripts/dev/e2e-check.mjs",
+    "init": "node scripts/scaffold/km-init.mjs"
   },
   "files": [
     "AGENTS.md",
