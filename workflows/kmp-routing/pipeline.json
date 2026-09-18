@@ -1,0 +1,75 @@
+{
+  "$schema": "../../shared/pipeline.schema.json",
+  "id": "kmp-routing",
+  "pattern": "routing",
+  "description": "Dispatch a Kotlin Multiplatform build request to exactly one skill. The build-layer sibling of workflows/routing (which owns the Penpot design layer).",
+  "preflight": [
+    "openspec list (active changes)",
+    "read openspec/specs/<capability>/spec.md if present",
+    "python3 shared/scripts/kmp_check.py --baseline",
+    "confirm the Penpot handoff artifact (DESIGN.md) exists for design-driven work"
+  ],
+  "routes": [
+    {
+      "intent": [
+        "new feature",
+        "create a KMP feature",
+        "build this screen in Kotlin",
+        "implement the spec",
+        "add a feature module"
+      ],
+      "target": "skill:kmp-create-feature"
+    },
+    {
+      "intent": [
+        "add to this feature",
+        "change the dashboard",
+        "update this screen",
+        "fix this feature",
+        "modify feature"
+      ],
+      "target": "skill:kmp-modify-feature"
+    },
+    {
+      "intent": [
+        "review this feature",
+        "check the dashboard",
+        "audit feature",
+        "is this feature correct"
+      ],
+      "target": "skill:kmp-review-feature"
+    },
+    {
+      "intent": [
+        "generate tests",
+        "test this feature",
+        "add tests",
+        "write tests for the dashboard"
+      ],
+      "target": "skill:kmp-test-feature"
+    },
+    {
+      "intent": [
+        "iOS SDK",
+        "call Swift",
+        "native framework",
+        "MapKit",
+        "biometrics",
+        "Apple Pay",
+        "bridge swift"
+      ],
+      "target": "skill:kmp-bridge-swift"
+    },
+    {
+      "intent": [
+        "use the design system",
+        "which component should I use",
+        "build this UI in Compose",
+        "style this"
+      ],
+      "target": "skill:kmp-using-design-system"
+    }
+  ],
+  "ambiguity_policy": "If the request could be design-first or build-first, ask one question: design it in Penpot, or build it in Kotlin from an existing spec? Then dispatch to exactly that layer's router. If it could be create or modify, check whether feature/<name>/ already exists and route accordingly.",
+  "mutation": false
+}

@@ -107,6 +107,7 @@ if (modes?.skillModes) for (const k of Object.keys(modes.skillModes)) if (!skill
 
 // ---------- 3. pipelines ----------
 const STEP_TYPES = new Set(["branch", "parallel", "aggregate", "action"]);
+const routingTables = [];
 for (const wf of workflowDirs) {
   const rel = `workflows/${wf}/pipeline.json`;
   if (!existsSync(join(ROOT, rel))) { bad(rel, "missing pipeline.json"); continue; }
@@ -123,9 +124,9 @@ for (const wf of workflowDirs) {
       if (kind === "skill" && !skillDirs.includes(id)) bad(rel, `route targets nonexistent skill '${id}'`);
       if (kind === "workflow" && !workflowDirs.includes(id)) bad(rel, `route targets nonexistent workflow '${id}'`);
     }
-    // every skill (except the router itself) should be reachable from the routing table
-    const routed = new Set(p.routes.map((r) => String(r.target).split(":")[1]));
-    for (const s of skillDirs) if (s !== "penpot-router" && !routed.has(s)) bad(rel, `skill '${s}' has no route`);
+    // Coverage is a union across every routing table (design layer + build layer):
+    // each router owns its own skill set, so no single table routes all skills.
+    routingTables.push({ rel, routes: p.routes });
     continue;
   }
 
@@ -158,6 +159,17 @@ for (const wf of workflowDirs) {
     if (!to) { bad(rel, `step '${from}' missing next/thenNext/elseNext`); continue; }
     if (to !== "done" && !ids.has(to)) bad(rel, `step '${from}' points at unknown step '${to}'`);
   }
+}
+
+// Every skill must be reachable from at least one routing table. Coverage is the
+// union across tables because the kit has one router per layer (design + build).
+// Routers are entry points, never routes, so any `*-router` is exempt.
+const routedAnywhere = new Set(
+  routingTables.flatMap((t) => t.routes.map((r) => String(r.target).split(":")[1])),
+);
+for (const s of skillDirs) {
+  if (s.endsWith("-router")) continue;
+  if (!routedAnywhere.has(s)) bad(routingTables[0]?.rel ?? "workflows", `skill '${s}' has no route in any routing table`);
 }
 
 // ---------- 4. evals ----------

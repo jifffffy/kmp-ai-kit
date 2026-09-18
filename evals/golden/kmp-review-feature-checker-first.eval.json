@@ -1,0 +1,22 @@
+{
+  "id": "kmp-review-feature-checker-first",
+  "skill": "kmp-review-feature",
+  "expected": {
+    "must_do": [
+      "run python3 shared/scripts/kmp_check.py {featurename} and read .kmp/check-report.json",
+      "report every mechanized finding for the feature verbatim, and label each finding mechanized vs judgment",
+      "assess the judgment rules (1, 2, 4, 10, 14) with reasoning, and compare the feature against openspec/specs/{featurename}/spec.md"
+    ],
+    "must_not": [
+      "re-implement any mechanized check by grepping the source instead of consuming the report",
+      "edit or create any file under feature/ (a review is read-only)",
+      "drop or downgrade a reported violation because it looks acceptable",
+      "route fixes itself; fixes go to kmp-modify-feature"
+    ]
+  },
+  "pass_criteria": "The checker ran and its findings were quoted verbatim; judgment findings are separated and reasoned; zero edits; spec divergences named without inventing requirements.",
+  "triggers": {
+    "should": ["review this feature", "check the dashboard", "audit feature", "is this feature correct"],
+    "should_not": ["create a KMP feature", "generate tests", "rename these layers"]
+  }
+}

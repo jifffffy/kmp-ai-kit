@@ -1,0 +1,23 @@
+{
+  "id": "kmp-create-feature-guard",
+  "skill": "kmp-create-feature",
+  "expected": {
+    "must_do": [
+      "run Phase 0 context discovery read-only and resolve the app module/catalog from `.kmp.json` (falling back to composeApp/libs)",
+      "stop at the Phase 1 missing-input case when no OpenSpec change exists, naming /opsx-propose, instead of inventing requirements",
+      "create /tmp/.kmp-skill-active before any feature/ edit and remove it on every exit path",
+      "build and run python3 shared/scripts/kmp_check.py {name} after each layer, and stop at each ✋ checkpoint"
+    ],
+    "must_not": [
+      "write a second spec copy into the code tree (the spec lives only under openspec/)",
+      "edit feature/ before the Phase 2 contract is approved, or while the skill marker is absent",
+      "scaffold every layer in one pass without per-layer build + checker runs",
+      "invent a design when no Penpot DESIGN.md exists"
+    ]
+  },
+  "pass_criteria": "Inputs resolved from files not guesses; marker created before any feature/ write and removed on exit; each layer gated by a build and a checker run; no spec copy created in the code tree.",
+  "triggers": {
+    "should": ["create a KMP feature", "build this screen in Kotlin", "implement the spec", "new feature module"],
+    "should_not": ["review this feature", "generate tests", "design this screen in Penpot"]
+  }
+}

@@ -79,6 +79,48 @@
       "version": "0.2.1",
       "path": "skills/penpot-design-md/SKILL.md",
       "description": "Extract a portable DESIGN.md design-system spec from a Penpot file."
+    },
+    {
+      "name": "kmp-router",
+      "version": "0.1.0",
+      "path": "skills/kmp-router/SKILL.md",
+      "description": "Route any KMP build request to exactly one skill."
+    },
+    {
+      "name": "kmp-create-feature",
+      "version": "0.1.0",
+      "path": "skills/kmp-create-feature/SKILL.md",
+      "description": "Create a KMP Clean Architecture feature from an OpenSpec spec and a Penpot design."
+    },
+    {
+      "name": "kmp-modify-feature",
+      "version": "0.1.0",
+      "path": "skills/kmp-modify-feature/SKILL.md",
+      "description": "Change an existing KMP feature spec-first, from an approved OpenSpec spec delta."
+    },
+    {
+      "name": "kmp-review-feature",
+      "version": "0.1.0",
+      "path": "skills/kmp-review-feature/SKILL.md",
+      "description": "Audit a KMP feature against the architecture rules; consume the deterministic checker report."
+    },
+    {
+      "name": "kmp-test-feature",
+      "version": "0.1.0",
+      "path": "skills/kmp-test-feature/SKILL.md",
+      "description": "Generate a KMP feature's test suite in dependency order through staged subagents."
+    },
+    {
+      "name": "kmp-bridge-swift",
+      "version": "0.1.0",
+      "path": "skills/kmp-bridge-swift/SKILL.md",
+      "description": "Bridge the iOS side when an expect/actual needs real Swift behind a thin interop surface."
+    },
+    {
+      "name": "kmp-using-design-system",
+      "version": "0.1.0",
+      "path": "skills/kmp-using-design-system/SKILL.md",
+      "description": "UI guard: reuse existing X* components and tokens; never hardcode a value or string."
     }
   ]
 }

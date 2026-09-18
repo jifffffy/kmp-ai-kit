@@ -1,0 +1,21 @@
+{
+  "id": "kmp-router-dispatch",
+  "skill": "kmp-router",
+  "expected": {
+    "must_do": [
+      "run the read-only preflight: openspec list, read openspec/specs/<capability>/spec.md when present, and python3 shared/scripts/kmp_check.py --baseline",
+      "recognise 'build the dashboard feature' as a build-layer request and route to exactly one target: kmp-create-feature",
+      "state the missing-input case plainly when no OpenSpec spec exits, pointing at /opsx-propose, instead of inferring requirements"
+    ],
+    "must_not": [
+      "edit or create any file under feature/ (the guard blocks it without /tmp/.kmp-skill-active)",
+      "scaffold a feature module, run gradle, or start kmp-create-feature's work inside the router",
+      "route to two targets, or route a Phase 1 skill that does not exist yet (kmp-modify-feature and friends)"
+    ]
+  },
+  "pass_criteria": "One target named, zero mutations, zero feature/ writes; the preflight ran and the route matches the layer (build → kmp-create-feature, design → penpot-build-screen).",
+  "triggers": {
+    "should": ["create a KMP feature", "build this screen in Kotlin", "implement the spec", "new feature module"],
+    "should_not": ["design this screen in Penpot", "audit tokens for hardcoded colors", "rename these layers"]
+  }
+}

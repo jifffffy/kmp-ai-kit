@@ -167,6 +167,89 @@
         "product-designer"
       ],
       "description": "Extract a portable DESIGN.md spec from the file's real tokens, assets and sampled components. Read-only; writes one local markdown file."
+    },
+    {
+      "id": "kmp-router",
+      "name": "kmp-router",
+      "version": "0.1.0",
+      "path": "skills/kmp-router/SKILL.md",
+      "mode": "suggest",
+      "audiences": [
+        "kmp-engineer",
+        "design-engineer",
+        "product-designer"
+      ],
+      "description": "Thin dispatcher for KMP build work: route any request to exactly one KMP skill (create, and later modify/review/test/adopt/bridge)."
+    },
+    {
+      "id": "kmp-create-feature",
+      "name": "kmp-create-feature",
+      "version": "0.1.0",
+      "path": "skills/kmp-create-feature/SKILL.md",
+      "mode": "review",
+      "audiences": [
+        "kmp-engineer",
+        "design-engineer"
+      ],
+      "description": "Create a complete KMP Clean Architecture feature from an OpenSpec spec and a Penpot design, layer by layer with checkpoints."
+    },
+    {
+      "id": "kmp-modify-feature",
+      "name": "kmp-modify-feature",
+      "version": "0.1.0",
+      "path": "skills/kmp-modify-feature/SKILL.md",
+      "mode": "review",
+      "audiences": [
+        "kmp-engineer",
+        "design-engineer"
+      ],
+      "description": "Change an existing KMP feature spec-first: draft the OpenSpec spec delta, get approval, then implement behind the feature guard."
+    },
+    {
+      "id": "kmp-review-feature",
+      "name": "kmp-review-feature",
+      "version": "0.1.0",
+      "path": "skills/kmp-review-feature/SKILL.md",
+      "mode": "suggest",
+      "audiences": [
+        "kmp-engineer",
+        "design-engineer"
+      ],
+      "description": "Audit a KMP feature: consume the deterministic checker report, then review the judgment rules, spec compliance and UI file organization. Read-only."
+    },
+    {
+      "id": "kmp-test-feature",
+      "name": "kmp-test-feature",
+      "version": "0.1.0",
+      "path": "skills/kmp-test-feature/SKILL.md",
+      "mode": "review",
+      "audiences": [
+        "kmp-engineer"
+      ],
+      "description": "Generate a KMP feature's test suite in dependency order: fixtures, data-layer, then ViewModel/UI/integration, staged through subagents."
+    },
+    {
+      "id": "kmp-bridge-swift",
+      "name": "kmp-bridge-swift",
+      "version": "0.1.0",
+      "path": "skills/kmp-bridge-swift/SKILL.md",
+      "mode": "review",
+      "audiences": [
+        "kmp-engineer"
+      ],
+      "description": "Bridge the iOS side when an expect/actual needs real Swift — native framework wrappers or UIKit views — behind a thin interop surface."
+    },
+    {
+      "id": "kmp-using-design-system",
+      "name": "kmp-using-design-system",
+      "version": "0.1.0",
+      "path": "skills/kmp-using-design-system/SKILL.md",
+      "mode": "review",
+      "audiences": [
+        "kmp-engineer",
+        "design-engineer"
+      ],
+      "description": "UI guard: reuse an existing X* component and its tokens before authoring anything new, and never hardcode a color, size, or string."
     }
   ]
 }

@@ -1,7 +1,30 @@
-# AGENTS.md — Penpot Agentic Design Workflows
+# AGENTS.md — Kotlin Multiplatform AI Kit
 
-> The instructions layer. Any AI agent operating on Penpot through the Penpot MCP loads this first.
-> It defines behavior; the `skills/` define capabilities; the `workflows/` define end-to-end orchestration.
+> The instructions layer. Any AI agent operating in this kit loads this first.
+> It defines behavior; the `skills/` define capabilities; the `workflows/` define end-to-end
+> orchestration. This kit is **opencode-only** — do not carry Claude Code hooks, plugin manifests
+> or namespaced commands across.
+
+## 0. Three layers, three owners — never blur them
+
+| Layer | Owner | Writes | Never writes |
+|---|---|---|---|
+| Planning | **OpenSpec** (`openspec/`, `/opsx-*`) | `proposal.md`, `spec.md`, `design.md`, `tasks.md` | code, Penpot files |
+| Design | **Penpot** (this file's rules, `penpot-*` skills) | Penpot file, `DESIGN.md`, handoff annotations | requirements, Kotlin code |
+| Build | **KMP skills** (`kmp-*`) | `feature/**`, `core/**`, gradle wiring | requirements, design |
+
+Routing: ask `kmp-router` for build work, `penpot-router` for design work. The spec always wins
+over code; the design always wins over a build guess. A feature's living requirements live in
+`openspec/specs/<capability>/spec.md` — there is no second spec copy in the code tree.
+
+Architecture rules for the build layer are `shared/kmp-patterns.md`, and the deterministic checker
+is `shared/scripts/kmp_check.py`. Editing `feature/**` directly is blocked by
+`.opencode/plugins/protect-feature.ts` unless the owning skill has created `/tmp/.kmp-skill-active`.
+Honor that contract: never work around the guard.
+
+---
+
+## Design layer — Penpot
 
 You are a design agent operating inside Penpot via the **Penpot MCP**. You work with a real,
 structured, editable design file — not images or mockups. Your job is to read, create, modify,
@@ -81,6 +104,31 @@ When you catch yourself reaching for one of these, **stop and do the rigorous th
 End every task with: what was created/changed, tokens used, new tokens proposed, accessibility/
 governance checks (pass/fail), assumptions, and what needs human review. No silent truncation — if
 you capped scope (top-N, sampled, skipped), say so.
+
+---
+
+## Build layer — Kotlin Multiplatform
+
+The design rules above govern the Penpot layer. The build layer has its own, equally binding rules.
+
+- **Route first.** Ask `kmp-router`; it picks exactly one of `kmp-create-feature`,
+  `kmp-modify-feature`, `kmp-review-feature`, `kmp-test-feature`, `kmp-bridge-swift`,
+  `kmp-using-design-system`. Never improvise a workflow a skill already defines.
+- **Spec is OpenSpec's; design is Penpot's.** Requirements live only in
+  `openspec/specs/<capability>/spec.md` — never write a second spec copy in the code tree. A
+  feature is design-aware when a Penpot `DESIGN.md` exists; never invent one.
+- **The 14 architecture rules are `shared/kmp-patterns.md`,** and the deterministic checker is
+  `shared/scripts/kmp_check.py` (wired as `archTest` in a host project). The checker's verdict is
+  the gate; never re-derive a mechanized rule by hand and never suppress a finding.
+- **`feature/**` is guarded.** `.opencode/plugins/protect-feature.ts` blocks Edit/Write unless the
+  owning skill created `/tmp/.kmp-skill-active`. Never work around the guard; never leave the marker
+  behind (remove it on every exit path).
+- **One layer per step, build + check between.** Status at each checkpoint; "looks good" approves
+  only the phase just shown. Never one-shot a feature module.
+- **Reuse before you build.** `kmp-using-design-system` auto-activates for UI work: an existing
+  `X*` component is instantiated, never reinvented, and no color/size/string is ever hardcoded.
+- **Resume from the ledger.** A multi-step run writes `.kmp/run.json`; after a context break,
+  re-read the ledger and re-run `kmp_check.py --baseline` before continuing.
 
 ---
 

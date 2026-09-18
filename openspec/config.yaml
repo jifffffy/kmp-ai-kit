@@ -1,0 +1,58 @@
+schema: spec-driven
+
+# Project context — shown to the AI when creating OpenSpec artifacts.
+context: |
+  This repo is the Kotlin Multiplatform AI Kit: an opencode-only agent kit with
+  three layers that never overlap.
+
+  - Planning (OpenSpec) — owns requirements. A change lives in openspec/changes/;
+    the living spec is openspec/specs/<capability>/spec.md. Both use Requirement +
+    Scenario format. No other layer writes requirements.
+  - Design (Penpot) — owns visual intent. Produced by the penpot-* skills into a
+    DESIGN.md plus an annotation layer. No other layer draws UI.
+  - Build (KMP skills) — owns implementation. kmp-create-feature builds a feature
+    from a spec + a design into Clean Architecture modules shared across Android
+    + iOS.
+
+  Tech stack for the build layer: Kotlin 2.x, Compose Multiplatform, Gradle Kotlin
+  DSL, Kotlin Multiplatform (Android + iOS + desktop test target), Koin for DI.
+  Architecture: Clean Architecture with data -> presentation -> DI, one Gradle
+  module per feature, features never depend on each other, shared code lives in
+  versioned core/ tiers. Mechanized rules: shared/scripts/kmp_check.py (also wired
+  as ./gradlew archTest in a host project).
+
+  Conventions: package names lowercase (productdetail, never product-detail);
+  Either<T> for fallible operations, never thrown exceptions across a layer
+  boundary; shared AppLoadingState/AppErrorState for loading and error UI; every
+  feature wires all four integration points (settings include, app-module
+  dependency, initKoin module registration, NavHost entry).
+
+  Artifact language: English.
+
+# Per-artifact rules.
+rules:
+  proposal:
+    - State the single user-facing capability this change delivers; if it spans layers, say which layer owns each part.
+    - Name the Penpot design artifact the change depends on, or state explicitly that the change is design-independent.
+  specs:
+    - Write requirements in Requirement + Scenario form; scenarios must be testable.
+    - Include at least one scenario for the error/failure path, not only the happy path.
+  design:
+    - Reference the KMP architecture rules in shared/kmp-patterns.md rather than restating them.
+    - Call out which of the 14 architecture rules the change is most likely to violate, and how it avoids that.
+  tasks:
+    - "Order tasks by layer: data/platform -> ui -> integration."
+    - Keep each task to one logical step so it can be checked with a build plus an architecture-checker run.
+    - Every task that touches feature/ must be executed through the owning KMP skill, never by a direct file edit.
+
+# Per-operation guidance.
+operations:
+  apply:
+    guidance:
+      - Before implementing, confirm the design artifact exists; if it does not, the design layer runs first.
+      - Run python3 shared/scripts/kmp_check.py --baseline before starting, and the feature-scoped check after each layer.
+      - Stop at each user checkpoint; "looks good" approves only the phase just shown.
+  archive:
+    guidance:
+      - Reconcile openspec/specs/<capability>/spec.md with what actually shipped before archiving.
+      - Never create a second spec copy in the build tree — the spec lives only under openspec/specs/.

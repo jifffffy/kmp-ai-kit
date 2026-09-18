@@ -38,7 +38,7 @@
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string" },
-        "skill": { "type": "string", "pattern": "^penpot-[a-z-]+$" },
+        "skill": { "type": "string", "pattern": "^(penpot|kmp)-[a-z-]+$" },
         "inputs": { "type": "array", "items": { "type": "string" }, "description": "Input tags: literal (brief), scoped (scope:library), wired from a prior step (tokensFrom:tokens), or alternated (a|b)." },
         "checkpoint": { "type": "boolean", "default": false, "description": "true = the agent MUST stop and get the user's OK before the next step (AGENTS.md §7)." },
         "next": { "type": "string", "description": "id of the next step, or the literal 'done'." },
@@ -73,7 +73,7 @@
             "additionalProperties": false,
             "properties": {
               "id": { "type": "string" },
-              "skill": { "type": "string", "pattern": "^penpot-[a-z-]+$" },
+              "skill": { "type": "string", "pattern": "^(penpot|kmp)-[a-z-]+$" },
               "inputs": { "type": "array", "items": { "type": "string" } },
               "on_fail": { "enum": ["halt", "report"] }
             }

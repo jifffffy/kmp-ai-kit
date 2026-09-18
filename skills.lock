@@ -1,10 +1,10 @@
 {
   "lockfileVersion": 2,
-  "integrity": "sha256-16:265b115247a71c27",
+  "integrity": "sha256-16:2b186143971b3b4d",
   "note": "Per-skill hash = sha256 (16 hex) over every file in the skill dir; doctrine = shared/ + policies/ (vendored into native bundles). Regenerate with scripts/dev/update-lock.mjs; verify with --check.",
   "doctrine": {
-    "shared": "sha256-16:66aea29f42d39e92",
-    "policies": "sha256-16:42e3b9a037cadf31"
+    "shared": "sha256-16:cb5d40692867c935",
+    "policies": "sha256-16:7f819f6c1e7cc1c3"
   },
   "skills": {
     "penpot-router": {
@@ -58,6 +58,34 @@
     "penpot-design-md": {
       "version": "0.2.1",
       "hash": "sha256-16:0d4ed4ac4a8c9aa9"
+    },
+    "kmp-router": {
+      "version": "0.1.0",
+      "hash": "sha256-16:4a37d7870edc7615"
+    },
+    "kmp-create-feature": {
+      "version": "0.1.0",
+      "hash": "sha256-16:a26a8d5d3915d109"
+    },
+    "kmp-modify-feature": {
+      "version": "0.1.0",
+      "hash": "sha256-16:ab05cb9a286c1cf5"
+    },
+    "kmp-review-feature": {
+      "version": "0.1.0",
+      "hash": "sha256-16:0f561c26cc128cae"
+    },
+    "kmp-test-feature": {
+      "version": "0.1.0",
+      "hash": "sha256-16:7918576e8592bcfb"
+    },
+    "kmp-bridge-swift": {
+      "version": "0.1.0",
+      "hash": "sha256-16:59338b44739fdecb"
+    },
+    "kmp-using-design-system": {
+      "version": "0.1.0",
+      "hash": "sha256-16:bb6af4ff8033a000"
     }
   }
 }
