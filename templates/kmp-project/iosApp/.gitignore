@@ -1,0 +1,25 @@
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Xcode
+xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# Build artifacts
+build/
+DerivedData/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# Provisioning
+*.mobileprovision
+*.cer
+*.certSigningRequest
+*.p12
+
+# Other
+.DS_Store

@@ -182,6 +182,17 @@
       "description": "Thin dispatcher for KMP build work: route any request to exactly one KMP skill (create, and later modify/review/test/adopt/bridge)."
     },
     {
+      "id": "kmp-init",
+      "name": "kmp-init",
+      "version": "0.1.0",
+      "path": "skills/kmp-init/SKILL.md",
+      "mode": "review",
+      "audiences": [
+        "kmp-engineer"
+      ],
+      "description": "Scaffold a new runnable Kotlin Multiplatform app from the vendored template and wire it for OpenSpec, the checker and the KMP subagents."
+    },
+    {
       "id": "kmp-create-feature",
       "name": "kmp-create-feature",
       "version": "0.1.0",

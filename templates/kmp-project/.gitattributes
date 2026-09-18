@@ -1,0 +1,5 @@
+# Shell scripts must check out with LF endings, even on Windows.
+# Without this, Git Bash runs `sed -i` against CRLF files and silently
+# embeds \r into rewritten Kotlin/Gradle sources during install.sh.
+*.sh    text eol=lf
+gradlew text eol=lf

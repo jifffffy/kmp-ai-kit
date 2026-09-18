@@ -25,14 +25,14 @@ what owns design in the merged model.
 | 4 | Slash commands & brief templates | `.claude/commands/*.md`, `_shared/spec-template.md` | `prompts/` templates + OpenSpec commands | discarded; OpenSpec is the only spec source |
 | 5 | Approval gates & safe set | `.claude/hooks/*.sh`, `.claude/settings.json` | `policies/modes.json`, `shared/modes-and-policies.md` | discarded; policy semantics re-expressed |
 | 6 | Cross-session state | `reinject-on-compact.sh`, memory index | `shared/state-management.md` (design), `shared/kmp-state.md` (build) | discarded; kit ledger model |
-| 7 | Install / update / uninstall | `install.sh`, `update.sh`, `rename.sh`, `.kmpilot.json` | `scripts/install/*` + install manifest | **discarded entirely** — no template-clone install |
+| 7 | Install / update / uninstall | `install.sh`, `update.sh`, `rename.sh`, `.kmpilot.json` | `scripts/install/*` + install manifest **for the kit**; `scripts/scaffold/km-init.mjs` + `templates/kmp-project` **for a new app** | discarded; the kit ships its own scaffolder |
 | 8 | Version & release drift check | `VERSION`, `release.sh` | `package.json`, `skills.lock`, `validate-kit.mjs` | discarded; checks folded into kit validation |
 | 9 | Test / CI gate framework | `kmpilot_check_test.py`, `adopt-matrix.sh` | `evals/` + `run-eval.mjs` + `validate-kit.mjs` | KMPilot's tests become kit fixtures, not a second framework |
 | 10 | Design pipeline | `design-ui`, `verify-ui`, Stitch MCP, `stitch-project.json` | `penpot-*` skill set, `visual-self-review.md`, `design-quality.md` | **Stitch discarded**; Penpot is the design layer |
 | 11 | Visual QA / token audit | `verify-ui` (code ↔ HTML) | `penpot-design-to-code-review`, drift/design-quality report schemas | superseded; becomes code ↔ Penpot/DESIGN.md |
 | 12 | Spec template & storage | `_shared/spec-template.md`, `.claude/docs/{name}/spec.md` | **OpenSpec** `openspec/changes/` + `openspec/specs/` | **discarded**; one spec source, no code-tree copy |
 | 13 | Plugin packaging | Claude Code plugin tree (parked, unpublished) | opencode-only: `.opencode/` config + `.opencode/plugins/` | discarded; Claude packaging is out of scope |
-| 14 | Package rename tooling | `scripts/rename.sh`, `.kmpilot.json` appModule | adopt-into-existing-project model (Phase 1) | discarded; the kit does not rename or adopt projects |
+| 14 | Project scaffolding & rename | `install.sh` template mode + `scripts/rename.sh` | `scripts/scaffold/km-init.mjs` + `templates/kmp-project/` (vendored, normalized) | reimplemented — KMPilot's template is no longer cloned at install time |
 
 ## B. Non-overlapping domain knowledge — ported
 
@@ -51,6 +51,8 @@ what owns design in the merged model.
 | `bridge-swift` | `skills/kmp-bridge-swift/` | **done** |
 | `using-design-system` (+ references) | `skills/kmp-using-design-system/` | **done** — Stitch Design-Aware Mode rewritten to the Penpot handoff |
 | 11 agents (`feature-development/*`, `feature-testing/*`, `code-quality/*`) | `.opencode/agent/kmp-*.md` (flat, `mode: subagent`) | **done** |
+| template-mode project skeleton (200 files: `core/*`, `composeApp`, `androidApp`, `iosApp`, gradle) | `templates/kmp-project/` + `scripts/scaffold/km-init.mjs` | **done** — vendored, de-branded to `dev.kmpapp`/`KmpApp`, `archTest` rewired to the kit's checker |
+| `scripts/rename.sh` substitution semantics | the `renameTree()` in `scripts/scaffold/km-init.mjs` | **done** — same two-phase sentinel rewrite and package-dir move |
 | `spec-template.md` | **not ported** — superseded by OpenSpec | discarded by design |
 | `design-ui`, `verify-ui`, Stitch references | **not ported** — Penpot owns design | discarded by design |
 
@@ -116,12 +118,38 @@ no network for that. The task is a three-line `Exec` wrapper whose `commandLine`
 exactly `python3 shared/scripts/kmp_check.py --all`, which the harness runs directly.
 Wiring it in a network-enabled project is the one remaining manual step.
 
-## G. Open decisions carried into Phase 3
+## G. Phase 3 — a new app can be created without KMPilot (done)
 
-1. **Kit rename.** Needs a decision on the new package name and repository URL.
-2. **License.** The kit is CC-BY-4.0 upstream and now contains MIT code ported from KMPilot.
-   CC-BY is a poor fit for a code-bearing kit; MIT (with attribution) is the recommended
-   license. This is a human decision, not a mechanical edit.
-3. **Penpot ↔ KMP token bridge.** The highest-value remaining piece.
-4. **Spec migration for existing KMP features.** Only relevant if a downstream repo already
-   has specs to import into `openspec/specs/`.
+KMPilot's last remaining role was scaffolding: its `install.sh` template mode cloned the
+KMPilot repo at a tag and trimmed the demo features. The kit now owns that.
+
+- `templates/kmp-project/` — the trimmed template tree (193 files: `core/{common,data,designsystem}`,
+  `composeApp`, `androidApp`, `iosApp`, gradle wrapper + catalog), vendored and **normalized**
+  from KMPilot's identity to the kit's (`KmpApp` / `dev.kmpapp`). `feature/*`, the demo
+  `app/` tiers, `WelcomeScreen` is authored fresh (the empty shell compiles and runs),
+  `BaseAppNavHost.kt` is Welcome-only, and `archTest` points at `shared/scripts/kmp_check.py`.
+- `scripts/scaffold/km-init.mjs` — deterministic scaffold: copies the template, rewrites its
+  identifiers to the user's name/package (reimplementing `rename.sh`'s two-phase sentinel
+  rewrite and package-dir move, including multi-segment package paths), then wires
+  `.kmp.json`, a local checker copy, `opencode.json`, the KMP subagents, `.gitignore`, and
+  (optionally) OpenSpec.
+- `skills/kmp-init/` — the skill contract: two inputs, a dry run, a scaffold, a verification,
+  and a handoff to `/opsx-propose`.
+
+Verified by scaffolding fresh projects and running the checker + `e2e-check` against them
+(10/10), with a grep confirming no template identifier survives.
+
+## H. Open decisions carried into Phase 4
+
+1. **Kit rename.** `package.json` still says `penpot-ai-kit`. Needs a decision on the new
+   package name and repository URL.
+2. **License.** The kit is CC-BY-4.0 upstream and now contains MIT code and a vendored
+   template from KMPilot. CC-BY is a poor fit for a code-bearing kit; MIT (with attribution
+   preserved in `shared/scripts/kmp_check.py` and this file) is the recommended license.
+   This is a human decision, not a mechanical edit.
+3. **Penpot ↔ KMP token bridge.** The highest-value remaining piece: make
+   `penpot-design-to-code-review` audit code against a Penpot `DESIGN.md`/tokens instead of
+   Stitch HTML.
+4. **Template refresh procedure.** `templates/kmp-project` is a snapshot. To refresh it from
+   upstream: re-copy the trimmed tree, then `node scripts/scaffold/km-init.mjs --normalize`
+   to re-apply the identity rewrite. Worth automating if upstream moves.

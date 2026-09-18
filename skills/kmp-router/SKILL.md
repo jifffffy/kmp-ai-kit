@@ -39,6 +39,7 @@ strongest signal of what is being built.
 
 | Signal in the request | Route to | Status |
 |---|---|---|
+| new KMP app / scaffold a KMP project / new Kotlin Multiplatform starter | `kmp-init` | implemented |
 | new feature, new screen module, "build a feature" | `kmp-create-feature` | implemented |
 | change/extend/fix an existing feature | `kmp-modify-feature` | implemented |
 | generate tests for a feature | `kmp-test-feature` | implemented |
@@ -51,6 +52,9 @@ strongest signal of what is being built.
 Create vs. modify is decided by one read-only check: does `feature/<name>/` exist? If it
 does, route to `kmp-modify-feature`; if not, `kmp-create-feature`. A capability that
 already has an OpenSpec spec is a modification, not a creation.
+
+"New app" vs. "new feature" is decided by another: does `core/common` exist? If it does,
+the project already exists and the request is a feature; if not, it is `kmp-init`.
 
 If a request names a skill that does not exist yet (a future capability), say so plainly:
 name the missing skill, and stop. Do not improvise the workflow it would have owned.

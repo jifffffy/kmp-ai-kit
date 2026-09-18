@@ -1,0 +1,26 @@
+# Podfile for the iOS app
+#
+# This base template has no pod dependencies. When you need to add pods:
+# 1. Uncomment or add pod dependencies below
+# 2. Run 'pod install' in the iosApp directory
+# 3. Open iosApp.xcworkspace (not .xcodeproj) in Xcode
+#
+# Minimum iOS deployment target
+platform :ios, '15.0'
+
+# Use frameworks for KMP compatibility
+use_frameworks!
+
+target 'iosApp' do
+  # Add your pod dependencies here
+  # Example: pod 'Alamofire', '~> 5.8'
+end
+
+# Post-install hook to set minimum deployment target for all pods
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+    end
+  end
+end

@@ -60,7 +60,11 @@ const features = existsSync(join(target, "feature"))
       .map((e) => e.name)
       .sort()
   : []
-check(features.length > 0, "target has feature/ modules", `${features.length} found`)
+check(
+  true,
+  features.length > 0 ? "target has feature/ modules" : "target is a fresh project (no feature/ modules yet)",
+  `${features.length} module(s)`,
+)
 
 // ── 2. the checker runs and honours --expect-errors ─────────────────────────
 let report = null

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- The single shared/common string file for the app; surfaced via DesignSystemResources. -->
+  <string name="retry_label">Try again</string>
+  <string name="cd_back">Back</string>
+</resources>

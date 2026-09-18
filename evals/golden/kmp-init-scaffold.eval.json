@@ -1,0 +1,23 @@
+{
+  "id": "kmp-init-scaffold",
+  "skill": "kmp-init",
+  "expected": {
+    "must_do": [
+      "collect exactly two inputs (project name, dotted package) plus a destination, and confirm the destination is empty or absent before writing",
+      "run scripts/scaffold/km-init.mjs (dry-run first) rather than authoring any Gradle or Kotlin file by hand",
+      "verify the scaffold: python3 shared/scripts/kmp_check.py --all passes with 0 features, e2e-check is 10/10, and no template identifier (dev.kmpapp, KmpApp) remains",
+      "end by handing off to /opsx-propose and kmp-create-feature instead of building a feature"
+    ],
+    "must_not": [
+      "hand-write settings.gradle.kts, build.gradle.kts, module trees or Kotlin sources",
+      "scaffold into the kit repo itself, or into a non-empty directory without explicit confirmation",
+      "hand-edit the generated-resources import (it is derived from rootProject.name)",
+      "start a feature build in the same run (that is kmp-create-feature's spec/design-gated workflow)"
+    ]
+  },
+  "pass_criteria": "A runnable project tree exists at the destination, the checker passes with zero features, template identifiers are gone, and the run stops at the handoff to OpenSpec.",
+  "triggers": {
+    "should": ["create a KMP app", "new Kotlin Multiplatform project", "scaffold a KMP starter", "start a new KMP project"],
+    "should_not": ["add a feature to this app", "review the dashboard feature", "design this screen in Penpot"]
+  }
+}

@@ -924,7 +924,7 @@ SEVERITY_ORDER = {"error": 0, "warning": 1}
 
 # ─── Output ──────────────────────────────────────────────────────────────────
 
-# `feature/send/src/commonMain/kotlin/thisissadeghi/send/presentation/ui/X.kt` says
+# `feature/send/src/commonMain/kotlin/com/acme/app/send/presentation/ui/X.kt` says
 # almost nothing that `presentation/ui/X.kt` does not. The source set and package
 # path are constant per feature, so they are elided for display; the JSON report
 # always keeps the full repo-relative path.

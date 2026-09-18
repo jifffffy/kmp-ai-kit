@@ -16,6 +16,7 @@
     "penpot-design-md": "suggest",
     "penpot-build-deck": "review",
     "kmp-router": "suggest",
+    "kmp-init": "review",
     "kmp-create-feature": "review",
     "kmp-modify-feature": "review",
     "kmp-review-feature": "suggest",

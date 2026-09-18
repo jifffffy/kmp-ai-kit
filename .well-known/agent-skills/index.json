@@ -87,6 +87,12 @@
       "description": "Route any KMP build request to exactly one skill."
     },
     {
+      "name": "kmp-init",
+      "version": "0.1.0",
+      "path": "skills/kmp-init/SKILL.md",
+      "description": "Scaffold a new runnable Kotlin Multiplatform app and wire it for the kit."
+    },
+    {
       "name": "kmp-create-feature",
       "version": "0.1.0",
       "path": "skills/kmp-create-feature/SKILL.md",

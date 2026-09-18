@@ -29,7 +29,8 @@
     "policies/",
     "templates/",
     "docs/",
-    "scripts/install/"
+    "scripts/install/",
+    "scripts/scaffold/"
   ],
   "engines": {
     "node": ">=22.0.0"

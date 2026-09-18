@@ -111,9 +111,13 @@ you capped scope (top-N, sampled, skipped), say so.
 
 The design rules above govern the Penpot layer. The build layer has its own, equally binding rules.
 
-- **Route first.** Ask `kmp-router`; it picks exactly one of `kmp-create-feature`,
-  `kmp-modify-feature`, `kmp-review-feature`, `kmp-test-feature`, `kmp-bridge-swift`,
-  `kmp-using-design-system`. Never improvise a workflow a skill already defines.
+- **Route first.** Ask `kmp-router`; it picks exactly one of `kmp-init`,
+  `kmp-create-feature`, `kmp-modify-feature`, `kmp-review-feature`,
+  `kmp-test-feature`, `kmp-bridge-swift`, `kmp-using-design-system`. Never improvise a
+  workflow a skill already defines.
+- **A new app comes from `kmp-init`, never from hand-written Gradle.** It instantiates
+  `templates/kmp-project` via `scripts/scaffold/km-init.mjs`. Requirements for an
+  existing app come from OpenSpec; visual intent from Penpot.
 - **Spec is OpenSpec's; design is Penpot's.** Requirements live only in
   `openspec/specs/<capability>/spec.md` — never write a second spec copy in the code tree. A
   feature is design-aware when a Penpot `DESIGN.md` exists; never invent one.

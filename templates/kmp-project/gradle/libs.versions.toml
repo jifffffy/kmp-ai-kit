@@ -1,0 +1,123 @@
+[versions]
+android-compileSdk = "37"
+android-minSdk = "23"
+android-targetSdk = "37"
+android-versionCode = "6"
+android-versionName = "0.2.1"
+
+agp = "9.2.1"
+kotlin = "2.4.0"
+coreKtx = "1.18.0"
+ktlint = "14.2.0"
+ksp = "2.3.7"
+androidx-lifecycle = "2.10.0"
+
+ktor = "3.5.0"
+koin = "4.2.1"
+compose-plugin = "1.11.1"
+compose-material3 = "1.9.0"
+#minSDK alert check before update.
+datastore = "1.2.1"
+coil = "3.4.0"
+#Do not upgrade navigation compose to newer versions until they release a version compatible with compose version. (Read compose plugin changelogs)
+#https://github.com/JetBrains/compose-multiplatform/releases?page=1
+navigationCompose = "2.9.2"
+buildkonfig = "0.21.2"
+kotlinxCollections = "0.4.0"
+#https://developer.android.com/jetpack/androidx/releases/activity#1.12.0-alpha06 - minSDK alert check before update.
+activityCompose = "1.13.0"
+kotlinxSerialization = "1.11.0"
+kotlinxDatetime = "0.8.0"
+composeWebviewMultiplatform = "2.0.3"
+recaptcha = "18.9.1"
+kotlinx-coroutines-test = "1.11.0"
+turbine = "1.2.1"
+kover = "0.9.8"
+mokkery = "3.4.0"
+
+[libraries]
+coreKtx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+kotlinCollection = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollections" }
+activityCompose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+kotlinxSerialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
+ktor-client-resources = { module = "io.ktor:ktor-client-resources", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
+koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
+
+datastore = { module = "androidx.datastore:datastore", version.ref = "datastore" }
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-compose-core = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+coil-mp = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
+
+jetbrains-compose-navigation = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref= "navigationCompose"}
+
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-plugin" }
+compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose-plugin" }
+compose-ui-util = { module = "org.jetbrains.compose.ui:ui-util", version.ref = "compose-plugin" }
+compose-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "compose-plugin" }
+compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose-plugin" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-plugin" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
+compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-plugin" }
+# Pinned: no longer updated in Compose Multiplatform; migrate to Material Symbols when ready
+compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version = "1.7.3" }
+compose-webview-multiplatform = { module = "io.github.kevinnzou:compose-webview-multiplatform", version.ref = "composeWebviewMultiplatform" }
+google-recaptcha = { module = "com.google.android.recaptcha:recaptcha", version.ref = "recaptcha" }
+# Testing
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-test" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+kotlinKsp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+# room plugin removed: AppDatabase.kt is fully commented out; re-add when Room is needed
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+mokkery = { id = "dev.mokkery", version.ref = "mokkery" }
+
+[bundles]
+ktor = [
+    "ktor-client-core",
+    "ktor-client-content-negotiation",
+    "ktor-client-auth",
+    "ktor-client-logging",
+    "ktor-serialization-kotlinx-json",
+    "ktor-client-resources",
+]
+coil = [
+    "coil-compose",
+    "coil-compose-core",
+    "coil-network-ktor3",
+    "coil-mp"
+]
+testing-common = [
+    "kotlin-test",
+    "kotlinx-coroutines-test",
+    "turbine",
+]
