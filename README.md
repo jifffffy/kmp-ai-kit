@@ -1,320 +1,355 @@
-# Penpot AI Kit
-<img width="1278" height="639" alt="Penpot AI Kit" src="https://github.com/user-attachments/assets/f4d016df-ebea-4520-af69-058ae300488e" />
+# Kotlin Multiplatform AI Kit
 
-**Let an AI assistant work directly inside your Penpot file, while you stay in control.**
+An **opencode-only** agent kit for building Kotlin Multiplatform apps. Three layers, three
+owners, and they never overlap:
 
-Penpot’s MCP already works well with the right prompts. You can ask an AI assistant like Claude, OpenCode or Cursor to edit a real Penpot file, use your components and design tokens, follow your system rules, check accessibility, and show you changes before they are applied.
+| Layer | Owner | Owns | Produces |
+|---|---|---|---|
+| **Planning** | OpenSpec (`/opsx-*`) | *what* and *why* | `openspec/changes/**` → `openspec/specs/**` |
+| **Design** | Penpot (`penpot-*` skills) | *how it looks* | a `DESIGN.md` handoff + annoted Penpot file |
+| **Build** | KMP skills (`kmp-*`) | *how it ships* | `feature/**`, `core/**`, Gradle wiring |
 
-This AI Kit builds on that.
+The spec always wins over code. The design always wins over a build guess. A feature's
+requirements live in exactly one place — `openspec/specs/<capability>/spec.md` — never in
+the code tree.
 
-Instead of writing a fresh prompt for every task, you give the assistant a clear set of skills and instructions. That helps it handle common workflows more reliably, move faster, and produce better results with less back-and-forth.
-
-This is not a “type a prompt and get a flat image” workflow. The AI creates real Penpot designs you can edit afterward, with actual tokens, components, and layouts.
-
-The kit is meant to be adapted. You can shape it around your team’s workflow, add new skills, refine the agent’s instructions, and share improvements so it works better across different projects and design systems.
-
-> New to this? The fastest path is to let your AI assistant **install the kit for you** —
-> see **[Fastest setup](#fastest-setup--let-your-assistant-install-it)** below.
-> Prefer to do it by hand? The **[Quick start — Step by step guide](#quick-start--step-by-step-guide)** walks every step. No coding required.
-
----
-
-## Watch this video
-
-[![Watch the video](https://github.com/user-attachments/assets/a67258b9-06c9-4b87-b632-92b3e61990ed)](https://www.youtube.com/watch?v=l-dsgHiycIY)
+> **Requirements:** this kit targets [opencode](https://opencode.ai) only. It does not carry
+> Claude Code hooks, plugin manifests or namespaced commands, and none are needed.
 
 ---
 
-## What you can ask it to do
+## 1. Requirements
 
-Just describe what you want in plain language. The kit figures out the right tool for the job.
+| Tool | Why | Check |
+|---|---|---|
+| **Node ≥ 22** | runs the scaffolder and the kit's dev scripts | `node -v` |
+| **Python 3** | runs the deterministic architecture checker | `python3 -V` |
+| **[OpenSpec](https://github.com/Fission-AI/OpenSpec) CLI** | the planning layer | `openspec --version` |
+| **opencode** | the agent runtime | `opencode --version` |
+| **JDK 21 + Android SDK** | to compile the app | `./gradlew --version` |
 
-| You say… | It does… |
-|----------|----------|
-| “Set up a color, spacing and type system (design tokens) for this file.” | Builds a clean, themeable token system (incl. light/dark). |
-| “Create a Button with all its states — hover, pressed, focus, disabled.” | Builds a real component with a complete set of variants, fully tokenized. |
-| “Design a dashboard (or landing page) from this brief.” | Builds the screen section by section, using your existing system. |
-| “Build a 12-slide pitch deck from this outline.” | Designs the deck slide by slide (1920×1080 boards), wires it into a playable flow, ready to export as PDF. |
-| “Turn this app screen / code into a Penpot design.” | Recreates it in Penpot, wired to your tokens. |
-| “Check this screen for accessibility problems.” | Audits contrast, tap-target sizes, headings (WCAG AA) and reports issues. |
-| “Find hardcoded colors that should be tokens.” | Audits the file for off-system values and suggests fixes. |
-| “Bring this Figma file into Penpot.” | Migrates layout, components and variables with fidelity. |
-| “Rename these messy layers properly.” | Renames layers to clear, semantic names. |
-| “I'm not sure where to start.” | It asks a quick question and routes you to the right place. |
+Install OpenSpec if you don't have it:
 
-You don't need to know the names of any “skills” — just ask.
-
----
-
-## Fastest setup — let your assistant install it
-
-If your AI assistant supports MCP **and** can read this folder (Claude Code, Claude Desktop, Cursor,
-Windsurf, OpenCode, OpenAI Codex — CLI or desktop app — or similar), you don't have to wire anything by
-hand. Open this folder in your assistant and say:
-
-```
-Install this Penpot AI Kit
+```bash
+npm install -g @fission-ai/openspec
 ```
 
-The assistant reads [`INSTALL.md`](INSTALL.md) and runs a short, guided install: it detects your client,
-asks just two things (**remote or local Penpot?** and your **MCP Key**), then connects the Penpot MCP and
-wires the kit's behavior (skills, workflows, and the brief templates in [`prompts/`](prompts/)) — and
-verifies the live connection before declaring success. It **confirms before every change**, never prints
-your key, and is safe to re-run.
+---
 
-How it stays clean and safe:
-- **This clone is a read-only seed.** The installer copies the kit once to `~/.penpot-ai-kit` and never
-  modifies (or writes into) this folder — so you can move or delete the clone afterward.
-- **Your MCP Key stays out of any repo.** It's written only to your client's user/global config.
-- It records an `install-manifest.json` so uninstalling is just removing those files. Exactly what each
-  client gets is in [`docs/clients.md`](docs/clients.md).
-- No MCP-capable assistant, or want to understand each step? Use the manual quick start below.
+## 2. Install the kit
 
-### Other things you can ask it (after installing)
-
-Same deal — open this folder in your assistant and say it in plain language. All of these are
-covered by the same playbook ([`INSTALL.md`](INSTALL.md)), confirm before changing anything, and are
-safe to re-run:
-
-| You say… | It does… |
-|----------|----------|
-| “Update this Penpot AI Kit” (e.g. after a `git pull` or local edits) | One step (`update.mjs`): refreshes the installed copy **and** re-wires every installed client's skills. Idempotent. |
-| “Is my Penpot AI Kit up to date?” | Compares clone vs. installed copy (a content hash, costs ~0 tokens) and answers in one line. |
-| “Set up automatic update checks” | Wires a silent session-start hook that only speaks up when the kit is stale (Claude Code). |
-| “Install the kit for Cursor too” | Re-runs the install for another client — earlier installs are kept and recorded. |
-| “I rotated my MCP Key” / “Switch me to my self-hosted Penpot” | Updates the `penpot` MCP entry in your client's user config (never the repo). |
-| “Clean up old penpot skills” | Finds stale `penpot-*` skills from older kit generations that shadow the current ones, and removes them after you confirm. |
-| “Verify the Penpot connection” | Live check: `high_level_overview` + a read-only probe of your open file. |
-| “Uninstall the Penpot AI Kit” | Removes everything the install manifest recorded: wired files, the `penpot` MCP entry, the installed copy. |
-
-## Install as a Claude Code plugin
-
-The kit also ships as a **Claude Code plugin** (manifests in `.claude-plugin/`). In Claude Code:
-
-```
-/plugin marketplace add elhombretecla/penpot-ai-kit
-/plugin install penpot-ai-kit@penpot-ai-kit
+```bash
+git clone <this-repo> ~/IdeaProjects/kmp-ai-kit
+cd ~/IdeaProjects/kmp-ai-kit
+npm link          # puts `kmp-ai-kit` on your PATH
 ```
 
-Then configure the Penpot MCP separately — follow [`docs/setup-remote.md`](docs/setup-remote.md) or run
-`node scripts/install/write-mcp-config.mjs` from a clone. Skills appear namespaced as
-`penpot-ai-kit:penpot-*`, and the brief templates as `/penpot-ai-kit:design-brief`,
-`/penpot-ai-kit:deck-brief`, etc.
+Verify:
 
-> ⚠️ **Don't combine the plugin with the Node installer for Claude Code** — the same skills would
-> trigger twice. If you used the installer, run `node scripts/install/uninstall.mjs --yes` first;
-> or skip the plugin and keep the installer, whichever you prefer.
+```bash
+kmp-ai-kit help
+```
 
 ---
 
-## Quick start — Step by step guide
+## 3. Getting started — the whole flow
 
-You'll connect your AI assistant to Penpot once (about 5 minutes), then just chat with it.
+### Step 1 — Create the app
 
-**What you need:**
-- A **Penpot account** (penpot.app).
-- An **AI assistant that supports MCP** — e.g. **Claude Desktop** or **Cursor**. (MCP is just the
-  secure bridge that lets the assistant work inside your open Penpot file.)
-
-### Step 1 — Get your Penpot “MCP Key”
-In Penpot: **Your Account → Integrations → MCP Key**, and generate a key. Keep it private (treat it
-like a password). Full details: [`docs/setup-remote.md`](docs/setup-remote.md).
-
-### Step 2 — Connect your AI assistant to Penpot
-Open the ready-made config in [`templates/`](templates/) for your assistant
-(`claude-desktop-config.remote.json` or `cursor-mcp-config.json`), paste in your MCP Key, and add it to
-your assistant. The setup guide walks through exactly where each file goes.
-
-### Step 3 — Open your Penpot file and the plugin (keep it open!)
-Open the file you want to work in and **leave that browser tab open** the whole time. If you close it, the assistant loses its connection.
-
-### Step 4 — Point the assistant at this kit
-Tell your assistant to read this folder’s **`AGENTS.md`** (most assistants let you attach a folder or a
-file as context / project instructions). That's what teaches it the good habits — use your system,
-never hardcode, ask before changing things.
-
-### Step 5 — Just ask, in plain language
-Try one of the examples above, e.g.:
-
-> “Read AGENTS.md first. Then set up a starter design-token system for this file: a brand color, a
-> neutral gray scale, a 4px spacing scale, and light/dark themes. Show me before applying.”
-
-The assistant will check your file, propose a plan, and get to work in small steps.
-
-### Step 6 — Review at each checkpoint
-The kit is built to **pause and show you a preview** (an exported image) plus a short summary, and ask
-for your OK before continuing. “Looks good” only approves the step you just saw — it always tells you
-what's next. You're never surprised.
-
-> ✅ **First thing to try:** open a *fresh, empty* Penpot file and ask it to *“set up a starter design
-> system and build me one Button component with all its states.”* It's a great 5-minute taste of the kit.
-
----
-
-## A few good-to-knows
-- **It works on your real file.** If you're trying it out, use a **duplicate** of an important file until
-  you trust it.
-- **It asks before meaningful changes** and only auto-applies tiny, safe things (like renaming an
-  unnamed layer). It will never restructure components or delete shared assets without asking.
-- **It prefers your existing components and tokens** over inventing new ones, so results stay on-brand
-  and editable.
-- **It grades its own design work.** Before declaring a screen done, it scores the result on seven
-  design axes (hierarchy, composition, type, color, spacing, content, distinctiveness) against
-  numeric targets — and revises weak spots instead of shipping “technically correct but bland”.
-- **If something looks off**, ask it to explain what it did or to undo the last step.
-
----
-
-## How it works (in one minute)
-- **AGENTS.md** — the assistant's “house rules” (use the system, never hardcode, ask first).
-- **Skills** (`skills/`) — focused how-to recipes for specific jobs (tokens, components, audits, …).
-- **Workflows** (`workflows/`) — multi-step recipes that chain skills (e.g. *design a screen, then keep
-  improving it until it passes both accessibility and the design-quality bar*).
-- A built-in **router** reads your request and picks the right skill — so you don't have to.
-
-For the full picture, see [`docs/architecture.md`](docs/architecture.md).
-
----
-
-## The catalog — everything the kit can do
-
-You never need to memorize these names — the router picks for you. This is the inventory, so you
-know what's on the shelf.
-
-**How each skill behaves** (its default mode):
-🔍 **Suggest** — reports and proposes, never touches the canvas · ✏️ **Review** — applies step by
-step, shows a preview at every checkpoint and waits for your OK · ⚡ **Auto-fix** — applies directly,
-but only trivially-safe changes (like renaming `Rectangle 12`).
-
-### Skills — build & create
-
-| Skill | What it does | Say something like… |
-|-------|--------------|----------------------|
-| ✏️ `penpot-foundations` | Sets up your design tokens: color/spacing/type scales, semantic tiers, **light & dark themes** — or infers tokens from an existing design. | *“Set up a starter token system for this file.”* |
-| ✏️ `penpot-component-factory` | Builds components with the **complete** variant matrix — sizes, hierarchies, hover/pressed/focus/disabled — fully tokenized. | *“Create a Button with all its states.”* |
-| ✏️ `penpot-build-screen` | Designs a screen from a written brief, **section by section**, reusing your tokens and components — then **scores its own result** against the kit's design-quality bar (hierarchy, composition, type, color, spacing…) and revises what's weak. | *“Design a settings page from this brief.”* |
-| ✏️ `penpot-build-from-code` | Rebuilds an existing app page/component **from its code**, bound to your design system. | *“Turn this React page into a Penpot screen.”* |
-| ✏️ `penpot-document-handoff` | Documents a design for **handoff**: a hideable annotation layer beside it — context card (the “How might we”, business rules, links, status), numbered pins on the UI, matching observation/recommendation notes, tooltips. Never touches the design. | *“Document this screen for handoff.”* |
-| ✏️ `penpot-build-deck` | Designs a **presentation deck** from a brief: 1920×1080 slide boards built one slide at a time, a committed deck style, varied slide layouts (cover, agenda, big-number, comparison, bento, quote, timeline, image-bleed…), tokenized, wired into a **playable View-mode flow** and exportable to PDF. | *“Build a pitch deck from this outline.”* |
-
-### Skills — audit & review (they report; they never change your file)
-
-| Skill | What it does | Say something like… |
-|-------|--------------|----------------------|
-| 🔍 `penpot-audit-accessibility` | WCAG 2.1/2.2 AA audit: contrast, tap-target sizes, heading structure, focus order — with a severity-ranked report. | *“Check this screen for accessibility problems.”* |
-| 🔍 `penpot-audit-tokens` | Design-system governance: hardcoded values, off-grid spacing, orphan/duplicate tokens, detached instances. | *“Find hardcoded colors that should be tokens.”* |
-| 🔍 `penpot-design-to-code-review` | Compares the Penpot design against the real component/Storybook and reports the **drift**, side by side. | *“Does my code match this design?”* |
-| 🔍 `penpot-design-md` | Extracts a portable **DESIGN.md** spec from the file's real tokens, assets and sampled components — so humans and coding agents can reproduce the system without opening Penpot. | *“Generate a DESIGN.md for this design system.”* |
-
-### Skills — migrate & housekeeping
-
-| Skill | What it does | Say something like… |
-|-------|--------------|----------------------|
-| ✏️ `penpot-migrate` | Migrates Figma → Penpot with fidelity: Auto Layout → flex, Variables → tokens, component sets → variants. | *“Bring this Figma file into Penpot.”* |
-| ⚡ `penpot-rename-layers` | Renames messy auto-generated layers to clear, semantic names (`nav`, `card-container`, `h1`…). | *“Clean up these layer names.”* |
-| 🔍 `penpot-router` | The dispatcher: reads your request, checks the file's state, and routes to exactly **one** of the above. | *“I'm not sure where to start.”* |
-
-### Workflows — multi-step recipes that chain skills
-
-| Workflow | The recipe | Ask for it like… |
-|----------|------------|-------------------|
-| `brief-to-screen` | build a screen → score design quality + audit accessibility → **fix and repeat until both pass** | *“Take this brief and ship an accessible screen.”* |
-| `brief-to-deck` | build a deck → accessibility on slides + deck-quality score → **fix and repeat until both pass** | *“Turn this outline into a polished, playable deck.”* |
-| `design-system-bootstrap` | tokens → core components → governance audit → clean naming | *“Bootstrap a full design system in this file.”* |
-| `code-to-penpot-sync` | build from code → drift review → reconcile, in a loop | *“Keep this Penpot file in sync with the repo.”* |
-| `figma-migration` | migrate → reconcile tokens → accessibility + governance audits | *“Migrate our whole Figma project, end to end.”* |
-| `accessibility-gate` | both audits in parallel → one merged report → only safe fixes, with your OK | *“Run every check before we hand this off.”* |
-| `routing` | preflight reads + dispatch to exactly one target | *“Where do I begin with this file?”* |
-
-### Brief templates — structured prompts for better results
-
-Vague asks produce generic output; these fill-in templates produce briefs the skills can act on
-precisely. In **Claude Code** they're slash commands; in other clients, open the file in
-[`prompts/`](prompts/) and fill it in chat.
-
-| Template | Feeds | Use it when… |
-|----------|-------|---------------|
-| `/penpot-design-brief` | build-screen | you want a screen and can describe audience, sections, constraints |
-| `/penpot-component-spec` | component-factory | you know exactly which axes/states the component needs |
-| `/penpot-handoff-brief` | document-handoff | you're annotating a screen for devs and want the context card + pins pre-filled |
-| `/penpot-deck-brief` | build-deck | you want a presentation and can describe audience, occasion, outline and style |
-| `/penpot-migration-brief` | migrate | you're scoping a Figma migration (fidelity, mapping rules) |
-| `/penpot-audit-request` | the audits | you want a formal, scoped audit (level, exceptions, scope) |
-| `/penpot-resume-continuation` | any long run | a multi-phase run got interrupted and must resume safely |
-
-### Kit lifecycle
-
-Install, update, verify, multi-client, cleanup, uninstall — all in plain language. See
-[**Other things you can ask it**](#other-things-you-can-ask-it-after-installing) above.
-
----
-
-## For technical users
-
-<details>
-<summary>Skill catalog, architecture, repository layout, contributing</summary>
-
-### Who it's for
-- **Design system teams** — tokens, libraries, variants, governance, theming.
-- **Product / UI designers** — build screens and components from a brief, accessibly.
-- **Design engineers** — design↔code bridge, token mapping, drift review.
-- **Teams migrating to Penpot** — from Figma, with fidelity.
-
-Built on open standards (Anthropic Agent Skills, Agent Skills Discovery, MCP, Claude Code plugins). It is **content only** —
-files and manifests, no build step.
-
-### Skill catalog
-The single inventory of skills, workflows and brief templates lives in
-[**The catalog**](#the-catalog--everything-the-kit-can-do) above (one source — it won't drift).
-Per-skill default modes are pinned in [`policies/modes.json`](policies/modes.json); audiences per
-skill are recorded in [`skills.json`](skills.json).
-
-### Layered architecture
-```
-AGENTS.md (instructions)
-  → skills/ (capabilities)
-    → workflows/ (orchestration)
-      → Penpot MCP (core tools: high_level_overview, penpot_api_info, execute_code, export_shape; + import_image in local mode)
-        → policies/ (suggest / review / autofix + safe set)
-          → evals/ (golden tests)
-shared/ = single source of truth (tool reference, API gotchas, token schema, naming, state, modes,
-          visual self-review, design quality, report schemas, pipeline schema, capability probe)
+```bash
+kmp-ai-kit new GithubLeaderboard com.example.demo
 ```
 
-### Repository layout
-```
-AGENTS.md            instructions layer
-INSTALL.md           conversational installer playbook ("Install this Penpot AI Kit")
-scripts/install/     installer helpers (install one-shot + detect-client, install-seed, write-mcp-config, install-behavior, update one-step, check-updates, lib)
-shared/              single source of truth (tool ref, gotchas, token schema, naming, state, modes, SKILL template, visual self-review, design-quality.md, report-schemas/, pipeline.schema.json, scripts/capability-probe.js)
-skills/              13 skills, each: SKILL.md + references/ (progressive disclosure) + scripts/ (execute_code templates)
-workflows/           7 orchestration recipes (README.md prose + pipeline.json)
-prompts/             token-aware brief templates
-templates/           MCP client configs (remote/local) + local-model calibration
-policies/            modes (suggest/review/autofix), safe set, approval checkpoints
-evals/               golden tests + fixtures
-docs/                setup, troubleshooting, architecture, glossary, mcp-api-findings (dev feedback)
-skills.json          aggregate manifest · .well-known/agent-skills/index.json discovery index · skills.lock version pins
-.claude-plugin/     Claude Code plugin + marketplace manifests (optional install path)
+This copies a complete, runnable KMP app into `~/IdeaProjects/GithubLeaderboard`:
+
+- `core/{common,data,designsystem}` — `Either`, `UiState`, `setState`, `XTheme`, `X*` components
+- `composeApp/` — `App.kt`, `initKoin.kt`, `BaseAppNavHost.kt`, a placeholder `WelcomeScreen`
+- `androidApp/`, `iosApp/`, the Gradle wrapper and version catalog
+- **every skill, rule and the architecture guard** — copied in, so the project is
+  self-contained and depends on no path outside itself
+- an initialized `openspec/` and a `git` repo with its first commit
+
+Flags: `--dry-run` (write nothing), `--linked` (thin refs to the kit instead of copying),
+`--no-openspec`, `--no-git`, `--force`.
+
+### Step 2 — Restart opencode
+
+opencode loads its config, skills and plugins **once at startup** and does not hot-reload.
+
+```bash
+cd ~/IdeaProjects/GithubLeaderboard
+opencode
 ```
 
-### Contributing a skill
-1. Copy the anatomy in `shared/SKILL-template.md` (frontmatter + the 16 sections).
-2. Ground every API call in `shared/penpot-mcp-tool-reference.md` + `shared/plugin-api-gotchas.md`;
-   verify unfamiliar members with `penpot_api_info`. Use the real token types in `shared/tokens-schema.json`.
-3. Add an Anti-Rationalization Table and a Token-Aware Brief Contract. If the skill mutates the
-   canvas, wire the visual self-review loop (`shared/visual-self-review.md`); if it audits, define
-   its structured report in `shared/report-schemas/`.
-4. Register the skill in `skills.json` and `.well-known/agent-skills/index.json`, and route it in
-   `workflows/routing/pipeline.json`.
-5. Add a golden eval under `evals/golden/` (runnable with `scripts/dev/run-eval.mjs`).
-6. Lint + lock: `node scripts/dev/validate-kit.mjs` must pass (it checks manifests, versions,
-   modes, `requires:`, pipelines, evals, and dangling `penpot-*` references), then regenerate
-   hashes with `node scripts/dev/update-lock.mjs`.
+Restarting matters: without it the agent has no `kmp-*` skills and every prompt below will
+look like it was ignored.
 
-</details>
+Optional sanity check that the project is wired:
+
+```bash
+ls skills/ | grep kmp        # the 7 build skills live here (kmp-init is kit-only)
+ls .opencode/agent/          # 11 subagents
+ls .opencode/commands/       # the /opsx-* commands
+```
+
+Inside opencode, ask *"what KMP skills do you have?"* if you want the agent to confirm it
+loaded them.
+
+### Step 3 — Plan (OpenSpec owns this)
+
+Ask your agent to plan the change. **Exact prompt:**
+
+```
+Propose a change called add-github-leaderboard: a GitHub contributor
+leaderboard screen. It shows a ranked list of contributors — rank, display
+name, avatar, contribution count — ordered by contribution count descending.
+Use mock data for now, no network call, but keep the standard data layer so a
+real API can replace it later. Make it the app's start destination, replacing
+the placeholder Welcome screen. Handle loading, success and failure states.
+```
+
+The agent runs `/opsx-propose`, which creates:
+
+```
+openspec/changes/add-github-leaderboard/
+├── proposal.md      what & why
+├── specs/leaderboard/spec.md   the Requirement + Scenario delta
+├── design.md        the technical decisions
+└── tasks.md         the ordered checklist
+```
+
+Review the artifacts. Then **archive nothing yet** — implementation comes first.
+
+> **Planning boundary.** `/opsx-propose` writes planning artifacts only. If the agent starts
+> editing Kotlin in the same turn, stop it: the planning step is meant to end with the
+> artifacts presented to you.
+
+### Step 4 — Design (optional; Penpot owns this)
+
+Skip this if the feature has no visual work or you are happy with the design system's
+defaults. When you want a real design:
+
+```
+Design the leaderboard screen in Penpot: a ranked list with an avatar, name and
+contribution count per row, following the existing design tokens.
+```
+
+The `penpot-router` skill picks `penpot-build-screen` → `penpot-design-md`, and the result
+is a `DESIGN.md` the build layer reads. Requirements: a Penpot MCP connection and an open
+Penpot file (see `docs/setup-remote.md` / `docs/setup-local.md`).
+
+A feature is **design-aware** exactly when a `DESIGN.md` exists for it. Never invent one.
+
+### Step 5 — Build (the KMP layer owns this)
+
+**Exact prompt:**
+
+```
+/kmp-create-feature leaderboard
+```
+
+Or in plain language: *"implement the leaderboard feature from the OpenSpec change."*
+
+`kmp-router` routes to `kmp-create-feature`, which works **layer by layer with a checkpoint
+at each step** — it will not one-shot the module:
+
+1. **Phase 0** — resolves the app module, package prefix, `initKoin`, NavHost and core
+   modules from the project (read-only).
+2. **Phase 1** — reads the OpenSpec spec and the Penpot `DESIGN.md`, if any.
+3. **Phase 2 — ✋ your first checkpoint.** It restates the request as a token-aware
+   contract (context / objective / inputs / constraints / acceptance criteria), resolves the
+   Platform Profile, and proposes the layer plan. **Approve it here.**
+4. **Phase 3** — turns the plan into the change's `tasks.md`.
+5. **Phase 4 — ✋ a checkpoint per layer.** Data layer → build + check → approve. UI layer →
+   build + check → approve. Integration → build + check.
+6. **Phase 5** — reconciles the spec, and hands back to OpenSpec.
+
+At every layer it runs:
+
+```bash
+python3 shared/scripts/kmp_check.py leaderboard
+```
+
+### Step 6 — Verify and archive
+
+```bash
+# direct checker run
+python3 shared/scripts/kmp_check.py --all
+
+# the CI gate (wraps the same checker)
+./gradlew archTest
+```
+
+Both must be green. Then close the loop:
+
+```
+/opsx-archive add-github-leaderboard
+```
+
+The change is archived and the living spec lands at
+`openspec/specs/leaderboard/spec.md`. That file is the single source of truth from now on —
+the next change to the leaderboard is a *modify*, not a *create*.
 
 ---
 
-## License
-- [Creative Commons Attribution 4.0 International Public License](https://creativecommons.org/licenses/by/4.0/)
+## 4. What the kit guarantees
+
+### The architecture is checked, not trusted
+
+`shared/scripts/kmp_check.py` mechanizes 19 of the architecture rules and is the gate:
+imports across layer boundaries, direct `MutableStateFlow` writes, Material3 components
+where an `X*` component exists, hardcoded display strings, the `*Screen.kt` allowlist,
+`components/` placement, the DI module shape, and all four integration points.
+
+```
+19 checks · 3 feature(s) · 0 error(s) · 0 warning(s)
+PASS
+```
+
+Exit code 1 on any error. `--baseline` reports errors as warnings (a scan tier for code that
+predates the rules); it is unrelated to any "adopt" mode — there isn't one.
+
+### `feature/**` is guarded
+
+`.opencode/plugins/protect-feature.ts` blocks edits under `feature/` unless the owning skill
+created its marker. Test sources and `build.gradle.kts` are exempt. The marker expires after
+2 hours, so a crashed run cannot leave the project permanently writable.
+
+This replaces KMPilot's Claude Code `PreToolUse` hook, which never ran under opencode.
+
+### The spec has one home
+
+Requirements live only under `openspec/`. A build skill that cannot find a spec **stops and
+sends you to `/opsx-propose`** rather than inferring requirements from the code.
+
+---
+
+## 5. Day-to-day commands
+
+| You want | Prompt / command |
+|---|---|
+| A new app | `kmp-ai-kit new MyApp com.acme.myapp` |
+| Plan a change | *"Propose a change called … : <what it does>"* → `/opsx-propose` |
+| Implement | `/kmp-create-feature <feature>` |
+| Change an existing feature | `/kmp-modify-feature <feature>` — drafts a spec delta first |
+| Audit a feature | `/kmp-review-feature <feature>` — read-only; reports, never edits |
+| Generate tests | `/kmp-test-feature <feature>` |
+| iOS Swift bridge | `/kmp-bridge-swift` — when an `expect`/`actual` needs real Swift |
+| Design-system reuse | `kmp-using-design-system` — auto-activates on UI work |
+| Review design vs code | `/penpot-design-to-code-review` |
+| Close a change | `/opsx-archive <change>` |
+| Architecture gate | `./gradlew archTest` |
+| Run the checker directly | `python3 shared/scripts/kmp_check.py [feature \| --all]` |
+
+`kmp-router` is the dispatcher: for any KMP request, ask it first and it names exactly one
+target skill. It never edits code itself.
+
+---
+
+## 6. The catalog
+
+### Build layer — 8 KMP skills
+
+| Skill | Mode | Does |
+|---|---|---|
+| `kmp-init` | review | Scaffold a new app *(kit-only; not copied into projects)* |
+| `kmp-router` | suggest | Route a request to one skill |
+| `kmp-create-feature` | review | Build a feature from a spec + design, layer by layer |
+| `kmp-modify-feature` | review | Change a feature, spec-delta first |
+| `kmp-review-feature` | suggest | Audit against the rules; consumes the checker report |
+| `kmp-test-feature` | review | Staged test generation (fixtures → data → ui/integration) |
+| `kmp-bridge-swift` | review | The iOS Swift leg of a native capability |
+| `kmp-using-design-system` | review | Reuse `X*` components; no hardcoded values |
+
+### Design layer — 13 Penpot skills
+
+`penpot-router` dispatches these: `penpot-foundations`, `penpot-component-factory`,
+`penpot-build-screen`, `penpot-build-deck`, `penpot-build-from-code`, `penpot-design-md`,
+`penpot-document-handoff`, `penpot-audit-tokens`, `penpot-audit-accessibility`,
+`penpot-design-to-code-review`, `penpot-migrate`, `penpot-rename-layers`, `penpot-router`.
+
+### Shared doctrine (single source of truth)
+
+| File | What |
+|---|---|
+| `shared/kmp-patterns.md` | the 14 architecture rules |
+| `shared/kmp-x-components-catalog.md` | the `X*` component contracts |
+| `shared/kmp-motion.md`, `shared/kmp-agent-base.md` | motion primitives; agent context |
+| `shared/scripts/kmp_check.py` | the deterministic checker |
+| `AGENTS.md` | the instructions layer every skill obeys |
+
+---
+
+## 7. What a scaffolded project looks like
+
+```
+GithubLeaderboard/
+├── opencode.json          project-local config (no external paths)
+├── AGENTS.md              the instructions layer
+├── .kmp.json              appModule (read by the skills and the checker)
+├── skills/                20 skills (kmp-init excluded — it builds new apps, not features)
+├── shared/  policies/  prompts/  workflows/  docs/
+├── .opencode/
+│   ├── agent/             11 KMP subagents
+│   ├── commands/opsx-*    OpenSpec commands
+│   ├── skills/openspec-*  OpenSpec skills
+│   └── plugins/protect-feature.ts
+├── openspec/              specs/ + changes/ + config.yaml
+├── feature/               created by kmp-create-feature, one module per feature
+├── core/{common,data,designsystem}
+├── composeApp/  androidApp/  iosApp/
+└── gradle/  gradlew  settings.gradle.kts  build.gradle.kts
+```
+
+---
+
+## 8. Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `kmp-*` skills missing in the agent | opencode hadn't loaded the project config | Restart opencode **from the project directory** |
+| `archTest` fails with a python error | `python3` not on PATH | Install Python 3 (macOS: `brew install python`) |
+| `./gradlew …` tries to download forever | no network / proxy | First build needs the Gradle distribution and AGP; allow it or use an offline mirror |
+| Agent edits `feature/` and gets blocked | the feature guard | That's intended — go through `/kmp-create-feature` |
+| A run died mid-way | a stale 2h marker may remain | The guard expires it automatically; remove `/tmp/.kmp-skill-active` to be sure |
+| Checker reports errors on old code | code predating the rules | `--baseline` reports them without failing; fix new code first |
+
+---
+
+## 9. Repository layout (the kit itself)
+
+```
+AGENTS.md                    the instructions layer
+skills/                      the skills (build + design)
+workflows/                   routing tables and multi-step recipes
+policies/                    mode defaults, approval checkpoints
+shared/                      doctrine + the checker + schemas
+prompts/                     brief templates
+evals/                       golden evals per skill
+templates/kmp-project/       the app template the scaffolder instantiates
+scripts/cli.mjs              `kmp-ai-kit` — the CLI
+scripts/scaffold/km-init.mjs the scaffolder
+scripts/install/             kit lifecycle (install/update/uninstall)
+scripts/dev/                  validators (`validate-kit`, `e2e-check`, lock)
+openspec/                    the kit's own planning
+docs/migration-from-kmpilot.md
+```
+
+Dev checks for the kit itself:
+
+```bash
+npm run validate        # kit content consistency
+npm run lock:check      # content hashes
+npm run e2e -- --root /path/to/a/kmp/project   # end-to-end against a real project
+python3 shared/scripts/kmp_check_test.py       # the checker's self-test
+```
+
+---
+
+## 10. License
+
+Kit content is licensed CC-BY-4.0 upstream. The build layer ports domain knowledge, a
+deterministic checker, and the app template from **KMPilot** (MIT); those parts retain their
+MIT attribution (see `shared/scripts/kmp_check.py` and `docs/migration-from-kmpilot.md`).
+Because the kit now contains substantial MIT code, MIT would be the better fit overall —
+this is a pending decision, not a settled one.

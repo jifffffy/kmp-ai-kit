@@ -282,6 +282,120 @@ function opencodeJson(vendored) {
 }
 
 /**
+ * The project's own README. `kmp-ai-kit new` drops the reader into a working app with no
+ * instructions; this carries the getting-started and the exact prompts into the repo, so
+ * the flow is reproducible without going back to the kit.
+ */
+function projectReadme(name) {
+  return `# ${name}
+
+A Kotlin Multiplatform app scaffolded by the **KMP AI Kit** — Compose Multiplatform shared
+UI, Android and iOS targets, Koin DI, and a deterministic architecture checker.
+
+This app is **self-contained**: the kit's skills, architecture rules and the feature guard
+are copied in, so nothing here points outside the repository.
+
+## Run it
+
+\`\`\`bash
+./gradlew assembleDebug      # Android
+# iOS: open iosApp/iosApp.xcodeproj
+\`\`\`
+
+It builds with a placeholder Welcome screen. The first feature replaces it.
+
+## Work with the agent
+
+opencode loads its config **once at startup** — after cloning or editing config, restart it
+from this directory:
+
+\`\`\`bash
+opencode
+\`\`\`
+
+Without the restart the agent has no \`kmp-*\` skills and the prompts below look ignored.
+Optional check that the project is wired:
+
+\`\`\`bash
+ls skills/ | grep kmp        # the 7 build skills (kmp-init is kit-only)
+ls .opencode/agent/          # 11 subagents
+ls .opencode/commands/       # the /opsx-* commands
+\`\`\`
+
+### 1. Plan (OpenSpec)
+
+> Propose a change called add-\<feature\>: \<what it does, in one paragraph\>.
+
+That creates \`openspec/changes/<change>/\` with \`proposal.md\`, \`specs/<capability>/spec.md\`,
+\`design.md\` and \`tasks.md\`. The spec is the single source of truth — never a second copy in
+the code tree.
+
+### 2. Design (optional, Penpot)
+
+> Design the \<screen\> in Penpot: \<elements, hierarchy, which tokens\>.
+
+Produces a \`DESIGN.md\` handoff. A feature is design-aware exactly when that file exists.
+
+### 3. Build
+
+> /kmp-create-feature <feature>
+
+The skill works layer by layer and stops at a checkpoint after the plan and after each
+layer. Approve each one — it does not one-shot a module.
+
+### 4. Verify
+
+\`\`\`bash
+./gradlew archTest                              # the architecture gate
+python3 shared/scripts/kmp_check.py --all       # the same checker, directly
+python3 shared/scripts/kmp_check.py <feature>   # one feature
+\`\`\`
+
+### 5. Close the change
+
+> /opsx-archive <change>
+
+## Every day
+
+| You want | Do |
+|---|---|
+| Change an existing feature | \`/kmp-modify-feature <feature>\` (drafts a spec delta first) |
+| Audit a feature | \`/kmp-review-feature <feature>\` (read-only) |
+| Generate tests | \`/kmp-test-feature <feature>\` |
+| iOS Swift bridge | \`/kmp-bridge-swift\` |
+| Reuse the design system | auto-activates on UI work |
+| Route anything | ask \`kmp-router\` — it names exactly one skill |
+
+## Structure
+
+\`\`\`
+composeApp/               app shell: App.kt, initKoin.kt, BaseAppNavHost.kt
+androidApp/  iosApp/      platform entry points
+core/common/              Either, UiState, setState, ErrorModel, UiText
+core/data/                Ktor ApiClient → Either, ErrorConst, DataStore
+core/designsystem/        XTheme, X* components, App{Loading,Error}State
+feature/<name>/           one module per feature (created by the agent)
+openspec/                 specs/ (living) + changes/ (in flight)
+shared/kmp-patterns.md    the 14 architecture rules
+shared/scripts/           kmp_check.py — the deterministic checker
+.opencode/plugins/        protect-feature.ts — guards feature/**
+\`\`\`
+
+## Rules the checker enforces
+
+- A feature never depends on another feature — shared code goes to \`core/\`.
+- Fallible operations return \`Either<T>\`; nothing throws across a layer boundary.
+- UI uses \`X*\` components from \`:core:designsystem\` — never Material3 directly, never raw
+  hex/size values, never hardcoded user-facing strings.
+- Loading and error UI are the shared \`AppLoadingState\` / \`AppErrorState\`.
+- One \`*UiModel.kt\` per feature; the data layer never imports presentation.
+- Every feature wires all four integration points.
+
+Editing \`feature/**\` directly is blocked — go through the build skills.
+`
+}
+
+/**
  * Path from the project to the kit, for the linked `opencode.json`.
  *
  * Both sides are resolved through `realpathSync` first: a purely lexical `relative()`
@@ -403,6 +517,10 @@ const rewritten = renameTree(destAbs, TEMPLATE_IDENTITY, { name, pkg })
 
 // Optional project config (the skills read `appModule` from it; the default is composeApp).
 writeFileSync(join(destAbs, ".kmp.json"), JSON.stringify({ appModule: "composeApp" }, null, 2) + "\n")
+
+// The project's own getting-started — `new` drops the user into a working app, so the
+// instructions and the exact prompts should live with it, not only in the kit.
+writeFileSync(join(destAbs, "README.md"), projectReadme(name))
 
 // The project always carries the checker (so `./gradlew archTest` and CI work with no
 // kit) plus the architecture rules it mechanizes. In vendored mode the whole runtime
