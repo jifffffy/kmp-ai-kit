@@ -91,7 +91,37 @@ what owns design in the merged model.
 3. **Penpot ↔ KMP token bridge.** The highest-value, highest-effort piece: make
    `penpot-design-to-code-review` audit code against a Penpot `DESIGN.md`/tokens instead of
    Stitch HTML. This is the piece that makes "code ↔ design" drift detection real.
-4. **End-to-end validation.** Phase 0/1 were validated structurally (kit validator, opencode
-   skill/agent loading, plugin unit test, checker self-test) but not yet against a live KMP
-   repo. The next step is a real host project: `/opsx-propose` → Penpot `DESIGN.md` →
-   `/kmp-create-feature` → `archTest` green → `/opsx-archive`.
+
+## F. Phase 2 — end-to-end validation (done)
+
+Validated against a real KMP repo (`feature/` + `core/{common,data,designsystem}`, 6
+features), used **read-only as a fixture**; KMPilot is not a dependency. Harness:
+`node scripts/dev/e2e-check.mjs --root <kmp-project> [--expect-errors N] [--with-openspec]`.
+
+| Check | Result |
+|---|---|
+| Reference implementation passes the ported checker | ✓ 19 checks · 6 features · 0 errors · 0 warnings |
+| Ported checker reproduces KMPilot's own verdict on the real repo | ✓ identical `mode`/`features`/`checked`/`error`/`warning`/`violations` payloads |
+| Injected real-code violation (data→presentation import) | ✓ both checkers: 1 finding, identical payload, exit 1 |
+| Broken integration point (`dashboard(` removed from the NavHost) | ✓ I4 error, FAIL, exit 1 |
+| Feature-file guard against the real tree | ✓ source blocked, test/Gradle bypassed, `core/` untouched, marker allows |
+| Phase 0 anchors (app module, initKoin, NavHost, core modules, pkg prefix) | ✓ all resolve — zero unresolved |
+| OpenSpec lifecycle in the fixture | ✓ change created, 1 requirement + 4 scenarios, `validate --strict` passes |
+| Exit codes | ✓ unknown feature 2, no args 2, clean 0, violations 1 |
+| Negative control (repo with a violation) | ✓ `--expect-errors 0` fails, `--expect-errors 1` passes |
+
+**Not covered by automation:** `./gradlew archTest` could not run here — the Gradle
+wrapper needs to download its distribution and resolve AGP, and this environment has
+no network for that. The task is a three-line `Exec` wrapper whose `commandLine` is
+exactly `python3 shared/scripts/kmp_check.py --all`, which the harness runs directly.
+Wiring it in a network-enabled project is the one remaining manual step.
+
+## G. Open decisions carried into Phase 3
+
+1. **Kit rename.** Needs a decision on the new package name and repository URL.
+2. **License.** The kit is CC-BY-4.0 upstream and now contains MIT code ported from KMPilot.
+   CC-BY is a poor fit for a code-bearing kit; MIT (with attribution) is the recommended
+   license. This is a human decision, not a mechanical edit.
+3. **Penpot ↔ KMP token bridge.** The highest-value remaining piece.
+4. **Spec migration for existing KMP features.** Only relevant if a downstream repo already
+   has specs to import into `openspec/specs/`.

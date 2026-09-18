@@ -11,7 +11,8 @@
   "scripts": {
     "validate": "node scripts/dev/validate-kit.mjs",
     "lock": "node scripts/dev/update-lock.mjs",
-    "lock:check": "node scripts/dev/update-lock.mjs --check"
+    "lock:check": "node scripts/dev/update-lock.mjs --check",
+    "e2e": "node scripts/dev/e2e-check.mjs"
   },
   "files": [
     "AGENTS.md",

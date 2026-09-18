@@ -161,6 +161,9 @@ export const seedProvenancePath = (seedHome = kitHome()) => join(seedHome, SEED_
 export const KIT_EXCLUDE = new Set([
   ".git", ".github", "node_modules", "evals", "dist",
   ".claude", ".cursor", ".windsurf", ".qwen",
+  // `.kmp` holds per-run build ledgers and checker reports (git-ignored). A run rewrites
+  // them, which would flap the digest "stale" with no kit content change.
+  ".kmp",
   ".penpot-kit-install.json", "install-manifest.json", SEED_PROVENANCE_FILE,
 ]);
 
