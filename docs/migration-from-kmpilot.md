@@ -132,8 +132,17 @@ KMPilot repo at a tag and trimmed the demo features. The kit now owns that.
   bin (`npm run init`, or `npm link` once): copies the template, rewrites its
   identifiers to the user's name/package (reimplementing `rename.sh`'s two-phase sentinel
   rewrite and package-dir move, including multi-segment package paths), then wires
-  `.kmp.json`, a local checker copy, `opencode.json`, the KMP subagents, `.gitignore`, and
-  OpenSpec (default on; `--no-openspec` opts out).
+  `.kmp.json`, a local checker copy, `opencode.json`, the KMP subagents, `.gitignore`,
+  OpenSpec (default on; `--no-openspec` opts out), and `git init` + an initial commit
+  (`--no-git` opts out).
+
+  `opencode.json` references the kit with **relative** paths by default, so the project and
+  the kit stay movable together and a kit update reaches every project. `--vendored` copies
+  the skills, rules, policies, AGENTS.md and the guard plugin into the project instead, for
+  a fully self-contained repo that can be cloned or shared on its own. Linked paths are
+  computed with `realpathSync` on both sides before `relative()` — a lexical relative path
+  resolves against the wrong tree when either side is reached through a symlink
+  (macOS `/tmp` → `/private/tmp`).
 - `skills/kmp-init/` — the skill contract: two inputs, a dry run, a scaffold, a verification,
   and a handoff to `/opsx-propose`.
 

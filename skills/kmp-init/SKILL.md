@@ -46,6 +46,18 @@ the kit (`<kit>/../<Name>`). Flags `--name/--pkg/--dest` still work and win when
 given. The template is `templates/kmp-project/`; the verifier is
 `scripts/dev/e2e-check.mjs`. No MCP.
 
+**Kit linkage.** Two modes, chosen by `--vendored`:
+
+| Mode | `opencode.json` | Trade-off |
+|---|---|---|
+| **linked** (default) | relative paths to the kit (`../kmp-ai-kit/skills`, …) | one source of truth; a kit update reaches every project; portable as long as the project and the kit move together |
+| **vendored** | project-local (`skills/`, `AGENTS.md`; plugin auto-discovered) | fully self-contained — safe to clone or share alone — but no longer tracks the kit |
+
+Paths in linked mode are computed with `realpathSync` on both sides before `relative()`,
+because a purely lexical relative path breaks when either side is reached through a
+symlink (macOS `/tmp` → `/private/tmp`, a symlinked home or projects dir). Never
+hand-write an absolute path here — that pins the project to one machine.
+
 ## The Token-Aware Brief Contract
 
 Collect exactly these before running anything:
@@ -55,9 +67,11 @@ Collect exactly these before running anything:
 | Destination | positional 3 (or `--dest`) | must be outside the kit; empty unless `--force`; defaults to `<kit>/../<Name>` |
 | Project name | positional 1 (or `--name`) | PascalCase, `^[A-Za-z][A-Za-z0-9_.-]*$` |
 | Package | positional 2 (or `--pkg`) | lowercase dotted, at least two segments, e.g. `com.acme.myapp` |
+| Linkage | `--vendored` | linked (relative paths) by default; `--vendored` makes it self-contained |
 
-Objective: one runnable app. Acceptance criteria: the script reports success; the
-checker passes; no template identifier (`dev.kmpapp`, `KmpApp`) remains anywhere.
+Objective: one runnable, portable app. Acceptance criteria: the script reports success;
+the checker passes; no template identifier (`dev.kmpapp`, `KmpApp`) remains; `opencode.json`
+holds no absolute path; the repo is git-initialized.
 
 ## Mandatory Workflow
 
@@ -72,8 +86,10 @@ checker passes; no template identifier (`dev.kmpapp`, `KmpApp`) remains anywhere
 - **Phase 3 — verify.** From the new project:
   `python3 shared/scripts/kmp_check.py --all` (must PASS with zero features), then
   `node <kit>/scripts/dev/e2e-check.mjs --root <dest>` (must be 10/10). Grep the new
-  tree for `dev.kmpapp` / `KmpApp` — expect zero hits. **✋ Checkpoint:** show the
-  verification output.
+  tree for `dev.kmpapp` / `KmpApp` — expect zero hits. Confirm
+  `opencode debug skill` in the project reports the `kmp-*` skills, that `opencode.json`
+  contains no absolute path (linked mode), and that `git log` shows the initial commit.
+  **✋ Checkpoint:** show the verification output.
 - **Phase 4 — hand off to the normal pipeline.** The next steps are OpenSpec's:
   `/opsx-propose` → Penpot design → `/kmp-create-feature`. Do **not** start building
   a feature in this run.
@@ -95,6 +111,11 @@ checker passes; no template identifier (`dev.kmpapp`, `KmpApp`) remains anywhere
    every feature imports.
 7. **`.kmp.json` records `appModule`** (`composeApp`). It is what the checker and the
    skills read for the app module — never hardcode `composeApp` past this point.
+8. **No absolute paths in `opencode.json`.** Linked mode uses kit-relative paths so the
+   project is portable; an absolute path is a bug, not a convenience.
+9. **Git is initialized** (`git init -b main` + one commit). If `git commit` fails because
+   `user.name`/`user.email` are unset, the files are staged — say so, do not force a
+   global git config change.
 
 ## Domain Architecture
 
@@ -149,6 +170,8 @@ two segments (`com.acme.myapp`). Feature packages nest under it
 | "I'll write the Gradle files myself — it's only a few." | A hand-written skeleton drifts from the template the contracts were written against, and the features will not compile against it. | Run `km-init.mjs`; never author project files here. |
 | "The destination has files, but they're harmless." | Scaffolding over an existing project silently mixes two trees. | Stop and ask. Only `--force` with explicit consent. |
 | "The Res import looks wrong, I'll fix it." | It is derived from `rootProject.name`; hand-editing it breaks the build in a way the script exists to prevent. | Fix the project name/package inputs and re-scaffold, or report it as a script bug. |
+| "An absolute path in `opencode.json` is simpler." | It pins the project to one machine and breaks on any move or share. | Use linked mode (relative) or `--vendored`. Fix with `kmp-init`'s path logic, never by hand. |
+| "Git commit failed, I'll set the user's global git config." | Changing a machine-global identity is the user's call, not a scaffold side effect. | Leave the files staged and tell the user to set `user.name`/`user.email`. |
 | "The checker reports 0 features — something must be wrong." | A fresh project is exactly 0 features; the shell compiles standalone. | Treat PASS as correct; the first feature comes from `kmp-create-feature`. |
 | "While I'm here I'll add the first feature." | Creating a feature is a different skill with its own spec/design gates. | Stop. Hand off to `/opsx-propose` and `kmp-create-feature`. |
 
@@ -162,9 +185,14 @@ npm link
 kmp-init Atlas com.acme.atlas --dry-run
 kmp-init Atlas com.acme.atlas
 
+# a self-contained project that can be shared on its own
+kmp-init Atlas com.acme.atlas --vendored
+
 # verify (from the new project)
 python3 shared/scripts/kmp_check.py --all
 node <kit>/scripts/dev/e2e-check.mjs --root .
+opencode debug skill | grep kmp-     # the skills resolve in the project
+git log --oneline
 ```
 
 ## Reference Resources

@@ -21,9 +21,9 @@
  * move with the project name.
  */
 
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { execFileSync } from "node:child_process"
-import { basename, dirname, join, resolve, sep } from "node:path"
+import { basename, dirname, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)))
@@ -68,6 +68,10 @@ const dryRun = has("--dry-run")
 // OpenSpec is core to the pipeline, so initializing it is the default;
 // `--no-openspec` opts out.
 const withOpenspec = !has("--no-openspec")
+// Default: reference the kit (single source, portable via relative paths).
+// `--vendored` copies the kit runtime in so the project stands alone.
+const vendored = has("--vendored")
+const noGit = has("--no-git")
 const normalize = has("--normalize")
 
 // `--normalize` is a maintenance mode for the kit itself: it rewrites the vendored
@@ -89,7 +93,7 @@ if (!name || !pkg) {
     "  <pkg>    package prefix, lowercase dotted (e.g. com.acme.atlas)\n" +
     "  [dest]   destination directory (default: next to the kit, i.e. <kit>/../<Name>)\n" +
     "\n" +
-    "flags: --dry-run  --force  --no-openspec  --normalize",
+    "flags: --vendored  --dry-run  --force  --no-openspec  --no-git  --normalize",
   )
   process.exit(2)
 }
@@ -220,16 +224,42 @@ function fileExt(p) {
   return i < 0 ? "" : b.slice(i).toLowerCase()
 }
 
-function opencodeJson() {
+/**
+ * `opencode.json` for the new project.
+ *
+ * Linked (default): reference the kit with *relative* paths, so the project and the kit
+ * stay movable together — an absolute path would pin the project to one machine and
+ * break the moment the kit moves or the project is shared. Skills, rules and the guard
+ * then keep a single source of truth in the kit, and a kit update reaches every project
+ * at once.
+ *
+ * Vendored: the project carries its own copies under `skills/`, `shared/` and
+ * `policies/`, so it is fully self-contained and safe to clone/share on its own —
+ * at the cost of no longer tracking the kit.
+ */
+function opencodeJson(vendored) {
+  if (vendored) {
+    return JSON.stringify(
+      {
+        $schema: "https://opencode.ai/config.json",
+        instructions: ["AGENTS.md"],
+        skills: { paths: ["skills"] },
+      },
+      null,
+      2,
+    ) + "\n"
+  }
+  const kit = relToKit(destAbs)
+  const p = (sub) => (kit === "." ? sub : `${kit}/${sub}`)
   return JSON.stringify(
     {
       $schema: "https://opencode.ai/config.json",
-      instructions: [join(ROOT, "AGENTS.md")],
-      skills: { paths: [join(ROOT, "skills")] },
-      plugin: [join(ROOT, ".opencode/plugins/protect-feature.ts")],
+      instructions: [p("AGENTS.md")],
+      skills: { paths: [p("skills")] },
+      plugin: [p(".opencode/plugins/protect-feature.ts")],
       references: {
         "kmp-kit": {
-          path: join(ROOT, "shared"),
+          path: p("shared"),
           description: "KMP architecture rules (kmp-patterns.md), the deterministic checker, and the state contract",
         },
       },
@@ -237,6 +267,62 @@ function opencodeJson() {
     null,
     2,
   ) + "\n"
+}
+
+/**
+ * Path from the project to the kit, for the linked `opencode.json`.
+ *
+ * Both sides are resolved through `realpathSync` first: a purely lexical `relative()`
+ * produces a path that does not resolve when either side is reached through a symlink
+ * (macOS `/tmp` → `/private/tmp`, a symlinked home, a symlinked projects dir), which
+ * silently breaks skill discovery.
+ */
+function relToKit(fromDir) {
+  const real = (p) => {
+    try {
+      return realpathSync(p)
+    } catch {
+      return p
+    }
+  }
+  return relative(real(fromDir), real(ROOT)).split(sep).join("/") || "."
+}
+
+/** Copy the kit runtime a project needs to stand alone. */
+function vendorKit(dest) {
+  for (const dir of ["skills", "shared", "policies"]) {
+    cpSync(join(ROOT, dir), join(dest, dir), { recursive: true, force: true })
+  }
+  // `kmp-init` scaffolds *new* apps from the kit's template; it has no meaning inside an
+  // app, and its `scripts/scaffold` + `templates/` paths would dangle here. Drop it.
+  rmSync(join(dest, "skills/kmp-init"), { recursive: true, force: true })
+  cpSync(join(ROOT, "AGENTS.md"), join(dest, "AGENTS.md"))
+  mkdirSync(join(dest, ".opencode/plugins"), { recursive: true })
+  cpSync(join(ROOT, ".opencode/plugins/protect-feature.ts"), join(dest, ".opencode/plugins/protect-feature.ts"))
+}
+
+/** `git init` + one initial commit. Skipped when git is absent or identity is unset. */
+function gitInit(dest) {
+  try {
+    try {
+      execFileSync("git", ["init", "-b", "main"], { cwd: dest, stdio: "pipe" })
+    } catch {
+      execFileSync("git", ["init"], { cwd: dest, stdio: "pipe" })
+      try {
+        execFileSync("git", ["symbolic-ref", "HEAD", "refs/heads/main"], { cwd: dest, stdio: "pipe" })
+      } catch { /* leave the default branch name */ }
+    }
+    execFileSync("git", ["add", "-A"], { cwd: dest, stdio: "pipe" })
+    try {
+      execFileSync("git", ["commit", "-q", "-m", "Initial commit from KMP AI Kit"], { cwd: dest, stdio: "pipe" })
+      return "initialized + committed"
+    } catch {
+      // Usually an unset user.name/user.email. The files are staged; the user commits.
+      return "initialized (staged; set git user.name/email, then commit)"
+    }
+  } catch {
+    return "skipped (git not available)"
+  }
 }
 
 // ── run ─────────────────────────────────────────────────────────────────────
@@ -260,19 +346,24 @@ const rewritten = renameTree(destAbs, TEMPLATE_IDENTITY, { name, pkg })
 // Optional project config (the skills read `appModule` from it; the default is composeApp).
 writeFileSync(join(destAbs, ".kmp.json"), JSON.stringify({ appModule: "composeApp" }, null, 2) + "\n")
 
-// The project carries its own checker so `./gradlew archTest` and CI work without the kit,
-// plus the architecture rules the checker mechanizes — so the contract is readable in-tree.
+// The project always carries the checker (so `./gradlew archTest` and CI work with no
+// kit) plus the architecture rules it mechanizes. In vendored mode the whole runtime
+// comes along; in linked mode these two files are the project-local copy.
 mkdirSync(join(destAbs, "shared/scripts"), { recursive: true })
 cpSync(join(ROOT, "shared/scripts/kmp_check.py"), join(destAbs, "shared/scripts/kmp_check.py"))
 cpSync(join(ROOT, "shared/kmp-patterns.md"), join(destAbs, "shared/kmp-patterns.md"))
 
-// Wire opencode: skills + plugin are referenced from the kit; the subagents are copied
-// because opencode only discovers agents inside the project.
-writeFileSync(join(destAbs, "opencode.json"), opencodeJson())
+// Subagents are always copied: opencode only discovers agents inside the project.
 mkdirSync(join(destAbs, ".opencode/agent"), { recursive: true })
 for (const f of readdirSync(join(ROOT, ".opencode/agent"))) {
   cpSync(join(ROOT, ".opencode/agent", f), join(destAbs, ".opencode/agent", f))
 }
+
+// Vendored mode: bring the skills, rules, policies, AGENTS.md and the guard plugin in,
+// so the project is self-contained and safe to clone or share on its own.
+if (vendored) vendorKit(destAbs)
+
+writeFileSync(join(destAbs, "opencode.json"), opencodeJson(vendored))
 
 // Runtime artifacts (run ledger, checker report) are tooling output.
 const gi = join(destAbs, ".gitignore")
@@ -293,6 +384,8 @@ if (withOpenspec) {
   }
 }
 
+const gitState = noGit ? "skipped (--no-git)" : gitInit(destAbs)
+
 const fileCount = walkFiles(destAbs).length
 const openspecState = openspecRan
   ? "initialized"
@@ -304,7 +397,9 @@ process.stdout.write(
   `  project : ${destAbs}\n` +
   `  name    : ${name}\n` +
   `  package : ${pkg}\n` +
+  `  opencode: ${vendored ? "vendored (self-contained)" : `linked (kit at ${relToKit(destAbs)})`}\n` +
   `  openspec: ${openspecState}\n` +
+  `  git     : ${gitState}\n` +
   `\nnext\n` +
   `  1. /opsx-propose                    write the first change's spec\n` +
   `  2. /kmp-create-feature              build the feature in Kotlin\n` +
