@@ -15,11 +15,13 @@ truncation, re-read the ledger and re-derive reality **before** continuing.
   "capability": "dashboard",
   "spec_path": "openspec/specs/dashboard/spec.md",
   "change_id": "add-dashboard",
+  "domain_path": "openspec/changes/add-dashboard/domain.md",
   "design_path": "openspec/…/DESIGN.md",
   "app_module": "composeApp",
   "pkg_prefix": "com.example.kmp",
   "phase": 3,
   "marker": true,
+  "checkpoints_passed": ["C1", "C2"],
   "layers": {
     "data": "done",
     "platform": "skipped",
@@ -27,9 +29,16 @@ truncation, re-read the ledger and re-derive reality **before** continuing.
     "integration": "pending"
   },
   "checker": { "ran_at": "…", "errors": 0, "warnings": 0, "report": ".kmp/check-report.json" },
+  "runtime": { "target": "desktop", "command": "./gradlew :composeApp:run", "result": "not-run" },
   "updated_at": "2026-09-18T20:00:00Z"
 }
 ```
+
+**`checkpoints_passed` is what makes a resumed run safe.** Checkpoints exist to make a human
+approve a decision; re-asking an approved one after a context break burns the approval's value, and
+skipping an unapproved one silently is worse. Record each id as it passes, and on resume read the
+list rather than re-deriving what was agreed. A checkpoint that was **re-opened** (the model found a
+contradiction after approval) is removed from the list, and the run returns to that checkpoint.
 
 ## Rules
 

@@ -52,6 +52,29 @@ survive contact with the UI:
 
 Steps 1 and 6 are the ones teams skip, and they are the two that prevent rework.
 
+### Where the checkpoints fall
+
+The method has four irreversible decisions, and `kmp-domain-model` stops for approval at each — no
+model is written until C4 passes, and nothing is written that C4 did not approve:
+
+| Checkpoint | The decision | Method steps |
+|---|---|---|
+| **C1** | what *happens* (the spine) | 1 |
+| **C2** | what *participates* (the concept set) | 2–4 |
+| **C3** | what it *knows*, and how it *relates* | 5–6 |
+| **C4** | where it *lands* in the code | the mapping table (§3) |
+
+**C3 is the one most likely to be skipped and the one that matters most**: it holds both the
+derived-vs-stored call and Coad's step 6. Folding it into C4 turns two decisions into a footnote.
+Re-opening an approved checkpoint (editing the MI list after C1) is never silent — say so and re-run
+C1.
+
+Before each checkpoint the skill runs a **self-review** (four scans for the classic defects: an MI
+with no participants, a Role disguised as a Party, an unmarked derived numeric/positional attribute,
+a two-valued Description), and C4 additionally requires a **spec-coverage table** — every
+Requirement behind a concept or MI, every Scenario's actor present as a Role. See
+`skills/kmp-domain-model/SKILL.md`.
+
 ---
 
 ## 3. Mapping onto this kit's Clean Architecture

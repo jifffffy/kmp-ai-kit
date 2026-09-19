@@ -4,14 +4,21 @@
   "expected": {
     "must_do": [
       "read the spec first and stop if it is missing — the router orders spec before domain",
-      "identify the Moment-Intervals first (read the spec's scenarios as events), and get that list approved before deriving anything else",
+      "identify the Moment-Intervals first (read the spec's scenarios as events), and get that list approved (C1) before deriving anything else",
+      "stop for approval at all four checkpoints (C1 MIs, C2 concepts, C3 attributes+links, C4 mapping) — none is skipped for being a small model",
+      "at C3 show the attributes table with an explicit stored/derived column, and the links table with multiplicity and togetherness",
+      "run the four self-review scans before presenting a checkpoint (MI without participants, two concepts sharing attributes, an unmarked derived numeric/positional attribute, a two-valued Description), and present unresolved findings rather than hiding them",
+      "before C4's approval, report spec coverage as a table (Requirement/Scenario -> concept or MI -> covered?) and surface every gap as a finding the user decides on",
       "map each archetype onto the kit: MI -> Repository method + ViewModel action (never a UseCase class, Rule 9), PPT -> data/model/*Response.kt, Role -> field/nested object, Description -> enum",
       "mark every derived attribute (a count that is an aggregation, a rank that is a position in a sort) explicitly as derived rather than stored",
-      "write exactly one file, openspec/changes/<id>/domain.md, then re-run kmp_route.py so .kmp/route.json sees it",
+      "write exactly one file, openspec/changes/<id>/domain.md, and only what C4 approved, then re-run kmp_route.py so .kmp/route.json sees it",
       "record `Domain model: none` with one sentence when the capability genuinely has no domain concepts"
     ],
     "must_not": [
       "start from the spec's nouns / entity list instead of Moment-Intervals",
+      "fold C3 (attributes + links) into the C4 mapping checkpoint, or skip C3 because the derived/stored calls look mechanical",
+      "silently re-open an already-approved checkpoint — editing the MI list after C1 passed without saying so and re-running C1",
+      "write any new concept or field in Phase 5 that C4 did not approve",
       "model a Moment-Interval as a UseCase class (Rule 9 forbids the UseCase layer)",
       "add a parallel Response DTO for something that is a Role on an existing party",
       "invent a requirement to fill a table — a gap goes under Open questions with the default taken",
@@ -19,7 +26,7 @@
       "omit domain.md silently when the model is trivial — silence is indistinguishable from skipping it"
     ]
   },
-  "pass_criteria": "domain.md exists in the change directory with Moment-Intervals first, every derived attribute marked, a filled archetype->KMP mapping table, and no UseCase layer; re-running kmp_route.py reports artifacts.domain present.",
+  "pass_criteria": "domain.md exists in the change directory with Moment-Intervals first, every derived attribute marked, a filled archetype->KMP mapping table, and no UseCase layer; all four checkpoints were presented with Evidence/Summary/Ask and approved; the self-review scans ran; spec coverage was reported with gaps named; re-running kmp_route.py reports artifacts.domain present.",
   "triggers": {
     "should": ["model the domain", "what are the entities", "what should the data model be", "domain model for the leaderboard"],
     "should_not": ["create a KMP feature", "review this feature", "design this screen in Penpot"]
