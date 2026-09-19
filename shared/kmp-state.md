@@ -16,7 +16,7 @@ truncation, re-read the ledger and re-derive reality **before** continuing.
   "spec_path": "openspec/specs/dashboard/spec.md",
   "change_id": "add-dashboard",
   "domain_path": "openspec/changes/add-dashboard/domain.md",
-  "living_domain_path": "openspec/domain.md",
+  "living_domain_path": "openspec/domain/model.md",
   "design_path": "openspec/…/DESIGN.md",
   "app_module": "composeApp",
   "pkg_prefix": "com.example.kmp",

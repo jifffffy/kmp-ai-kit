@@ -45,6 +45,7 @@ python3 shared/scripts/kmp_route.py --capability <slug> [--ui]
 | Signal in the request | Route to | Status |
 |---|---|---|
 | new KMP app / scaffold a KMP project / new Kotlin Multiplatform starter | `kmp-init` | implemented |
+| brand-new project, needs its domain framed before any feature / "what should this app do" | `kmp-domain-recon` | implemented |
 | new feature, new screen module, "build a feature" | `kmp-create-feature` | implemented |
 | change/extend/fix an existing feature | `kmp-modify-feature` | implemented |
 | generate tests for a feature | `kmp-test-feature` | implemented |
@@ -61,6 +62,11 @@ already has an OpenSpec spec is a modification, not a creation.
 
 "New app" vs. "new feature" is decided by another: does `core/common` exist? If it does,
 the project already exists and the request is a feature; if not, it is `kmp-init`.
+
+**Reconnaissance is not a change.** On a scaffolded project with no change and no living model, a
+request to *frame the domain* or *decide what to build first* routes to `kmp-domain-recon` — it runs
+once, before `/opsx-propose`, and is optional (skip is recorded). Once a change exists, the normal
+chain applies and `kmp-domain-model` handles the domain at change scope.
 
 If a request names a skill that does not exist yet (a future capability), say so plainly:
 name the missing skill, and stop. Do not improvise the workflow it would have owned.

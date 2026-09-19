@@ -12,6 +12,17 @@
   "routes": [
     {
       "intent": [
+        "recon the domain",
+        "new project domain",
+        "break the app into features",
+        "what should this app do",
+        "overall domain model",
+        "where do I start on a new project"
+      ],
+      "target": "skill:kmp-domain-recon"
+    },
+    {
+      "intent": [
         "model the domain",
         "what are the entities",
         "domain model",

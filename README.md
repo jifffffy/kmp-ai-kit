@@ -6,7 +6,7 @@ owners, and they never overlap:
 | Layer | Owner | Owns | Produces |
 |---|---|---|---|
 | **Planning** | OpenSpec (`/opsx-*`) | *what* and *why* | `openspec/changes/**` → `openspec/specs/**` |
-| **Domain** | `kmp-domain-model` (Coad color modeling) | *what the domain is* | `openspec/changes/<id>/domain.md` + the living `openspec/domain.md` |
+| **Domain** | `kmp-domain-model` (Coad color modeling) | *what the domain is* | `openspec/changes/<id>/domain.md` + the living `openspec/domain/model.md` |
 | **Design** | Penpot (`penpot-*` skills) | *how it looks* | a `DESIGN.md` handoff + annoted Penpot file |
 | **Build** | KMP skills (`kmp-*`) | *how it ships* | `feature/**`, `core/**`, Gradle wiring |
 
@@ -21,7 +21,7 @@ reads those artifact states and writes `.kmp/route.json`; every step reads that 
 re-deriving. A missing spec is always blocking and is fixed first.
 
 The domain layer keeps **two** models: the change's delta (`openspec/changes/<id>/domain.md`) and the
-project's cumulative vocabulary (`openspec/domain.md`). The living one is read at the **proposal**
+project's cumulative vocabulary (`openspec/domain/model.md`). The living one is read at the **proposal**
 step, so a new spec says `Account` rather than inventing `User` for a concept the project already
 has. It is a vocabulary, not a requirement source — it emits no SHALL/MUST.
 
@@ -107,7 +107,44 @@ ls .opencode/commands/       # the /opsx-* commands
 Inside opencode, ask *"what KMP skills do you have?"* if you want the agent to confirm it
 loaded them.
 
-### Step 3 — Plan (OpenSpec owns this)
+### Step 3 — Frame the domain (optional, once, on a new project)
+
+A project's **first** change names its concepts by accident: the proposal is written from a
+one-paragraph request, and whatever words it happens to use become the vocabulary every later change
+inherits. FDD does not have this gap — it starts with *Develop an Overall Model*, before any feature
+is chosen.
+
+**Exact prompt:**
+
+```
+Recon the domain: I'm building <a short description of the product>.
+```
+
+`kmp-domain-recon` interviews you, splits the domain into **areas**, assigns each key concept a Coad
+archetype, and writes two files:
+
+```
+openspec/domain/
+├── model.md      the living vocabulary (coarse)
+└── features.md   candidate features to choose from
+```
+
+> **Two levels, and you pick the top one.** FDD's *feature* is a few hours of work; this kit's
+> feature is a **module** (data + UI + DI + four integration points + a spec capability) — a change.
+> So the list's headings are **Features** (selectable, one change each) with FDD-granular
+> **Functions** nested under them as raw material for that change's `tasks.md`. A list at the wrong
+> level cannot be acted on.
+
+> **Hypotheses, not requirements.** Recon output emits no SHALL/MUST and is expected to be wrong in
+> places; the first change's `domain` step reconciles it. It is also **not maintained** afterwards —
+> once you select a feature, `openspec/changes/` and `openspec/specs/` are the only truth. Skip recon
+> entirely for a single-purpose project, and record the skip the same way a concept-free capability
+> records `Domain model: none`.
+
+It stops at three checkpoints: **R1** the frame (is this your domain, in your words), **R2** the
+areas and their concepts, **R3** the feature list (which first, and is the level right).
+
+### Step 4 — Plan (OpenSpec owns this)
 
 Ask your agent to plan the change. **Exact prompt:**
 
@@ -132,7 +169,7 @@ openspec/changes/add-github-leaderboard/
 ```
 
 **It will not write `domain.md` itself.** The schema's `domain` instruction delegates to the
-`kmp-domain-model` skill, so the run pauses there and drives that skill's checkpoints — Step 4 is
+`kmp-domain-model` skill, so the run pauses there and drives that skill's checkpoints — Step 5 is
 what happens during that pause. Expect to approve five things before the task list appears.
 
 Review the artifacts. Then **archive nothing yet** — implementation comes first.
@@ -141,7 +178,7 @@ Review the artifacts. Then **archive nothing yet** — implementation comes firs
 > editing Kotlin in the same turn, stop it: the planning step is meant to end with the
 > artifacts presented to you.
 
-### Step 4 — The domain step (what happens inside Step 3)
+### Step 5 — The domain step (what happens inside Step 4)
 
 This is not a command you type separately on a new project — `/opsx-propose` reaches it
 automatically once the spec exists, because the schema makes `domain` depend on `specs`. It is
@@ -173,13 +210,13 @@ and **`Contributor` is a Role** on `Account` — so there is no `ContributorResp
 
 It stops at five checkpoints: **C0** reconciles against the living vocabulary, then C1 the
 Moment-Interval list — the model's spine. It writes two files: the change's `domain.md` and the living
-`openspec/domain.md`.
+`openspec/domain/model.md`.
 
 **On a brand-new project there is no vocabulary yet.** C0 then simply declares every concept NEW,
-and *that run creates* `openspec/domain.md`. From the second change onward, `proposal` reads it and
+and *that run creates* `openspec/domain/model.md`. From the second change onward, `proposal` reads it and
 reuses the project's words instead of inventing new ones — which is the whole point of keeping it.
 
-### Step 5 — Design (optional; Penpot owns this)
+### Step 6 — Design (optional; Penpot owns this)
 
 Skip this if the feature has no visual work or you are happy with the design system's
 defaults. When you want a real design:
@@ -195,7 +232,7 @@ Penpot file (see `docs/setup-remote.md` / `docs/setup-local.md`).
 
 A feature is **design-aware** exactly when a `DESIGN.md` exists for it. Never invent one.
 
-### Step 6 — Build (the KMP layer owns this)
+### Step 7 — Build (the KMP layer owns this)
 
 **Exact prompt:**
 
@@ -228,7 +265,7 @@ At every layer it runs:
 python3 shared/scripts/kmp_check.py leaderboard
 ```
 
-### Step 7 — Verify, run, and archive
+### Step 8 — Verify, run, and archive
 
 ```bash
 # static gate
@@ -329,7 +366,8 @@ specification and has to be undone before the fix can land.
 |---|---|
 | A new app | `kmp-ai-kit new MyApp com.acme.myapp` |
 | Plan a change | *"Propose a change called … : <what it does>"* → `/opsx-propose` |
-| Model the domain | *"Model the domain for the <x> change"* → `/kmp-domain-model` |
+| Frame a new project's domain | *"Recon the domain: I'm building <x>"* → `/kmp-domain-recon` (optional, once) |
+| Model the domain for a change | *"Model the domain for the <x> change"* → `/kmp-domain-model` |
 | Implement | `/kmp-create-feature <feature>` |
 | Change an existing feature | `/kmp-modify-feature <feature>` — drafts a spec delta first |
 | Audit a feature | `/kmp-review-feature <feature>` — read-only; reports, never edits |
@@ -350,12 +388,13 @@ target skill. It never edits code itself.
 
 ## 6. The catalog
 
-### Build layer — 9 KMP skills
+### Build layer — 10 KMP skills
 
 | Skill | Mode | Does |
 |---|---|---|
 | `kmp-init` | review | Scaffold a new app *(kit-only; not copied into projects)* |
 | `kmp-router` | suggest | Compute `.kmp/route.json`; name one skill |
+| `kmp-domain-recon` | review | FDD 1–2 on a new project → living vocabulary + feature list |
 | `kmp-domain-model` | review | Coad color modeling → `domain.md` |
 | `kmp-create-feature` | review | Build a feature from spec + domain + design, layer by layer |
 | `kmp-modify-feature` | review | Change a feature, spec-delta first |
@@ -376,7 +415,7 @@ target skill. It never edits code itself.
 | File | What |
 |---|---|
 | `shared/kmp-patterns.md` | the 14 architecture rules |
-| `shared/domain-modeling.md` | Coad's Color Modeling: archetypes, the six steps, archetype→KMP mapping, the `domain.md` template |
+| `shared/domain-modeling.md` | Coad's Color Modeling: archetypes, the six steps, the archetype→KMP mapping, the living model + reconciliation (C0), reconnaissance (FDD 1–2), and the templates |
 | `shared/kmp-x-components-catalog.md` | the `X*` component contracts |
 | `shared/kmp-motion.md`, `shared/kmp-agent-base.md` | motion primitives; agent context |
 | `shared/scripts/kmp_check.py` | the deterministic checker |
@@ -392,9 +431,9 @@ GithubLeaderboard/
 ├── opencode.json          project-local config (no external paths)
 ├── AGENTS.md              the instructions layer
 ├── .kmp.json              appModule (read by the skills and the checker)
-├── openspec/domain.md     the living domain vocabulary (created by the first domain model)
+├── openspec/domain/model.md     the living domain vocabulary
 ├── .kmp/route.json        the routing verdict (tooling output, git-ignored)
-├── skills/                20 skills (kmp-init excluded — it builds new apps, not features)
+├── skills/                22 skills (kmp-init and kmp-domain-recon are kit-only)
 ├── shared/  policies/  prompts/  workflows/  docs/
 ├── .opencode/
 │   ├── agent/             11 KMP subagents

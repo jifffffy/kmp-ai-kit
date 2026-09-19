@@ -133,6 +133,12 @@
       "version": "0.1.0",
       "path": "skills/kmp-using-design-system/SKILL.md",
       "description": "UI guard: reuse existing X* components and tokens; never hardcode a value or string."
+    },
+    {
+      "name": "kmp-domain-recon",
+      "version": "0.1.0",
+      "path": "skills/kmp-domain-recon/SKILL.md",
+      "description": "FDD reconnaissance for a new project: living vocabulary + selectable feature list."
     }
   ]
 }

@@ -261,7 +261,7 @@
       "audiences": [
         "kmp-engineer"
       ],
-      "description": "Bridge the iOS side when an expect/actual needs real Swift — native framework wrappers or UIKit views — behind a thin interop surface."
+      "description": "Bridge the iOS side when an expect/actual needs real Swift \u2014 native framework wrappers or UIKit views \u2014 behind a thin interop surface."
     },
     {
       "id": "kmp-using-design-system",
@@ -274,6 +274,19 @@
         "design-engineer"
       ],
       "description": "UI guard: reuse an existing X* component and its tokens before authoring anything new, and never hardcode a color, size, or string."
+    },
+    {
+      "id": "kmp-domain-recon",
+      "name": "kmp-domain-recon",
+      "version": "0.1.0",
+      "path": "skills/kmp-domain-recon/SKILL.md",
+      "mode": "review",
+      "audiences": [
+        "product-designer",
+        "kmp-engineer",
+        "design-engineer"
+      ],
+      "description": "FDD steps 1-2 for a new project: interview, split the domain into areas, and write the living vocabulary plus a selectable feature list."
     }
   ]
 }

@@ -83,9 +83,11 @@ Phase 5  write both models       (no checkpoint — writes only what C4 approved
   (`artifacts.spec`) or the change directory, and read the schema's own guidance for this artifact
   (`openspec instructions domain --change <id>`). Read the spec's requirements and scenarios. If no
   spec exists, **stop** — OpenSpec blocks `domain` until `specs` completes, and there is nothing to
-  model from. Then read the **living model** `openspec/domain.md`, if it exists, and reconcile:
+  model from. Then read the **living model** `openspec/domain/model.md`, if it exists, and reconcile:
   every concept this change needs is classified **NEW**, **EXTENDS**, **REUSES** or **CONFLICT**.
-  **✋ C0.** **Exit:** the spec and the reconciliation are loaded.
+  (If reconnaissance ran, that file is its output — coarse, and hypotheses rather than decisions.
+  Your reconciliation is where a hypothesis is confirmed or corrected.) **✋ C0.**
+  **Exit:** the spec and the reconciliation are loaded.
 - **Phase 1 — Moment-Intervals.** Read the scenarios as *events*: what happens, what starts it, who
   participates and how many. **✋ C1.**
 - **Phase 2 — Roles → Parties/Places/Things → Descriptions.** Derive, in that order, each from the
@@ -97,7 +99,7 @@ Phase 5  write both models       (no checkpoint — writes only what C4 approved
 - **Phase 5 — Write both models.** Two files, from the one C4-approved model:
   1. `openspec/changes/<change-id>/domain.md` — the change's delta, using the template in
      `shared/domain-modeling.md` §4. This is the OpenSpec artifact.
-  2. `openspec/domain.md` — the **living** model, updated with what this change ADDS or EXTENDS.
+  2. `openspec/domain/model.md` — the **living** model, updated with what this change ADDS or EXTENDS.
      Keep it the whole project's vocabulary, not a per-change view; never rewrite REUSED concepts.
 
   Then re-run the router so `.kmp/route.json` sees it:
@@ -108,7 +110,7 @@ Phase 5  write both models       (no checkpoint — writes only what C4 approved
 
 | File | Scope | Lifetime | Read by |
 |---|---|---|---|
-| `openspec/domain.md` | the whole project | permanent, cumulative | **the proposal step** (so a new spec reuses the project's vocabulary), and this skill's C0 |
+| `openspec/domain/model.md` | the whole project | permanent, cumulative | **the proposal step** (so a new spec reuses the project's vocabulary), and this skill's C0 |
 | `openspec/changes/<id>/domain.md` | this change only | archived with the change | the build skills |
 
 Both are written once, at Phase 5, from the same C4-approved model — so there is **no merge step and
@@ -127,7 +129,7 @@ filled in as follows. Never present a checkpoint without all three.
 
 | | Evidence (show) | The ask (question) | If rejected |
 |---|---|---|---|
-| **C0** | the reconciliation table: concept · matched existing? · NEW/EXTENDS/REUSES/CONFLICT · why | "Does this match what the project already means by these words? Any CONFLICT is yours to settle." | re-read `openspec/domain.md`; a CONFLICT returns to the user, not to a guess |
+| **C0** | the reconciliation table: concept · matched existing? · NEW/EXTENDS/REUSES/CONFLICT · why | "Does this match what the project already means by these words? Any CONFLICT is yours to settle." | re-read `openspec/domain/model.md`; a CONFLICT returns to the user, not to a guess |
 | **C1** | the MI table: event · trigger · participants (multiplicity) · persisted? | "Is this the complete set of things that *happen*? Anything missing or misfiled?" | re-read the scenarios; a missing MI is usually an unread Scenario |
 | **C2** | the three lists: Roles · Parties/Places/Things · Descriptions, each annotated with what derived it | "Is every concept the right archetype — and is anything *not* here that should be?" | return to Phase 2 only; do **not** restart at MIs — C1 is still approved |
 | **C3** | the attributes table **with the stored/derived column**, and the links table with multiplicity + togetherness | "Are these the right *derived* calls? Do the multiplicities match how the UI behaves?" | return to Phase 3 only |
@@ -187,7 +189,7 @@ and that is the user's call, not a silent edit to either.
    default taken, not resolved by invention.
 7. **Record `Domain model: none` explicitly** when a capability genuinely has no domain concepts
    (a copy change, a styling tweak). Silence is indistinguishable from forgetting.
-8. **This skill writes two files** — the change's `domain.md` and the living `openspec/domain.md` —
+8. **This skill writes two files** — the change's `domain.md` and the living `openspec/domain/model.md` —
    and nothing else. It never edits `feature/**`, the spec, or the design.
 9. **Reconcile before you model (C0).** Classify every concept against the living model as
    NEW / EXTENDS / REUSES / CONFLICT. A CONFLICT (same name different meaning, or two names for one
@@ -252,7 +254,7 @@ the kit: `{Concept}Response`. A Moment-Interval maps to a verb-named repository 
 | "I'll skip the checkpoint; the model is small and obviously right." | "Obviously right" is where the stored count and the duplicated entity come from. | Small models present faster, not never. C0–C4 are unconditional. |
 | "No living model exists yet, so I'll skip C0 and just model." | On the first change C0 is trivially "all NEW" — and that run is what creates the living model the next change reads. | Run C0 anyway; on an empty project it just declares the concept set NEW. |
 | "`User` here is close enough to the existing `Account`, I'll extend it quietly." | Different names for one concept is a CONFLICT: it is how both end up shipping. | Stop and ask. Never merge or fork a concept on your own judgment. |
-| "I'll copy the existing concepts into the change's model so it reads standalone." | A restated REUSED concept is a second source, and the two copies drift. | Reference it by name; it stays defined once, in `openspec/domain.md`. |
+| "I'll copy the existing concepts into the change's model so it reads standalone." | A restated REUSED concept is a second source, and the two copies drift. | Reference it by name; it stays defined once, in `openspec/domain/model.md`. |
 | "The spec already lists the entities, so modeling is redundant." | A spec lists behaviours; entities fall out incidentally and the events are missing entirely. | Run the six steps; produce the MI list the spec does not contain. |
 | "I'll model from the screens after the UI exists." | Screens are one projection; modeling from them bakes UI accidents into the data layer. | MIs first, before any DTO is named. |
 | "This MI needs its own class — a UseCase." | Rule 9 forbids the UseCase layer. | Repository method + ViewModel action; a DTO only if it is user-visible. |

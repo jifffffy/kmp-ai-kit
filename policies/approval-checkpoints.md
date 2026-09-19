@@ -22,6 +22,7 @@ explicitly before proceeding.
 | penpot-migrate | after scope/mapping, after IR, after tokens, after components, per screen |
 | penpot-audit-* | after the report (before any fix) |
 | penpot-rename-layers | none for safe-set renames; review for meaningful names |
+| kmp-domain-recon | **R1** the frame · **R2** areas + concepts · **R3** the selectable feature list |
 | kmp-domain-model | **C0** reconciliation vs the living model · **C1** Moment-Intervals · **C2** Roles/PPT/Descriptions · **C3** attributes (stored/derived) + links · **C4** KMP mapping + spec coverage |
 | kmp-create-feature | **Phase 2** the brief contract + layer plan · **each Phase 4 layer** (data/platform, ui, integration) |
 | kmp-modify-feature | **the spec delta** (before any edit) · each implementation layer |

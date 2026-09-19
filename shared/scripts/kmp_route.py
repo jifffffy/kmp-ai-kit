@@ -194,7 +194,7 @@ def compute(root: Path, capability: str | None, action: str | None, ui: bool) ->
             "action": "init",
             "target": "skill:kmp-init",
             "project": {"managed": managed, "app_module": app_module, "core": core_modules, "features": features},
-            "artifacts": {"spec": None, "domain": None, "design": None, "living_domain": None},
+            "artifacts": {"spec": None, "domain": None, "design": None, "living_domain": None, "recon": None},
             "active_changes": changes,
             "gaps": []
             if managed
@@ -240,7 +240,10 @@ def compute(root: Path, capability: str | None, action: str | None, ui: bool) ->
     # The living domain model (the project's cumulative vocabulary). Not an artifact of this
     # change: it is read at the proposal step so a new spec reuses the project's words, and at
     # C0 of the domain model. Absent on a project's first change — that is normal, not a gap.
-    living_domain = "openspec/domain.md" if (root / "openspec/domain.md").is_file() else None
+    living_domain = "openspec/domain/model.md" if (root / "openspec/domain/model.md").is_file() else None
+    # Reconnaissance output (FDD steps 1-2). Present only on a project that ran recon; a project
+    # may legitimately skip it, so its absence is not a gap.
+    recon = "openspec/domain/features.md" if (root / "openspec/domain/features.md").is_file() else None
 
     # ---- action inference ---------------------------------------------------
     resolved = action
@@ -253,6 +256,18 @@ def compute(root: Path, capability: str | None, action: str | None, ui: bool) ->
 
     # ---- gaps, in the order they must be filled -----------------------------
     gaps: list[dict] = []
+    # At the very start — a managed project with nothing in flight and no vocabulary yet — the
+    # deliberate first step is reconnaissance (FDD steps 1-2). It is optional, so it is never
+    # blocking; it is surfaced so the first proposal does not name the domain by accident.
+    if not changes and not living_domain and not recon:
+        gaps.append(
+            {
+                "what": "recon",
+                "blocking": False,
+                "fix": "/kmp-domain-recon",
+                "why": "a brand-new project: frame the domain first, or the first proposal names it by accident (skip is fine — record it)",
+            }
+        )
     if not spec:
         gaps.append(
             {
@@ -300,7 +315,7 @@ def compute(root: Path, capability: str | None, action: str | None, ui: bool) ->
         "action": resolved,
         "target": f"skill:{target_skill}",
         "project": {"managed": True, "app_module": app_module, "core": core_modules, "features": features},
-        "artifacts": {"spec": spec, "domain": domain, "design": design, "living_domain": living_domain},
+        "artifacts": {"spec": spec, "domain": domain, "design": design, "living_domain": living_domain, "recon": recon},
         "active_changes": changes,
         "gaps": gaps,
         "next": nxt,
@@ -336,6 +351,8 @@ def main() -> int:
     a = route["artifacts"]
     print(f"  artifacts: spec={'yes' if a['spec'] else 'NO'}  domain={'yes' if a['domain'] else 'NO'}  design={'yes' if a['design'] else 'no'}")
     print(f"  vocabulary: living domain model {'yes' if a.get('living_domain') else 'none (created by the first domain model)'}")
+    if a.get("recon"):
+        print(f"  recon     : feature candidates at {a['recon']}")
     if route["active_changes"]:
         for c in route["active_changes"]:
             flag = "  (stale — decide: resume or archive)" if c["stale"] else ""

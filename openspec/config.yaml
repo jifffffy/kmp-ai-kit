@@ -36,7 +36,7 @@ context: |
   feature wires all four integration points (settings include, app-module
   dependency, initKoin module registration, NavHost entry).
 
-  Domain vocabulary: if `openspec/domain.md` exists, READ IT BEFORE writing any
+  Domain vocabulary: if `openspec/domain/model.md` exists, READ IT BEFORE writing any
   artifact — especially the proposal. It is the project's accumulated domain model
   (Coad color modeling): the concepts, their archetypes, and their names. Use its
   vocabulary so a new spec says `Account`, not `User`, for the same concept. It is
@@ -44,7 +44,10 @@ context: |
   behaviour. Requirements come only from the spec; when a spec needs a concept or
   behaviour the model lacks, the spec still decides, and the model is reconciled to
   it during that change's `domain` artifact (which may not exist yet on the first
-  change — that is fine, the model is created then).
+  change — that is fine, the model is created then). If `openspec/domain/features.md`
+  exists it is a one-time reconnaissance candidate list (FDD steps 1-2): hypotheses,
+  not requirements, and not maintained after a feature is chosen. Use it only to
+  pick what to work on; do not treat its entries as commitments.
 
   Artifact language: English.
 

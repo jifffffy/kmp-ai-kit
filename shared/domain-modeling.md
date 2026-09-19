@@ -170,10 +170,11 @@ decision the Frame contradicts, the Frame is wrong.
 
 | Action | Domain model |
 |---|---|
+| `recon` (new project) | **optional, once.** FDD steps 1–2: a coarse model and a candidate list, before any change exists. See §9 — it produces hypotheses, not requirements. |
 | `create` / `modify` | **required** before Phase 4 (build). A capability with genuinely no domain concepts records `Domain model: none` plus one sentence why — the explicit record is the point. |
 | `review` | read, do not require: use it to check the code against the model (drift, not just layering) |
 | `test` | read: fixtures and edge cases come from the Moment-Intervals and their multiplicities |
-| `init` | not applicable |
+| `init` | not applicable to modeling (scaffolding has no domain yet) |
 
 It is **not** a design artifact (Penpot owns the visuals) and **not** a spec (OpenSpec owns
 requirements). It sits between them, and the build reads it.
@@ -184,16 +185,26 @@ requirements). It sits between them, and the build reads it.
 
 A per-change model is not enough. The same concept appearing in two changes will be modeled twice —
 once as `Account`, once as `User`; once correctly as a Role, once wrongly as a new entity — and the
-two versions drift in code. So the project keeps a **living model**:
+two versions drift in code. So the project keeps a **living model**, in a directory of its own — parallel to `specs/`, both
+living and project-wide:
 
 ```
-openspec/domain.md                 ← the whole project's vocabulary, cumulative, permanent
-openspec/changes/<id>/domain.md    ← this change's delta (the OpenSpec artifact), archived with it
+openspec/
+├── specs/          ← living specs (one per capability)
+├── domain/         ← the project's domain material (kit-owned; OpenSpec does not see it)
+│   ├── model.md    ← the living VOCABULARY — concepts, archetypes, what is derived
+│   └── features.md ← the reconnaissance candidate list (§9)
+└── changes/<id>/
+    └── domain.md   ← this change's DELTA (the OpenSpec artifact), archived with it
 ```
 
-Both are written once, at the end of the change, from the same approved model. The living model is
-read **twice**: by the proposal step (so a new spec reuses the project's words rather than inventing
-`User` for an existing `Account`), and here at C0.
+The directory/file split is deliberate: `domain/` is **where the project's domain lives**, while
+`changes/<id>/domain.md` is one change's delta. Same word, different shapes and different trees —
+a bare `openspec/domain.md` beside `specs/` read like a peer artifact and was genuinely ambiguous.
+
+Both models are written once, at the end of the change, from the same approved model. The living one
+is read **twice**: by the proposal step (so a new spec reuses the project's words rather than
+inventing `User` for an existing `Account`), and here at C0.
 
 **It is a vocabulary, not a requirement source.** No SHALL/MUST, no behaviour, invisible to
 `openspec validate`. Requirements come only from the spec; when a spec needs a concept the model
@@ -237,7 +248,11 @@ which name wins and what the concept means; guessing produces two models and two
 | "The change is a pure UI tweak, so no domain model." | Then say so — `Domain model: none (presentation-only change)`. Recording none is cheap; silently skipping is indistinguishable from forgetting. | Always record the verdict. |
 | "There is no living model yet, so C0 does not apply." | On the first change there is nothing to reconcile — C0 is then simply "everything is NEW", and the change *creates* the living model. Skipping it means the second change has nothing to read. | Run C0 regardless; its output on an empty project is the whole concept set as NEW. |
 | "The concept is named differently, but it's basically the same — I'll extend it quietly." | A same-name/different-meaning (or different-name/same-meaning) pair is a CONFLICT precisely because the code will end up carrying both. Deciding it silently is how `Account` and `User` both ship. | CONFLICT stops the run and goes to the user. |
-| "I'll copy the existing concept into this change's model so it's self-contained." | Restating a REUSED concept creates the second source the living model exists to prevent — and the two copies drift. | Reference it by name; leave it defined once, in `openspec/domain.md`. |
+| "I'll copy the existing concept into this change's model so it's self-contained." | Restating a REUSED concept creates the second source the living model exists to prevent — and the two copies drift. | Reference it by name; leave it defined once, in `openspec/domain/model.md`. |
+| "Recon is done, so the change's `domain` artifact can be skipped." | Recon is coarse and hypothetical; the change's model is where a hypothesis becomes a decision with real attributes and multiplicities. C0 reconciles against recon — it does not replace it. | Always run the change-level model, with C0 reading `openspec/domain/model.md`. |
+| "The feature list is the roadmap; I'll keep it updated." | A second backlog beside OpenSpec drifts, and its stale entries compete with `changes/` as the truth. | Recon runs once. After selection, `openspec/changes/` and `openspec/specs/` are the only truth. |
+| "I'll make the recon list FDD-granular so it's thorough." | FDD features are hours of work; this kit's feature is a module. A list at the wrong level cannot be acted on. | Two levels: features (selectable, = a change) with functions nested under them. |
+| "The user was vague, so I'll fill in the missing concepts." | An agent has no domain expert; inventing here produces a confident-looking wrong model the first real change has to undo. | Record it as an Open question with the assumption taken, and let the change reconcile it. |
 
 ---
 
@@ -262,3 +277,85 @@ What the model forces that the spec did not:
   it is `AccountResponse` in the contributor role, with the window's aggregate attached.
 
 Three decisions settled before a single DTO was named. That is the layer the kit was missing.
+
+---
+
+## 9. Reconnaissance — FDD steps 1–2 (a new project)
+
+A per-change model has one gap: **a project's first change names its concepts by accident.** The
+proposal is written from a one-paragraph request, and whatever words it happens to use become the
+living vocabulary every later change inherits. Coad's process does not have this gap — FDD starts
+with *Develop an Overall Model*, before any feature is selected.
+
+`kmp-domain-recon` performs those two steps once, on a project that has no change yet:
+
+1. **Develop an overall model** — the domain split into areas, with the key concepts and their
+   archetypes, at a deliberately coarse resolution.
+2. **Build a feature list** — candidate work, ordered, for the user to choose from.
+
+### Granularity — the trap, and the two levels
+
+FDD's *feature* is small: `<action> the <result> <object>`, a few hours, dozens per project. **This
+kit's feature is not that.** One feature here is a Gradle module with a data layer, a presentation
+layer, DI, four integration points, a spec capability — a change that takes a session, not an hour.
+
+So reconnaissance produces **two levels**, and the user selects the **upper** one:
+
+| Level | Unit | Becomes | Named |
+|---|---|---|---|
+| Upper | **Feature** (an area of the domain) | one `/opsx-propose` change → one `feature/` module | the top-level list |
+| Lower | **Function** (`<action> the <result> <object>`) | raw material for that change's `tasks.md` | nested under a feature |
+
+Confusing the two produces a list the user cannot act on: FDD-granular items are far too small to be
+a change, and treating one as a change yields a module with one method.
+
+### The boundary — hypotheses, not requirements
+
+FDD step 1 assumes **domain experts in a room**. An agent has no domain expert; its only input is
+what the user says. Where the user is vague, the model can only guess — and guessing requirements is
+what this kit forbids everywhere else.
+
+Therefore reconnaissance output is explicitly **non-normative**:
+
+- `openspec/domain/model.md` from reconnaissance is a **hypothesis**. It carries no SHALL/MUST — the
+  same rule as §6 — and it is expected to be wrong in places.
+- `openspec/domain/features.md` is a **candidate list**. It is not a plan, not a backlog, and not a
+  commitment.
+- The first real change's `domain` artifact (C0) **reconciles against it**, correcting it. That is
+  where a hypothesis becomes a decision.
+
+### The list does not stay in sync
+
+After the user selects a feature, `features.md` is **historical**. The truth about what exists and
+what is next is `openspec/changes/` and `openspec/specs/`. Recon ran once; nothing maintains the
+list afterward, and nothing should try — a second backlog beside OpenSpec is exactly the kind of
+duplicate source this kit removes elsewhere.
+
+Skip reconnaissance entirely when the project is single-purpose (one obvious area, no ambiguity) —
+and record the skip explicitly, the same way a concept-free capability records
+`Domain model: none`.
+
+### The candidate list — `openspec/domain/features.md`
+
+```markdown
+# Feature Candidates
+
+> One-time reconnaissance output (FDD step 2). **Hypotheses, not requirements** — no SHALL/MUST.
+> After a feature is selected, this list is historical: `openspec/changes/` and `openspec/specs/`
+> are the truth. Nothing maintains it.
+
+## <Feature name>
+*<one line: the capability, in the domain's words>* · **selectable as one change**
+
+- Function: <action> the <result> <object>
+- Function: <action> the <result> <object>
+
+## <Feature name>
+...
+
+## Open questions
+- <question the brief left open> — assumption taken: <what was assumed>
+```
+
+The **feature** heading is what the user picks; its `Function:` lines are FDD-granular and become
+input for that change's `tasks.md`, never a change of their own.

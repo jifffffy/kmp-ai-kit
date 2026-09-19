@@ -4,7 +4,7 @@
   "expected": {
     "must_do": [
       "read the spec first and stop if it is missing — OpenSpec blocks the domain artifact until `specs` completes",
-      "read the living model openspec/domain.md at C0 and classify every needed concept NEW / EXTENDS / REUSES / CONFLICT before modeling (on a project's first change, C0 declares everything NEW and creates the living model)",
+      "read the living model openspec/domain/model.md at C0 and classify every needed concept NEW / EXTENDS / REUSES / CONFLICT before modeling (on a project's first change, C0 declares everything NEW and creates the living model)",
       "read the schema's own guidance for the artifact (openspec instructions domain --change <id>) rather than restating the required sections from memory",
       "treat the artifact's existence, path and ordering as the schema's concern (domain requires specs; tasks requires domain) and not re-derive it",
       "identify the Moment-Intervals first (read the spec's scenarios as events), and get that list approved (C1) before deriving anything else",
@@ -14,14 +14,14 @@
       "before C4's approval, report spec coverage as a table (Requirement/Scenario -> concept or MI -> covered?) and surface every gap as a finding the user decides on",
       "map each archetype onto the kit: MI -> Repository method + ViewModel action (never a UseCase class, Rule 9), PPT -> data/model/*Response.kt, Role -> field/nested object, Description -> enum",
       "mark every derived attribute (a count that is an aggregation, a rank that is a position in a sort) explicitly as derived rather than stored",
-      "write two files at Phase 5 — openspec/changes/<id>/domain.md (the delta) and openspec/domain.md (the living vocabulary) — and only what C4 approved, then re-run kmp_route.py so .kmp/route.json sees it",
+      "write two files at Phase 5 — openspec/changes/<id>/domain.md (the delta) and openspec/domain/model.md (the living vocabulary) — and only what C4 approved, then re-run kmp_route.py so .kmp/route.json sees it",
       "record `Domain model: none` with one sentence when the capability genuinely has no domain concepts"
     ],
     "must_not": [
       "start from the spec's nouns / entity list instead of Moment-Intervals",
       "fold C3 (attributes + links) into the C4 mapping checkpoint, or skip C3 because the derived/stored calls look mechanical",
       "silently resolve a CONFLICT (same name different meaning, or two names for one concept) instead of stopping to ask the user",
-      "restate a REUSED concept inside the change's model so it reads standalone — it stays defined once, in openspec/domain.md",
+      "restate a REUSED concept inside the change's model so it reads standalone — it stays defined once, in openspec/domain/model.md",
       "treat the living model as a requirement source: it emits no SHALL/MUST, and a spec that needs a concept the model lacks still decides",
       "silently re-open an already-approved checkpoint — editing the MI list after C1 passed without saying so and re-running C1",
       "write any new concept or field in Phase 5 that C4 did not approve",

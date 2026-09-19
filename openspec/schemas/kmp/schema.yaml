@@ -166,7 +166,7 @@ artifacts:
 
       **Do not write this file yourself** — delegate to the skill, which stops for
       the user at each checkpoint. It writes TWO files: this change's `domain.md`
-      (the delta) and the living `openspec/domain.md` (the project's cumulative
+      (the delta) and the living `openspec/domain/model.md` (the project's cumulative
       vocabulary, read by later proposals). On the project's first change there is
       no living model yet; C0 then declares every concept NEW and creates it.
 

@@ -74,7 +74,7 @@ which attributes are stored vs. derived, and which archetype each maps to in the
 it, the DTO shapes and derived fields get guessed during implementation.
 
 Look for `openspec/changes/<change-id>/domain.md` (the router reports it as `artifacts.domain`).
-The project's cumulative vocabulary is `openspec/domain.md` (the router reports it as
+The project's cumulative vocabulary is `openspec/domain/model.md` (the router reports it as
 `artifacts.living_domain`) — read it too; it is where a REUSED concept is defined, and the change's
 delta only references those by name.
 
@@ -118,7 +118,7 @@ Write to the capability's entry in `.kmp/run.json`:
   "spec_path": "openspec/specs/{featurename}/spec.md",
   "change_path": "openspec/changes/{change-id}/",
   "domain_path": "openspec/changes/{change-id}/domain.md",
-  "living_domain_path": "openspec/domain.md",
+  "living_domain_path": "openspec/domain/model.md",
   "design_path": "{DESIGN.md path, or null}",
   "phase": 1
 }

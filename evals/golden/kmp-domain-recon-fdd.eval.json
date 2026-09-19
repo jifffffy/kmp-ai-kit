@@ -1,0 +1,29 @@
+{
+  "id": "kmp-domain-recon-fdd",
+  "skill": "kmp-domain-recon",
+  "expected": {
+    "must_do": [
+      "run before any change exists — reconnaissance is not a change and produces no spec",
+      "interview the user for the frame instead of inferring the domain from the app name or the repo",
+      "produce two levels: Features (selectable, each one /opsx-propose change = one feature/ module) with FDD-granular Functions (`<action> the <result> <object>`) nested under them",
+      "ask the user to select at the FEATURE level, not the function level",
+      "write exactly two files — openspec/domain/model.md (coarse living vocabulary) and openspec/domain/features.md (candidate list) — and nothing else",
+      "stop at the three checkpoints R1 (frame), R2 (areas + concepts + archetypes), R3 (feature list), all gating",
+      "state in features.md that it is a one-time artifact and historical after a feature is selected",
+      "record open questions with the assumption taken wherever the brief is vague"
+    ],
+    "must_not": [
+      "emit SHALL/MUST or acceptance criteria — recon output is hypotheses, not requirements",
+      "produce an FDD-granular list as the selectable unit (too small to be a change in this kit)",
+      "choose architecture, modules, DTOs, screens, or a task breakdown — that is the change's job",
+      "write a spec, a change, or code",
+      "keep features.md updated after selection, or treat it as a second backlog",
+      "resolve a vague answer by inventing concepts rather than recording an open question"
+    ]
+  },
+  "pass_criteria": "openspec/domain/model.md and openspec/domain/features.md exist; the list is selectable at feature granularity with functions nested; no SHALL/MUST anywhere; all three checkpoints were presented and approved; the artifact states it is a one-time, unmaintained output.",
+  "triggers": {
+    "should": ["recon the domain", "what should this app do", "break the app into features", "where do I start on a new project"],
+    "should_not": ["model the domain for the leaderboard change", "create a KMP feature", "review this feature"]
+  }
+}

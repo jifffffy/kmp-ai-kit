@@ -23,7 +23,8 @@
     "kmp-review-feature": "suggest",
     "kmp-test-feature": "review",
     "kmp-bridge-swift": "review",
-    "kmp-using-design-system": "review"
+    "kmp-using-design-system": "review",
+    "kmp-domain-recon": "review"
   },
   "safeSet": [
     "rename an unnamed or auto-named layer to a semantic name",
