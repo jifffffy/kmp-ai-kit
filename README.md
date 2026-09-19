@@ -120,15 +120,20 @@ real API can replace it later. Make it the app's start destination, replacing
 the placeholder Welcome screen. Handle loading, success and failure states.
 ```
 
-The agent runs `/opsx-propose`, which creates:
+The agent runs `/opsx-propose`, which walks the schema's artifact graph in dependency order —
+`proposal → specs → domain → tasks` (design is optional in this kit, and does not gate tasks):
 
 ```
 openspec/changes/add-github-leaderboard/
 ├── proposal.md      what & why
 ├── specs/leaderboard/spec.md   the Requirement + Scenario delta
-├── design.md        the technical decisions
+├── domain.md        the domain model — see Step 4
 └── tasks.md         the ordered checklist
 ```
+
+**It will not write `domain.md` itself.** The schema's `domain` instruction delegates to the
+`kmp-domain-model` skill, so the run pauses there and drives that skill's checkpoints — Step 4 is
+what happens during that pause. Expect to approve five things before the task list appears.
 
 Review the artifacts. Then **archive nothing yet** — implementation comes first.
 
@@ -136,15 +141,17 @@ Review the artifacts. Then **archive nothing yet** — implementation comes firs
 > editing Kotlin in the same turn, stop it: the planning step is meant to end with the
 > artifacts presented to you.
 
-### Step 4 — Model the domain (Coad color modeling)
+### Step 4 — The domain step (what happens inside Step 3)
 
-The spec says what the system must **do**. It does not say what the domain **is** — and that gap is
-where a feature gets a stale stored count, or a duplicate entity that was really a Role.
+This is not a command you type separately on a new project — `/opsx-propose` reaches it
+automatically once the spec exists, because the schema makes `domain` depend on `specs`. It is
+described on its own here because it is where the project's domain vocabulary is born, and it is
+the step most likely to change what you thought you were building.
 
-**Exact prompt:**
+**You can also invoke it directly** when a change already exists and the model needs updating:
 
 ```
-Model the domain for the leaderboard change.
+Model the domain for the leaderboard change.     → /kmp-domain-model
 ```
 
 `kmp-domain-model` applies **Peter Coad's Color Modeling**: identify the **Moment-Intervals first**
@@ -167,6 +174,10 @@ and **`Contributor` is a Role** on `Account` — so there is no `ContributorResp
 It stops at five checkpoints: **C0** reconciles against the living vocabulary, then C1 the
 Moment-Interval list — the model's spine. It writes two files: the change's `domain.md` and the living
 `openspec/domain.md`.
+
+**On a brand-new project there is no vocabulary yet.** C0 then simply declares every concept NEW,
+and *that run creates* `openspec/domain.md`. From the second change onward, `proposal` reads it and
+reuses the project's words instead of inventing new ones — which is the whole point of keeping it.
 
 ### Step 5 — Design (optional; Penpot owns this)
 

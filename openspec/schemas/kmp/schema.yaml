@@ -160,9 +160,15 @@ artifacts:
       requirements and do not specify visuals.
 
       **Use the `kmp-domain-model` skill.** The full method is in
-      `shared/domain-modeling.md`; the skill gates it with four checkpoints
-      (C1 Moment-Intervals, C2 concepts, C3 attributes/links, C4 KMP mapping).
-      Do not model from the spec's nouns.
+      `shared/domain-modeling.md`; the skill gates it with five checkpoints
+      (C0 reconcile vs the living model, C1 Moment-Intervals, C2 concepts,
+      C3 attributes/links, C4 KMP mapping). Do not model from the spec's nouns.
+
+      **Do not write this file yourself** — delegate to the skill, which stops for
+      the user at each checkpoint. It writes TWO files: this change's `domain.md`
+      (the delta) and the living `openspec/domain.md` (the project's cumulative
+      vocabulary, read by later proposals). On the project's first change there is
+      no living model yet; C0 then declares every concept NEW and creates it.
 
       Order — Moment-Intervals first, always:
         1. Moment-Intervals — what HAPPENS (read the spec's scenarios as events).
