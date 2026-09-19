@@ -121,14 +121,28 @@ An admitted `not-run` is worth more than an implied pass.
 
 Every box in `openspec/changes/{change-id}/tasks.md` is either `- [x]` or explicitly struck
 through with a reason. Archiving with unticked boxes produces a "0/N tasks" warning, and forcing
-past it leaves a permanent false "incomplete" record in the archive.
+past it (`--yes`) leaves a permanent false "incomplete" record in the archive.
+
+**Tick each box in the same step that completes its task — not in a batch at the end.** The
+observable failure mode is real: a change is created with N unchecked boxes, every task is actually
+done, and none is ever ticked, because ticking is deferred and then forgotten. So the gate is
+mechanical, not a reminder:
 
 ```bash
-grep -c '^- \[ \]' openspec/changes/{change-id}/tasks.md   # must be 0 (or only struck entries)
+# the verdict the gate reads — must be true before Step 5.6
+python3 shared/scripts/kmp_route.py --capability {featurename} --json-only \
+  | python3 -c "import json,sys; c=json.load(sys.stdin)['active_changes']; \
+                print([(x['id'], x['unchecked'], x['archive_ready']) for x in c])"
 ```
 
-**If any box is unticked:** either finish the task, or strike it (`- [ ] ~~Task N: …~~ (skipped:
-<reason>)`). Never tick a box for work that did not happen.
+The router reports `archive_ready: false` and prints a warning while any box is unticked. **Do not
+archive, and never pass `--yes`, until `archive_ready` is true.**
+
+**If a box is unticked:** either finish the task, or strike it
+(`- [ ] ~~Task N: …~~ (skipped: <reason>)`). Never tick a box for work that did not happen.
+
+**If the archive is not ready and the work is done:** you skipped the ticking, not the work. Tick the
+boxes now, honestly, matching them to what actually shipped.
 
 ---
 

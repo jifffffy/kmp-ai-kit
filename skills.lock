@@ -1,9 +1,9 @@
 {
   "lockfileVersion": 2,
-  "integrity": "sha256-16:e0efe5e6bae9cfc9",
+  "integrity": "sha256-16:f345a5a2ddbd26e9",
   "note": "Per-skill hash = sha256 (16 hex) over every file in the skill dir; doctrine = shared/ + policies/ (vendored into native bundles). Regenerate with scripts/dev/update-lock.mjs; verify with --check.",
   "doctrine": {
-    "shared": "sha256-16:34741f08fd17ebaa",
+    "shared": "sha256-16:332a959e6a60454e",
     "policies": "sha256-16:200a86be7a2636c5"
   },
   "skills": {
@@ -73,7 +73,7 @@
     },
     "kmp-create-feature": {
       "version": "0.1.0",
-      "hash": "sha256-16:d848eab663d32549"
+      "hash": "sha256-16:c4c3dce97e0f1b05"
     },
     "kmp-modify-feature": {
       "version": "0.1.0",

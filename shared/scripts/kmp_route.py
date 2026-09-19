@@ -153,10 +153,17 @@ def active_changes(root: Path) -> list[dict]:
             done = len(re.findall(r"^\s*-\s*\[[xX]\]", text, re.M))
             total = done + len(re.findall(r"^\s*-\s*\[\s\]", text, re.M))
         age_h = round((time.time() - d.stat().st_mtime) / 3600, 1)
+        unchecked = total - done
         out.append(
             {
                 "id": d.name,
                 "tasks": {"done": done, "total": total},
+                # The archive gate. A change is only ready to archive when every task is ticked
+                # or struck through — archiving over unchecked boxes leaves a permanent, false
+                # "incomplete" record, and `--yes` forces past OpenSpec's own warning. Prose asks
+                # for this; the boolean is what a workflow can actually check.
+                "unchecked": unchecked,
+                "archive_ready": total > 0 and unchecked == 0,
                 "age_hours": age_h,
                 # Not yet started and untouched for a day: worth a user decision, not a silent resume.
                 "stale": total > 0 and done == 0 and age_h > 24,
@@ -233,7 +240,11 @@ def compute(root: Path, capability: str | None, action: str | None, ui: bool) ->
 
     # A capability is specced when the change's `specs` artifact is complete, or a living
     # spec already exists (the change has been archived).
-    spec = living_spec or (f"{change_dir}/specs" if art.get("specs", {}).get("status") == "done" else None)
+    # `spec` means the ACTIVE CHANGE has its spec delta — it does not mean a living spec
+    # exists. A capability with a living spec still needs a new change to carry the new delta
+    # (`/opsx-propose`), so a living spec must NOT close the spec gap: doing so routed a modify
+    # straight to `kmp-domain-model` with no change-id to write its delta into.
+    spec = f"{change_dir}/specs" if art.get("specs", {}).get("status") == "done" else None
     domain = artifact_path("domain")
     # `design` here means the PENPOT handoff (DESIGN.md), not OpenSpec's design.md artifact.
     design = find_design(root, capability) if capability else None
@@ -250,7 +261,7 @@ def compute(root: Path, capability: str | None, action: str | None, ui: bool) ->
     if not resolved:
         feature_exists = any(norm(f) == norm(capability or "") for f in features)
         # A capability that already has a feature module or a living spec is a modification.
-        resolved = "modify" if (feature_exists or spec) else "create"
+        resolved = "modify" if (feature_exists or living_spec) else "create"
 
     target_skill = BUILD_TARGET.get(resolved, "kmp-create-feature")
 
@@ -357,6 +368,13 @@ def main() -> int:
         for c in route["active_changes"]:
             flag = "  (stale — decide: resume or archive)" if c["stale"] else ""
             print(f"  in flight: {c['id']}  {c['tasks']['done']}/{c['tasks']['total']} tasks  {c['age_hours']}h{flag}")
+            if not c["archive_ready"] and c["tasks"]["total"] > 0:
+                # Loud on purpose: /opsx-archive with `--yes` would turn this into a permanent
+                # false "incomplete" record in the archive.
+                print(
+                    f"  ⚠ archive NOT ready: {c['unchecked']} unchecked task(s) — tick each as its "
+                    f"work lands, or strike it with a reason; never force past the warning"
+                )
     if route["gaps"]:
         for g in route["gaps"]:
             print(f"  {'BLOCKING' if g['blocking'] else 'optional'}: missing {g['what']} → {g['fix']}")
