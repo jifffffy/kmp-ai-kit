@@ -3,16 +3,25 @@ schema: spec-driven
 # Project context — shown to the AI when creating OpenSpec artifacts.
 context: |
   This repo is the Kotlin Multiplatform AI Kit: an opencode-only agent kit with
-  three layers that never overlap.
+  four layers that never overlap.
 
   - Planning (OpenSpec) — owns requirements. A change lives in openspec/changes/;
     the living spec is openspec/specs/<capability>/spec.md. Both use Requirement +
     Scenario format. No other layer writes requirements.
+  - Domain (kmp-domain-model) — owns the concepts. Produced with Coad's Color
+    Modeling into openspec/changes/<change-id>/domain.md: Moment-Intervals, Roles,
+    Parties/Places/Things, Descriptions, then attributes and links. It is not a
+    second spec and not a design artifact — it says what the domain IS, which the
+    spec never does. Required for create/modify before the build runs.
   - Design (Penpot) — owns visual intent. Produced by the penpot-* skills into a
     DESIGN.md plus an annotation layer. No other layer draws UI.
   - Build (KMP skills) — owns implementation. kmp-create-feature builds a feature
-    from a spec + a design into Clean Architecture modules shared across Android
-    + iOS.
+    from a spec + domain model + design into Clean Architecture modules shared
+    across Android + iOS.
+
+  The chain is: spec → domain → design(optional) → build. `shared/scripts/kmp_route.py`
+  computes which step comes next and writes .kmp/route.json; the router reads it
+  instead of re-deriving (a missing spec is always blocking, and is fixed first).
 
   Tech stack for the build layer: Kotlin 2.x, Compose Multiplatform, Gradle Kotlin
   DSL, Kotlin Multiplatform (Android + iOS + desktop test target), Koin for DI.
@@ -37,6 +46,12 @@ rules:
   specs:
     - Write requirements in Requirement + Scenario form; scenarios must be testable.
     - Include at least one scenario for the error/failure path, not only the happy path.
+  domain:
+    - This file (openspec/changes/<change-id>/domain.md) is produced by the kmp-domain-model skill using Coad's Color Modeling; see shared/domain-modeling.md for the method and the required sections.
+    - Moment-Intervals come first, derived from the spec's scenarios read as events — not from the spec's nouns.
+    - Mark every derived attribute (a count that is a sum, a rank that is a position). Never store a value that can go stale.
+    - "A Role is not a new entity: if a 'new' concept shares most attributes with another, model it as a field or nested object."
+    - "If the capability has no domain concepts, write `Domain model: none` with one sentence why — never omit the file silently."
   design:
     - Reference the KMP architecture rules in shared/kmp-patterns.md rather than restating them.
     - Call out which of the 14 architecture rules the change is most likely to violate, and how it avoids that.
@@ -49,7 +64,8 @@ rules:
 operations:
   apply:
     guidance:
-      - Before implementing, confirm the design artifact exists; if it does not, the design layer runs first.
+      - Read .kmp/route.json first (regenerate with python3 shared/scripts/kmp_route.py --capability <slug>). A missing spec is always blocking and is fixed before anything else; a missing domain model is blocking for create/modify.
+      - Before implementing, confirm the spec and domain.md exist, and that the design artifact does if the work has UI.
       - Run python3 shared/scripts/kmp_check.py --baseline before starting, and the feature-scoped check after each layer.
       - Stop at each user checkpoint; "looks good" approves only the phase just shown.
   archive:

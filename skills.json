@@ -179,7 +179,20 @@
         "design-engineer",
         "product-designer"
       ],
-      "description": "Thin dispatcher for KMP build work: route any request to exactly one KMP skill (create, and later modify/review/test/adopt/bridge)."
+      "description": "Thin dispatcher for KMP build work: compute the routing decision into .kmp/route.json and name exactly one target skill."
+    },
+    {
+      "id": "kmp-domain-model",
+      "name": "kmp-domain-model",
+      "version": "0.1.0",
+      "path": "skills/kmp-domain-model/SKILL.md",
+      "mode": "review",
+      "audiences": [
+        "kmp-engineer",
+        "design-engineer",
+        "product-designer"
+      ],
+      "description": "Model a capability's domain with Coad's Color Modeling (Moment-Intervals first, then Roles, Parties/Places/Things, Descriptions) and map it onto the kit. Produces openspec/changes/<id>/domain.md."
     },
     {
       "id": "kmp-init",

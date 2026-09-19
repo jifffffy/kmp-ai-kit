@@ -1,12 +1,13 @@
 # Phase 1: Input Resolution
 
-**Purpose:** Resolve this build's two inputs — the **requirements** (OpenSpec) and the
-**design** (Penpot) — before any contract is written or any code is touched. Read-only.
+**Purpose:** Resolve this build's three inputs — the **requirements** (OpenSpec), the **domain
+model** (Coad color modeling), and the **design** (Penpot) — before any contract is written or any
+code is touched. Read-only.
 
 **When:** Immediately after Phase 0 context discovery.
 
-**Exit:** both input paths are recorded in the run ledger, or the run stops with the
-missing input named.
+**Exit:** each input's path is recorded in the run ledger, or the run stops with the missing input
+named.
 
 ---
 
@@ -16,9 +17,17 @@ missing input named.
 Input Resolution Progress:
 - [ ] Step 1.1: Locate the OpenSpec change and its spec delta
 - [ ] Step 1.2: Confirm the capability is create, not modify
-- [ ] Step 1.3: Locate the Penpot handoff artifact, if the work is visual
-- [ ] Step 1.4: Record inputs in `.kmp/run.json`
-- [ ] Step 1.5: Assert the inputs exist (stop if they do not)
+- [ ] Step 1.3: Confirm the domain model exists (or is explicitly `none`)
+- [ ] Step 1.4: Locate the Penpot handoff artifact, if the work is visual
+- [ ] Step 1.5: Record inputs in `.kmp/run.json`
+- [ ] Step 1.6: Assert the inputs exist (stop if they do not)
+```
+
+**Shortcut:** run the router's computation and read the verdict instead of re-deriving any of this:
+
+```bash
+python3 shared/scripts/kmp_route.py --capability {featurename} [--ui]
+# → .kmp/route.json: artifacts.{spec,domain,design}, gaps[], next
 ```
 
 ---
@@ -58,7 +67,26 @@ capability is already owned, so the work is a modification.
 
 ---
 
-## Step 1.3: Locate the Penpot handoff (visual work only)
+## Step 1.3: Confirm the domain model
+
+The domain model is the layer between the spec and the build — it decides what the concepts are,
+which attributes are stored vs. derived, and which archetype each maps to in the feature. Without
+it, the DTO shapes and derived fields get guessed during implementation.
+
+Look for `openspec/changes/<change-id>/domain.md` (the router reports it as `artifacts.domain`).
+
+| Situation | Action |
+|---|---|
+| `domain.md` exists | read it; it drives the DTO shapes and the repository operations in Phase 4 |
+| missing, and the capability has domain concepts | **stop** — run `/kmp-domain-model <capability>`, then re-run the router |
+| missing, and the capability is genuinely concept-free | require an explicit `Domain model: none` with a one-sentence reason, written by `kmp-domain-model`; then continue |
+
+**Do not model the domain here.** This phase consumes the model; `kmp-domain-model` produces it.
+Inferring entity shapes mid-implementation is exactly what that skill exists to prevent.
+
+---
+
+## Step 1.4: Locate the Penpot handoff (visual work only)
 
 The design layer owns design. Its output is:
 
@@ -76,7 +104,7 @@ If the feature is genuinely UI-less (a pure data/platform change), record
 
 ---
 
-## Step 1.4: Record the inputs
+## Step 1.5: Record the inputs
 
 Write to the capability's entry in `.kmp/run.json`:
 
@@ -86,6 +114,7 @@ Write to the capability's entry in `.kmp/run.json`:
   "change_id": "{change-id}",
   "spec_path": "openspec/specs/{featurename}/spec.md",
   "change_path": "openspec/changes/{change-id}/",
+  "domain_path": "openspec/changes/{change-id}/domain.md",
   "design_path": "{DESIGN.md path, or null}",
   "phase": 1
 }
@@ -95,21 +124,23 @@ Schema and rules: `shared/kmp-state.md`.
 
 ---
 
-## Step 1.5: Assert before proceeding
+## Step 1.6: Assert before proceeding
 
-Both inputs must exist as files:
+Every input must resolve:
 
-- a spec delta under `openspec/changes/<change-id>/specs/`, and
+- a spec delta under `openspec/changes/<change-id>/specs/`,
+- a `domain.md` (or a recorded `Domain model: none`), and
 - either a `DESIGN.md` or an explicit `design: none`.
 
-If either is missing, do not continue to Phase 2. Name the missing input and the command
-that produces it.
+If one is missing, do not continue to Phase 2. Name the missing input and the command that produces
+it — `.kmp/route.json` already lists it under `gaps`, with `blocking`.
 
 ---
 
 ## Output
 
 - The change and its spec delta are located.
+- The domain model is located and read.
 - The Penpot handoff is located, or design is explicitly out of scope.
 - The inputs are recorded in `.kmp/run.json`.
 

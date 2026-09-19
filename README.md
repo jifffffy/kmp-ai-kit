@@ -1,17 +1,22 @@
 # Kotlin Multiplatform AI Kit
 
-An **opencode-only** agent kit for building Kotlin Multiplatform apps. Three layers, three
+An **opencode-only** agent kit for building Kotlin Multiplatform apps. Four layers, four
 owners, and they never overlap:
 
 | Layer | Owner | Owns | Produces |
 |---|---|---|---|
 | **Planning** | OpenSpec (`/opsx-*`) | *what* and *why* | `openspec/changes/**` → `openspec/specs/**` |
+| **Domain** | `kmp-domain-model` (Coad color modeling) | *what the domain is* | `openspec/changes/<id>/domain.md` |
 | **Design** | Penpot (`penpot-*` skills) | *how it looks* | a `DESIGN.md` handoff + annoted Penpot file |
 | **Build** | KMP skills (`kmp-*`) | *how it ships* | `feature/**`, `core/**`, Gradle wiring |
 
 The spec always wins over code. The design always wins over a build guess. A feature's
 requirements live in exactly one place — `openspec/specs/<capability>/spec.md` — never in
 the code tree.
+
+The chain is **`spec → domain → design?(UI) → build`**, and the order is not a judgment call:
+`shared/scripts/kmp_route.py` computes it, writes `.kmp/route.json`, and every step reads that file
+instead of re-deriving. A missing spec is always blocking and is fixed first.
 
 > **Requirements:** this kit targets [opencode](https://opencode.ai) only. It does not carry
 > Claude Code hooks, plugin manifests or namespaced commands, and none are needed.
@@ -124,7 +129,38 @@ Review the artifacts. Then **archive nothing yet** — implementation comes firs
 > editing Kotlin in the same turn, stop it: the planning step is meant to end with the
 > artifacts presented to you.
 
-### Step 4 — Design (optional; Penpot owns this)
+### Step 4 — Model the domain (Coad color modeling)
+
+The spec says what the system must **do**. It does not say what the domain **is** — and that gap is
+where a feature gets a stale stored count, or a duplicate entity that was really a Role.
+
+**Exact prompt:**
+
+```
+Model the domain for the leaderboard change.
+```
+
+`kmp-domain-model` applies **Peter Coad's Color Modeling**: identify the **Moment-Intervals first**
+(what *happens* — a contribution, not a contributor), then Roles, then Parties/Places/Things, then
+Descriptions; then attributes and links. It writes
+`openspec/changes/add-github-leaderboard/domain.md`, and maps each archetype onto this kit:
+
+| Archetype | Lands in |
+|---|---|
+| Moment-Interval | a Repository method + a ViewModel action — **never** a UseCase class (Rule 9 forbids that layer) |
+| Role | a field / nested object on the party (not a parallel DTO) |
+| Party / Place / Thing | `data/model/*Response.kt` |
+| Description | an `enum class` / constants |
+
+For the leaderboard it settles three things the spec left open: **`contributionCount` is derived**
+(a sum over the contribution interval, not a column), **`rank` is derived** (a position in a sort),
+and **`Contributor` is a Role** on `Account` — so there is no `ContributorResponse` duplicating
+`AccountResponse`. Full method + template: `shared/domain-modeling.md`.
+
+The agent will stop at a checkpoint after the Moment-Interval list — that list is the model's spine,
+so approve it before it derives anything else.
+
+### Step 5 — Design (optional; Penpot owns this)
 
 Skip this if the feature has no visual work or you are happy with the design system's
 defaults. When you want a real design:
@@ -140,7 +176,7 @@ Penpot file (see `docs/setup-remote.md` / `docs/setup-local.md`).
 
 A feature is **design-aware** exactly when a `DESIGN.md` exists for it. Never invent one.
 
-### Step 5 — Build (the KMP layer owns this)
+### Step 6 — Build (the KMP layer owns this)
 
 **Exact prompt:**
 
@@ -155,14 +191,17 @@ at each step** — it will not one-shot the module:
 
 1. **Phase 0** — resolves the app module, package prefix, `initKoin`, NavHost and core
    modules from the project (read-only).
-2. **Phase 1** — reads the OpenSpec spec and the Penpot `DESIGN.md`, if any.
+2. **Phase 1** — reads the OpenSpec spec, the **domain model** (`domain.md`), and the Penpot
+   `DESIGN.md` if any. Missing a blocking input here stops the run: spec → `/opsx-propose`,
+   domain → `/kmp-domain-model`.
 3. **Phase 2 — ✋ your first checkpoint.** It restates the request as a token-aware
    contract (context / objective / inputs / constraints / acceptance criteria), resolves the
    Platform Profile, and proposes the layer plan. **Approve it here.**
 4. **Phase 3** — turns the plan into the change's `tasks.md`.
 5. **Phase 4 — ✋ a checkpoint per layer.** Data layer → build + check → approve. UI layer →
    build + check → approve. Integration → build + check.
-6. **Phase 5** — reconciles the spec, and hands back to OpenSpec.
+6. **Phase 5** — runs the app (runtime gate), reconciles the spec, ticks the tasks, and hands
+   back to OpenSpec.
 
 At every layer it runs:
 
@@ -170,7 +209,7 @@ At every layer it runs:
 python3 shared/scripts/kmp_check.py leaderboard
 ```
 
-### Step 6 — Verify, run, and archive
+### Step 7 — Verify, run, and archive
 
 ```bash
 # static gate
@@ -271,6 +310,7 @@ specification and has to be undone before the fix can land.
 |---|---|
 | A new app | `kmp-ai-kit new MyApp com.acme.myapp` |
 | Plan a change | *"Propose a change called … : <what it does>"* → `/opsx-propose` |
+| Model the domain | *"Model the domain for the <x> change"* → `/kmp-domain-model` |
 | Implement | `/kmp-create-feature <feature>` |
 | Change an existing feature | `/kmp-modify-feature <feature>` — drafts a spec delta first |
 | Audit a feature | `/kmp-review-feature <feature>` — read-only; reports, never edits |
@@ -291,13 +331,14 @@ target skill. It never edits code itself.
 
 ## 6. The catalog
 
-### Build layer — 8 KMP skills
+### Build layer — 9 KMP skills
 
 | Skill | Mode | Does |
 |---|---|---|
 | `kmp-init` | review | Scaffold a new app *(kit-only; not copied into projects)* |
-| `kmp-router` | suggest | Route a request to one skill |
-| `kmp-create-feature` | review | Build a feature from a spec + design, layer by layer |
+| `kmp-router` | suggest | Compute `.kmp/route.json`; name one skill |
+| `kmp-domain-model` | review | Coad color modeling → `domain.md` |
+| `kmp-create-feature` | review | Build a feature from spec + domain + design, layer by layer |
 | `kmp-modify-feature` | review | Change a feature, spec-delta first |
 | `kmp-review-feature` | suggest | Audit against the rules; consumes the checker report |
 | `kmp-test-feature` | review | Staged test generation (fixtures → data → ui/integration) |
@@ -316,9 +357,11 @@ target skill. It never edits code itself.
 | File | What |
 |---|---|
 | `shared/kmp-patterns.md` | the 14 architecture rules |
+| `shared/domain-modeling.md` | Coad's Color Modeling: archetypes, the six steps, archetype→KMP mapping, the `domain.md` template |
 | `shared/kmp-x-components-catalog.md` | the `X*` component contracts |
 | `shared/kmp-motion.md`, `shared/kmp-agent-base.md` | motion primitives; agent context |
 | `shared/scripts/kmp_check.py` | the deterministic checker |
+| `shared/scripts/kmp_route.py` | computes the routing decision → `.kmp/route.json` |
 | `AGENTS.md` | the instructions layer every skill obeys |
 
 ---
@@ -330,6 +373,7 @@ GithubLeaderboard/
 ├── opencode.json          project-local config (no external paths)
 ├── AGENTS.md              the instructions layer
 ├── .kmp.json              appModule (read by the skills and the checker)
+├── .kmp/route.json        the routing verdict (tooling output, git-ignored)
 ├── skills/                20 skills (kmp-init excluded — it builds new apps, not features)
 ├── shared/  policies/  prompts/  workflows/  docs/
 ├── .opencode/

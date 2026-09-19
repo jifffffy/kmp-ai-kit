@@ -84,7 +84,13 @@
       "name": "kmp-router",
       "version": "0.1.0",
       "path": "skills/kmp-router/SKILL.md",
-      "description": "Route any KMP build request to exactly one skill."
+      "description": "Compute the routing decision into .kmp/route.json; name exactly one skill."
+    },
+    {
+      "name": "kmp-domain-model",
+      "version": "0.1.0",
+      "path": "skills/kmp-domain-model/SKILL.md",
+      "description": "Model a capability's domain with Coad's Color Modeling into domain.md."
     },
     {
       "name": "kmp-init",

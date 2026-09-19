@@ -42,7 +42,7 @@ const TEMPLATE_IDENTITY = {
 const TEXT_EXT = new Set([
   ".kt", ".kts", ".xml", ".gradle", ".pro", ".swift", ".plist", ".pbxproj", ".xcconfig", ".toml", ".properties", ".json", ".md",
 ])
-const SKIP_DIRS = new Set([".git", ".gradle", "build", ".kotlin", ".idea", "Pods", "node_modules", ".kmp"])
+const SKIP_DIRS = new Set([".git", ".gradle", "build", ".kotlin", ".idea", "Pods", "node_modules", ".kmp", "__pycache__", ".ruff_cache"])
 
 const argv = process.argv.slice(2)
 const arg = (name, dflt) => {
@@ -525,12 +525,20 @@ writeFileSync(join(destAbs, ".kmp.json"), JSON.stringify({ appModule: "composeAp
 // instructions and the exact prompts should live with it, not only in the kit.
 writeFileSync(join(destAbs, "README.md"), projectReadme(name))
 
-// The project always carries the checker (so `./gradlew archTest` and CI work with no
-// kit) plus the architecture rules it mechanizes. In vendored mode the whole runtime
-// comes along; in linked mode these two files are the project-local copy.
+// Every project carries the checker (so `./gradlew archTest` and CI work with no kit), the
+// routing computation (the router reads `shared/scripts/kmp_route.py` at its own repo-relative
+// path), and the two doctrine files those scripts and the build skills reference. In
+// self-contained mode the whole runtime comes along; in linked mode these are the local copies
+// the skills resolve against.
 mkdirSync(join(destAbs, "shared/scripts"), { recursive: true })
-cpSync(join(ROOT, "shared/scripts/kmp_check.py"), join(destAbs, "shared/scripts/kmp_check.py"))
-cpSync(join(ROOT, "shared/kmp-patterns.md"), join(destAbs, "shared/kmp-patterns.md"))
+for (const rel of [
+  "shared/scripts/kmp_check.py",
+  "shared/scripts/kmp_route.py",
+  "shared/kmp-patterns.md",
+  "shared/domain-modeling.md",
+]) {
+  cpSync(join(ROOT, rel), join(destAbs, rel))
+}
 
 // Subagents are always copied: opencode only discovers agents inside the project.
 mkdirSync(join(destAbs, ".opencode/agent"), { recursive: true })

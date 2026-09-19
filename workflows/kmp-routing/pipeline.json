@@ -12,6 +12,16 @@
   "routes": [
     {
       "intent": [
+        "model the domain",
+        "what are the entities",
+        "domain model",
+        "what should the data model be",
+        "add a domain model"
+      ],
+      "target": "skill:kmp-domain-model"
+    },
+    {
+      "intent": [
         "new KMP app",
         "create a KMP app",
         "scaffold a KMP project",

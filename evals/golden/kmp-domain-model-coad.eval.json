@@ -1,0 +1,27 @@
+{
+  "id": "kmp-domain-model-coad",
+  "skill": "kmp-domain-model",
+  "expected": {
+    "must_do": [
+      "read the spec first and stop if it is missing — the router orders spec before domain",
+      "identify the Moment-Intervals first (read the spec's scenarios as events), and get that list approved before deriving anything else",
+      "map each archetype onto the kit: MI -> Repository method + ViewModel action (never a UseCase class, Rule 9), PPT -> data/model/*Response.kt, Role -> field/nested object, Description -> enum",
+      "mark every derived attribute (a count that is an aggregation, a rank that is a position in a sort) explicitly as derived rather than stored",
+      "write exactly one file, openspec/changes/<id>/domain.md, then re-run kmp_route.py so .kmp/route.json sees it",
+      "record `Domain model: none` with one sentence when the capability genuinely has no domain concepts"
+    ],
+    "must_not": [
+      "start from the spec's nouns / entity list instead of Moment-Intervals",
+      "model a Moment-Interval as a UseCase class (Rule 9 forbids the UseCase layer)",
+      "add a parallel Response DTO for something that is a Role on an existing party",
+      "invent a requirement to fill a table — a gap goes under Open questions with the default taken",
+      "edit feature/**, the spec, or the design; this skill writes only domain.md",
+      "omit domain.md silently when the model is trivial — silence is indistinguishable from skipping it"
+    ]
+  },
+  "pass_criteria": "domain.md exists in the change directory with Moment-Intervals first, every derived attribute marked, a filled archetype->KMP mapping table, and no UseCase layer; re-running kmp_route.py reports artifacts.domain present.",
+  "triggers": {
+    "should": ["model the domain", "what are the entities", "what should the data model be", "domain model for the leaderboard"],
+    "should_not": ["create a KMP feature", "review this feature", "design this screen in Penpot"]
+  }
+}

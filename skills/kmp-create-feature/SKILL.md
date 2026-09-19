@@ -71,10 +71,12 @@ prefix and namespaces from `.kmp.json` (falling back to `composeApp` / `libs`), 
 reference shape. **Exit:** every anchor resolved. No edits.
 
 ### Phase 1 — Input resolution (read-only)
-`references/phases/01-inputs.md`. Locate the OpenSpec change/spec and the Penpot handoff
-(`DESIGN.md`). If the design is missing and the work is visual, **stop** and point at
-`/penpot-build-screen` — design is the Penpot layer's job. **Exit:** inputs recorded in
-`.kmp/run.json`. No edits.
+`references/phases/01-inputs.md`. Locate the OpenSpec change/spec, the **domain model**
+(`openspec/changes/<id>/domain.md`), and the Penpot handoff (`DESIGN.md`). If the spec is missing,
+**stop** — `/opsx-propose` comes first. If the domain model is missing, **stop** and run
+`/kmp-domain-model`; if the design is missing and the work is visual, point at
+`/penpot-build-screen`. `.kmp/route.json` already lists these as blocking gaps. **Exit:** inputs
+recorded in `.kmp/run.json`. No edits.
 
 ### Phase 2 — Contract + plan
 `references/phases/02-contract.md`. Emit the Token-Aware Brief Contract, resolve the
@@ -109,7 +111,8 @@ spec copy in the code tree.
 3. **`Either<T>` for fallible ops**; never throw across a layer boundary (Rule 2).
 4. **Loading/Failed UI is shared** — `AppLoadingState`/`AppErrorState` from
    `designsystem.app`; never a private `LoadingContent`/`FailedContent`.
-5. **Spec is OpenSpec's, design is Penpot's** — this skill writes neither.
+5. **Spec is OpenSpec's, design is Penpot's, the domain model is `kmp-domain-model`'s** — this skill
+   writes none of the three. It reads them and builds from them.
 6. **Validate the build and the checker after every layer**, not once at the end.
 7. **Never hand-edit feature files outside this skill** — the guard exists for a reason.
 8. **Marker discipline:** `touch /tmp/.kmp-skill-active` at Phase 4 start, `rm -f` at

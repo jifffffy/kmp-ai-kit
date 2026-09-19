@@ -5,17 +5,25 @@
 > orchestration. This kit is **opencode-only** — do not carry Claude Code hooks, plugin manifests
 > or namespaced commands across.
 
-## 0. Three layers, three owners — never blur them
+## 0. Four layers, four owners — never blur them
 
 | Layer | Owner | Writes | Never writes |
 |---|---|---|---|
-| Planning | **OpenSpec** (`openspec/`, `/opsx-*`) | `proposal.md`, `spec.md`, `design.md`, `tasks.md` | code, Penpot files |
-| Design | **Penpot** (this file's rules, `penpot-*` skills) | Penpot file, `DESIGN.md`, handoff annotations | requirements, Kotlin code |
-| Build | **KMP skills** (`kmp-*`) | `feature/**`, `core/**`, gradle wiring | requirements, design |
+| Planning | **OpenSpec** (`openspec/`, `/opsx-*`) | `proposal.md`, `spec.md`, `design.md`, `tasks.md` | domain model, code, Penpot files |
+| Domain | **`kmp-domain-model`** (Coad color modeling) | `openspec/changes/<id>/domain.md` | requirements, code, design |
+| Design | **Penpot** (this file's rules, `penpot-*` skills) | Penpot file, `DESIGN.md`, handoff annotations | requirements, domain model, Kotlin code |
+| Build | **KMP skills** (`kmp-*`) | `feature/**`, `core/**`, gradle wiring | requirements, domain model, design |
 
 Routing: ask `kmp-router` for build work, `penpot-router` for design work. The spec always wins
 over code; the design always wins over a build guess. A feature's living requirements live in
 `openspec/specs/<capability>/spec.md` — there is no second spec copy in the code tree.
+
+**The chain is `spec → domain → design?(UI) → build`, and it is not a judgment call.**
+`shared/scripts/kmp_route.py` computes it and writes `.kmp/route.json` (`gaps`, `next`, `chain`);
+read that file instead of re-deriving. A missing spec is **blocking** and is fixed first. A missing
+domain model is **blocking** for create/modify — it decides what the concepts are and, critically,
+which attributes are *derived* rather than stored. Never model from the spec's nouns; Moment-Intervals
+come first (`shared/domain-modeling.md`).
 
 Architecture rules for the build layer are `shared/kmp-patterns.md`, and the deterministic checker
 is `shared/scripts/kmp_check.py`. Editing `feature/**` directly is blocked by
@@ -111,10 +119,9 @@ you capped scope (top-N, sampled, skipped), say so.
 
 The design rules above govern the Penpot layer. The build layer has its own, equally binding rules.
 
-- **Route first.** Ask `kmp-router`; it picks exactly one of `kmp-init`,
-  `kmp-create-feature`, `kmp-modify-feature`, `kmp-review-feature`,
-  `kmp-test-feature`, `kmp-bridge-swift`, `kmp-using-design-system`. Never improvise a
-  workflow a skill already defines.
+- **Route first.** Ask `kmp-router`; it picks exactly one of `kmp-init`, `kmp-domain-model`,
+  `kmp-create-feature`, `kmp-modify-feature`, `kmp-review-feature`, `kmp-test-feature`,
+  `kmp-bridge-swift`, `kmp-using-design-system`. Never improvise a workflow a skill already defines.
 - **A new app comes from `kmp-ai-kit new`, never from hand-written Gradle.** The command
   (`kmp-ai-kit new <Name> <pkg> [dest]`, or `npm run init -- <Name> <pkg>`) instantiates
   `templates/kmp-project` and copies the whole kit runtime in, so the project depends on no
@@ -123,6 +130,8 @@ The design rules above govern the Penpot layer. The build layer has its own, equ
 - **Spec is OpenSpec's; design is Penpot's.** Requirements live only in
   `openspec/specs/<capability>/spec.md` — never write a second spec copy in the code tree. A
   feature is design-aware when a Penpot `DESIGN.md` exists; never invent one.
+- **Domain model before build.** `openspec/changes/<id>/domain.md` (from `kmp-domain-model`) decides
+  the concepts and which attributes are derived. Missing it blocks create/modify.
 - **The 14 architecture rules are `shared/kmp-patterns.md`,** and the deterministic checker is
   `shared/scripts/kmp_check.py` (wired as `archTest` in a host project). The checker's verdict is
   the gate; never re-derive a mechanized rule by hand and never suppress a finding.
