@@ -10,7 +10,7 @@
 | Layer | Owner | Writes | Never writes |
 |---|---|---|---|
 | Planning | **OpenSpec** (`openspec/`, `/opsx-*`) | `proposal.md`, `spec.md`, `design.md`, `tasks.md` | domain model, code, Penpot files |
-| Domain | **`kmp-domain-model`** (Coad color modeling) | `openspec/changes/<id>/domain.md` | requirements, code, design |
+| Domain | **`kmp-domain-model`** (Coad color modeling) | `openspec/changes/<id>/domain.md` + the living `openspec/domain.md` | requirements, code, design |
 | Design | **Penpot** (this file's rules, `penpot-*` skills) | Penpot file, `DESIGN.md`, handoff annotations | requirements, domain model, Kotlin code |
 | Build | **KMP skills** (`kmp-*`) | `feature/**`, `core/**`, gradle wiring | requirements, domain model, design |
 
@@ -133,7 +133,9 @@ The design rules above govern the Penpot layer. The build layer has its own, equ
   `openspec/specs/<capability>/spec.md` — never write a second spec copy in the code tree. A
   feature is design-aware when a Penpot `DESIGN.md` exists; never invent one.
 - **Domain model before build.** `openspec/changes/<id>/domain.md` (from `kmp-domain-model`) decides
-  the concepts and which attributes are derived. Missing it blocks create/modify.
+  the concepts and which attributes are derived. Missing it blocks create/modify. The project's
+  cumulative vocabulary is `openspec/domain.md`; read it before writing a proposal so a new spec
+  reuses the project's words. It is a vocabulary, not a requirement source — it emits no SHALL/MUST.
 - **The 14 architecture rules are `shared/kmp-patterns.md`,** and the deterministic checker is
   `shared/scripts/kmp_check.py` (wired as `archTest` in a host project). The checker's verdict is
   the gate; never re-derive a mechanized rule by hand and never suppress a finding.

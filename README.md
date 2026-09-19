@@ -6,7 +6,7 @@ owners, and they never overlap:
 | Layer | Owner | Owns | Produces |
 |---|---|---|---|
 | **Planning** | OpenSpec (`/opsx-*`) | *what* and *why* | `openspec/changes/**` → `openspec/specs/**` |
-| **Domain** | `kmp-domain-model` (Coad color modeling) | *what the domain is* | `openspec/changes/<id>/domain.md` |
+| **Domain** | `kmp-domain-model` (Coad color modeling) | *what the domain is* | `openspec/changes/<id>/domain.md` + the living `openspec/domain.md` |
 | **Design** | Penpot (`penpot-*` skills) | *how it looks* | a `DESIGN.md` handoff + annoted Penpot file |
 | **Build** | KMP skills (`kmp-*`) | *how it ships* | `feature/**`, `core/**`, Gradle wiring |
 
@@ -19,6 +19,11 @@ kit's OpenSpec schema (`openspec/schemas/kmp/schema.yaml`) declares it, so OpenS
 `domain` until the spec is done and blocks `tasks` until the domain model is. `shared/scripts/kmp_route.py`
 reads those artifact states and writes `.kmp/route.json`; every step reads that file instead of
 re-deriving. A missing spec is always blocking and is fixed first.
+
+The domain layer keeps **two** models: the change's delta (`openspec/changes/<id>/domain.md`) and the
+project's cumulative vocabulary (`openspec/domain.md`). The living one is read at the **proposal**
+step, so a new spec says `Account` rather than inventing `User` for a concept the project already
+has. It is a vocabulary, not a requirement source — it emits no SHALL/MUST.
 
 > **Requirements:** this kit targets [opencode](https://opencode.ai) only. It does not carry
 > Claude Code hooks, plugin manifests or namespaced commands, and none are needed.
@@ -159,8 +164,9 @@ For the leaderboard it settles three things the spec left open: **`contributionC
 and **`Contributor` is a Role** on `Account` — so there is no `ContributorResponse` duplicating
 `AccountResponse`. Full method + template: `shared/domain-modeling.md`.
 
-The agent will stop at a checkpoint after the Moment-Interval list — that list is the model's spine,
-so approve it before it derives anything else.
+It stops at five checkpoints: **C0** reconciles against the living vocabulary, then C1 the
+Moment-Interval list — the model's spine. It writes two files: the change's `domain.md` and the living
+`openspec/domain.md`.
 
 ### Step 5 — Design (optional; Penpot owns this)
 
@@ -375,6 +381,7 @@ GithubLeaderboard/
 ├── opencode.json          project-local config (no external paths)
 ├── AGENTS.md              the instructions layer
 ├── .kmp.json              appModule (read by the skills and the checker)
+├── openspec/domain.md     the living domain vocabulary (created by the first domain model)
 ├── .kmp/route.json        the routing verdict (tooling output, git-ignored)
 ├── skills/                20 skills (kmp-init excluded — it builds new apps, not features)
 ├── shared/  policies/  prompts/  workflows/  docs/

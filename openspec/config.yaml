@@ -36,6 +36,16 @@ context: |
   feature wires all four integration points (settings include, app-module
   dependency, initKoin module registration, NavHost entry).
 
+  Domain vocabulary: if `openspec/domain.md` exists, READ IT BEFORE writing any
+  artifact — especially the proposal. It is the project's accumulated domain model
+  (Coad color modeling): the concepts, their archetypes, and their names. Use its
+  vocabulary so a new spec says `Account`, not `User`, for the same concept. It is
+  a VOCABULARY, not a requirement source: it emits no SHALL/MUST and defines no
+  behaviour. Requirements come only from the spec; when a spec needs a concept or
+  behaviour the model lacks, the spec still decides, and the model is reconciled to
+  it during that change's `domain` artifact (which may not exist yet on the first
+  change — that is fine, the model is created then).
+
   Artifact language: English.
 
 # Per-artifact rules.

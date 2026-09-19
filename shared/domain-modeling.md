@@ -54,11 +54,12 @@ Steps 1 and 6 are the ones teams skip, and they are the two that prevent rework.
 
 ### Where the checkpoints fall
 
-The method has four irreversible decisions, and `kmp-domain-model` stops for approval at each — no
-model is written until C4 passes, and nothing is written that C4 did not approve:
+The method has five decisions, and `kmp-domain-model` stops for approval at each — no model is
+written until C4 passes, and nothing is written that C4 did not approve:
 
 | Checkpoint | The decision | Method steps |
 |---|---|---|
+| **C0** | what *already exists* (reconcile against the living model) | §6 |
 | **C1** | what *happens* (the spine) | 1 |
 | **C2** | what *participates* (the concept set) | 2–4 |
 | **C3** | what it *knows*, and how it *relates* | 5–6 |
@@ -179,7 +180,52 @@ requirements). It sits between them, and the build reads it.
 
 ---
 
-## 6. Anti-rationalization
+## 6. The living model and reconciliation (C0)
+
+A per-change model is not enough. The same concept appearing in two changes will be modeled twice —
+once as `Account`, once as `User`; once correctly as a Role, once wrongly as a new entity — and the
+two versions drift in code. So the project keeps a **living model**:
+
+```
+openspec/domain.md                 ← the whole project's vocabulary, cumulative, permanent
+openspec/changes/<id>/domain.md    ← this change's delta (the OpenSpec artifact), archived with it
+```
+
+Both are written once, at the end of the change, from the same approved model. The living model is
+read **twice**: by the proposal step (so a new spec reuses the project's words rather than inventing
+`User` for an existing `Account`), and here at C0.
+
+**It is a vocabulary, not a requirement source.** No SHALL/MUST, no behaviour, invisible to
+`openspec validate`. Requirements come only from the spec; when a spec needs a concept the model
+lacks, the spec decides and the model follows — never the reverse.
+
+### Reconciliation: classify before you model
+
+At C0, every concept this change needs is classified against the living model. This is not generic
+de-duplication; Coad's archetypes give it teeth:
+
+| Verdict | When | Action |
+|---|---|---|
+| **NEW** | no existing concept matches | model it fully |
+| **EXTENDS** | the same concept, and this change adds attributes or links | read the existing definition, then write only the addition — never restate the whole concept |
+| **REUSES** | the same concept, unchanged by this change | reference it by name; **never redefine it** |
+| **CONFLICT** | the same name, a different meaning (or two names for one concept) | **stop and ask the user.** Never silently create a second one |
+
+### The matching keys, strongest first
+
+| Key | Why it is decisive |
+|---|---|
+| **The Moment-Interval** | The strongest signal. Two changes that need the same event usually hit the same endpoint → one `data.app` DTO, not two. Modeling one MI twice is the origin of drift. |
+| **Role vs Party** | The most common false NEW. If a "new" concept shares most of its attributes with an existing one, it is a **Role on that party** (REUSES + a role field), not a new entity. |
+| **Description** | Never fork a value set. Two `ContributionWindow` enums is a bug, not a coincidence. |
+| **Party / Place / Thing** | Match on identity, not on name spelling — `Account` and `User` may be one concept under two names (a CONFLICT worth resolving, since the code will otherwise carry both). |
+
+A **CONFLICT** is the one verdict that stops the run. It is exactly where the human must decide
+which name wins and what the concept means; guessing produces two models and two DTOs that drift.
+
+---
+
+## 7. Anti-rationalization
 
 | Excuse | Why it is wrong | Countermeasure |
 |---|---|---|
@@ -189,10 +235,13 @@ requirements). It sits between them, and the build reads it.
 | "`rank` is a field on Contributor." | Rank is a *position in a sort*, not an attribute — storing it creates a value that goes stale the moment one contribution changes. | List it under **Derived, not stored** with its derivation. |
 | "I'll skip `domain.md`; it's obvious." | "Obvious" is what produces a second entity that was really a Role, and a count that should have been an aggregation. | One paragraph per section, or an explicit `Domain model: none`. |
 | "The change is a pure UI tweak, so no domain model." | Then say so — `Domain model: none (presentation-only change)`. Recording none is cheap; silently skipping is indistinguishable from forgetting. | Always record the verdict. |
+| "There is no living model yet, so C0 does not apply." | On the first change there is nothing to reconcile — C0 is then simply "everything is NEW", and the change *creates* the living model. Skipping it means the second change has nothing to read. | Run C0 regardless; its output on an empty project is the whole concept set as NEW. |
+| "The concept is named differently, but it's basically the same — I'll extend it quietly." | A same-name/different-meaning (or different-name/same-meaning) pair is a CONFLICT precisely because the code will end up carrying both. Deciding it silently is how `Account` and `User` both ship. | CONFLICT stops the run and goes to the user. |
+| "I'll copy the existing concept into this change's model so it's self-contained." | Restating a REUSED concept creates the second source the living model exists to prevent — and the two copies drift. | Reference it by name; leave it defined once, in `openspec/domain.md`. |
 
 ---
 
-## 7. Worked example — the leaderboard
+## 8. Worked example — the leaderboard
 
 The capability: *"a ranked list of GitHub contributors, with their contribution counts"*.
 

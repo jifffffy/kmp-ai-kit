@@ -194,7 +194,7 @@ def compute(root: Path, capability: str | None, action: str | None, ui: bool) ->
             "action": "init",
             "target": "skill:kmp-init",
             "project": {"managed": managed, "app_module": app_module, "core": core_modules, "features": features},
-            "artifacts": {"spec": None, "domain": None, "design": None},
+            "artifacts": {"spec": None, "domain": None, "design": None, "living_domain": None},
             "active_changes": changes,
             "gaps": []
             if managed
@@ -237,6 +237,10 @@ def compute(root: Path, capability: str | None, action: str | None, ui: bool) ->
     domain = artifact_path("domain")
     # `design` here means the PENPOT handoff (DESIGN.md), not OpenSpec's design.md artifact.
     design = find_design(root, capability) if capability else None
+    # The living domain model (the project's cumulative vocabulary). Not an artifact of this
+    # change: it is read at the proposal step so a new spec reuses the project's words, and at
+    # C0 of the domain model. Absent on a project's first change — that is normal, not a gap.
+    living_domain = "openspec/domain.md" if (root / "openspec/domain.md").is_file() else None
 
     # ---- action inference ---------------------------------------------------
     resolved = action
@@ -296,7 +300,7 @@ def compute(root: Path, capability: str | None, action: str | None, ui: bool) ->
         "action": resolved,
         "target": f"skill:{target_skill}",
         "project": {"managed": True, "app_module": app_module, "core": core_modules, "features": features},
-        "artifacts": {"spec": spec, "domain": domain, "design": design},
+        "artifacts": {"spec": spec, "domain": domain, "design": design, "living_domain": living_domain},
         "active_changes": changes,
         "gaps": gaps,
         "next": nxt,
@@ -331,6 +335,7 @@ def main() -> int:
     print(f"  target  : {route['target']}")
     a = route["artifacts"]
     print(f"  artifacts: spec={'yes' if a['spec'] else 'NO'}  domain={'yes' if a['domain'] else 'NO'}  design={'yes' if a['design'] else 'no'}")
+    print(f"  vocabulary: living domain model {'yes' if a.get('living_domain') else 'none (created by the first domain model)'}")
     if route["active_changes"]:
         for c in route["active_changes"]:
             flag = "  (stale — decide: resume or archive)" if c["stale"] else ""

@@ -22,7 +22,7 @@ explicitly before proceeding.
 | penpot-migrate | after scope/mapping, after IR, after tokens, after components, per screen |
 | penpot-audit-* | after the report (before any fix) |
 | penpot-rename-layers | none for safe-set renames; review for meaningful names |
-| kmp-domain-model | **C1** Moment-Intervals · **C2** Roles/PPT/Descriptions · **C3** attributes (stored/derived) + links · **C4** KMP mapping + spec coverage |
+| kmp-domain-model | **C0** reconciliation vs the living model · **C1** Moment-Intervals · **C2** Roles/PPT/Descriptions · **C3** attributes (stored/derived) + links · **C4** KMP mapping + spec coverage |
 | kmp-create-feature | **Phase 2** the brief contract + layer plan · **each Phase 4 layer** (data/platform, ui, integration) |
 | kmp-modify-feature | **the spec delta** (before any edit) · each implementation layer |
 | kmp-init | the two inputs + destination, then the dry run |
@@ -31,7 +31,7 @@ explicitly before proceeding.
 | kmp-bridge-swift | the interop surface, then the implementation |
 
 **Not every stop is equal.** A skill's checkpoint may be *gated* (no file is written until it
-passes) or *advisory* (work continues, the stop is a review). `kmp-domain-model`'s C1–C4 are gated:
+passes) or *advisory* (work continues, the stop is a review). `kmp-domain-model`'s C0–C4 are gated:
 nothing is written until C4 approves, and Phase 5 writes only what C4 approved. A silently re-opened
 checkpoint — editing an already-approved section and carrying on — is a violation regardless of the
 skill; say so and re-run that checkpoint.

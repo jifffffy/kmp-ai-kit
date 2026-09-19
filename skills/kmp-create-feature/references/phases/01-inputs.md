@@ -17,7 +17,7 @@ named.
 Input Resolution Progress:
 - [ ] Step 1.1: Locate the OpenSpec change and its spec delta
 - [ ] Step 1.2: Confirm the capability is create, not modify
-- [ ] Step 1.3: Confirm the domain model exists (or is explicitly `none`)
+- [ ] Step 1.3: Confirm the domain model exists (or is explicitly `none`), and note the living model
 - [ ] Step 1.4: Locate the Penpot handoff artifact, if the work is visual
 - [ ] Step 1.5: Record inputs in `.kmp/run.json`
 - [ ] Step 1.6: Assert the inputs exist (stop if they do not)
@@ -74,6 +74,9 @@ which attributes are stored vs. derived, and which archetype each maps to in the
 it, the DTO shapes and derived fields get guessed during implementation.
 
 Look for `openspec/changes/<change-id>/domain.md` (the router reports it as `artifacts.domain`).
+The project's cumulative vocabulary is `openspec/domain.md` (the router reports it as
+`artifacts.living_domain`) — read it too; it is where a REUSED concept is defined, and the change's
+delta only references those by name.
 
 | Situation | Action |
 |---|---|
@@ -115,6 +118,7 @@ Write to the capability's entry in `.kmp/run.json`:
   "spec_path": "openspec/specs/{featurename}/spec.md",
   "change_path": "openspec/changes/{change-id}/",
   "domain_path": "openspec/changes/{change-id}/domain.md",
+  "living_domain_path": "openspec/domain.md",
   "design_path": "{DESIGN.md path, or null}",
   "phase": 1
 }
