@@ -129,6 +129,10 @@ The design rules above govern the Penpot layer. The build layer has its own, equ
 - **`feature/**` is guarded.** `.opencode/plugins/protect-feature.ts` blocks Edit/Write unless the
   owning skill created `/tmp/.kmp-skill-active`. Never work around the guard; never leave the marker
   behind (remove it on every exit path).
+- **`archTest` green ≠ the app works.** The checker is static. Run the desktop target
+  (`./gradlew :composeApp:run`) before handoff whenever DI or a `@Serializable` model is touched;
+  record the verdict, and record `not-run` honestly rather than implying a pass. See
+  `shared/kmp-runtime-verification.md`.
 - **One layer per step, build + check between.** Status at each checkpoint; "looks good" approves
   only the phase just shown. Never one-shot a feature module.
 - **Reuse before you build.** `kmp-using-design-system` auto-activates for UI work: an existing

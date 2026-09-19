@@ -96,9 +96,10 @@ consuming the Penpot `DESIGN.md` where the UI is built. Build and check after ea
 **Exit:** build green, checker green, all four integration points wired.
 
 ### Phase 5 — Handoff (marker off)
-`references/phases/05-handoff.md`. Reconcile the living spec, run the final checker, archive
-with `/opsx-archive`, and write the run ledger to `.kmp/run.json`. This skill **never**
-creates a spec copy in the code tree.
+`references/phases/05-handoff.md`. Reconcile the living spec, run the final checker, **run the app
+(runtime gate — `./gradlew :composeApp:run`)**, reconcile every `tasks.md` checkbox, then archive
+with `/opsx-archive` and write the run ledger to `.kmp/run.json`. This skill **never** creates a
+spec copy in the code tree.
 
 ## Critical Rules
 
@@ -113,6 +114,12 @@ creates a spec copy in the code tree.
 7. **Never hand-edit feature files outside this skill** — the guard exists for a reason.
 8. **Marker discipline:** `touch /tmp/.kmp-skill-active` at Phase 4 start, `rm -f` at
    Phase 5 end or on any early exit.
+9. **`archTest` green ≠ the app works.** Run the desktop target before handoff. The checker is
+   static and cannot see the Koin graph, a `@Serializable` contract, or a runtime cast — all three
+   of which have crashed apps that passed every check. See `shared/kmp-runtime-verification.md`.
+   If the app cannot be run, record `runtime: not-run` — never imply a pass.
+10. **Tick `tasks.md` as you go**, and reconcile it before archiving. Unticked boxes force a
+    "0/N tasks" warning and leave a false incomplete record in the archive.
 
 ## Modes & Policies
 
@@ -151,6 +158,9 @@ packages or files; that is a separate, deliberate refactor.
 | "I'll add a temporary loading composable to move fast." | Loading/Failed UI is shared; a private one becomes an orphan and fails review. | Use `AppLoadingState`/`AppErrorState` from `designsystem.app`. |
 | "The feature needs another feature's code, I'll just import it." | A feature never depends on another feature — that is what `core/` is for. | Move the shared code into the correct `core/` tier, then import that. |
 | "`archTest` is failing on pre-existing code, I'll skip it." | The checker is the gate; skipping it is how the architecture drifts. | Run `kmp_check.py --baseline` to separate pre-existing from new, fix the new, report the rest. |
+| "`archTest` is green, so the feature is done." | The checker reads source one file at a time. It cannot see the assembled Koin graph, a serializer contract against a real payload, or a cast that only runs at runtime — all three have crash apps that passed it. | Run `./gradlew :composeApp:run` before handoff (`shared/kmp-runtime-verification.md`). |
+| "I can't see the app window, so I'll assume it's fine." | Unverifiable is not verified. | Render smoke to `build/smoke/*.png` and look at it, or record `runtime: not-run` honestly. |
+| "I'll tick the tasks at the end / skip it, the work is obviously done." | Unticked boxes make the archive claim work is incomplete, and force a warning people learn to ignore. | Tick each box as its task lands; reconcile before `archive`. |
 
 ## Helper Code Snippets
 

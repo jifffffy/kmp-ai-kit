@@ -15,6 +15,7 @@
     "lock": "node scripts/dev/update-lock.mjs",
     "lock:check": "node scripts/dev/update-lock.mjs --check",
     "e2e": "node scripts/dev/e2e-check.mjs",
+    "preflight": "node scripts/dev/preflight.mjs",
     "init": "node scripts/scaffold/km-init.mjs"
   },
   "files": [

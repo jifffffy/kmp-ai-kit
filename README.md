@@ -170,17 +170,27 @@ At every layer it runs:
 python3 shared/scripts/kmp_check.py leaderboard
 ```
 
-### Step 6 — Verify and archive
+### Step 6 — Verify, run, and archive
 
 ```bash
-# direct checker run
+# static gate
 python3 shared/scripts/kmp_check.py --all
-
-# the CI gate (wraps the same checker)
 ./gradlew archTest
+
+# RUNTIME gate — the static checks cannot see the Koin graph, serialization
+# contracts, or a cast that only executes at runtime. Run the app.
+./gradlew :composeApp:run          # NOT :composeApp:desktopRun
 ```
 
-Both must be green. Then close the loop:
+A green checker is **not** "the app works". Three bugs that shipped through a fully green
+`archTest` and passing unit tests — a `@Serializable` model missing defaults, an unsafe cast in
+`equals()`, and `viewModelOf` with a defaulted parameter — each crashed the app on **all**
+platforms at launch. Run the target. If you genuinely cannot (headless, no screen-recording
+permission), render the screen off-screen to `build/smoke/*.png`, look at it, and record
+`runtime: render-smoke` — never imply a pass you did not make. Details:
+`shared/kmp-runtime-verification.md`.
+
+Then close the loop:
 
 ```
 /opsx-archive add-github-leaderboard
@@ -189,6 +199,10 @@ Both must be green. Then close the loop:
 The change is archived and the living spec lands at
 `openspec/specs/leaderboard/spec.md`. That file is the single source of truth from now on —
 the next change to the leaderboard is a *modify*, not a *create*.
+
+> Before archiving, every checkbox in the change's `tasks.md` must be ticked or explicitly struck
+> through. An archive with unticked boxes warns "0/N tasks" and leaves a false *incomplete* record
+> behind — don't force past it.
 
 ---
 
@@ -209,6 +223,27 @@ PASS
 Exit code 1 on any error. `--baseline` reports errors as warnings (a scan tier for code that
 predates the rules); it is unrelated to any "adopt" mode — there isn't one.
 
+### ...and the app is actually run
+
+The checker is **static**. It reads source; it cannot see the assembled Koin graph, a
+`@Serializable` contract against a real payload, or a cast that only executes at runtime. Every
+bug in this class passes the checker and the unit tests and then crashes on launch for **every**
+platform. So the handoff gate is a launch, not a lint:
+
+```bash
+./gradlew :composeApp:run      # the desktop target shares the same Koin graph + serialization
+```
+
+`shared/kmp-runtime-verification.md` records the three real bugs that motivated this, when the run
+is mandatory (any DI change, any `@Serializable` change, any shared `core/` type), and how to
+record an honest `not-run`.
+
+### Capabilities are probed before they are trusted
+
+"Configured" ≠ "available". `npm run preflight` verifies the Penpot MCP chain end to end — server,
+token, **and the in-app plugin**, which only a real tool call can confirm. In multi-user mode the
+plugin's token and your client's token must match byte-for-byte.
+
 ### `feature/**` is guarded
 
 `.opencode/plugins/protect-feature.ts` blocks edits under `feature/` unless the owning skill
@@ -221,6 +256,12 @@ This replaces KMPilot's Claude Code `PreToolUse` hook, which never ran under ope
 
 Requirements live only under `openspec/`. A build skill that cannot find a spec **stops and
 sends you to `/opsx-propose`** rather than inferring requirements from the code.
+
+### Tests never codify a bug
+
+A test generator that finds wrong behaviour reports it and leaves the test **red**. It must not
+"characterize" the bug with `assertFailsWith<…>` around it — that turns a regression into a
+specification and has to be undone before the fix can land.
 
 ---
 
@@ -238,7 +279,9 @@ sends you to `/opsx-propose`** rather than inferring requirements from the code.
 | Design-system reuse | `kmp-using-design-system` — auto-activates on UI work |
 | Review design vs code | `/penpot-design-to-code-review` |
 | Close a change | `/opsx-archive <change>` |
-| Architecture gate | `./gradlew archTest` |
+| Architecture gate (static) | `./gradlew archTest` |
+| Run the app (runtime gate) | `./gradlew :composeApp:run` — **not** `desktopRun` |
+| Probe a capability | `npm run preflight` (Penpot MCP: server + token + plugin) |
 | Run the checker directly | `python3 shared/scripts/kmp_check.py [feature \| --all]` |
 
 `kmp-router` is the dispatcher: for any KMP request, ask it first and it names exactly one
@@ -313,6 +356,11 @@ GithubLeaderboard/
 | Agent edits `feature/` and gets blocked | the feature guard | That's intended — go through `/kmp-create-feature` |
 | A run died mid-way | a stale 2h marker may remain | The guard expires it automatically; remove `/tmp/.kmp-skill-active` to be sure |
 | Checker reports errors on old code | code predating the rules | `--baseline` reports them without failing; fix new code first |
+| App crashed on launch but `archTest` was green | the checker is static; Koin/serialization/cast failures need a run | `./gradlew :composeApp:run` and read the stack trace (`shared/kmp-runtime-verification.md`) |
+| `:composeApp:desktopRun` says "No main class specified" | that task ignores `compose.desktop { application { mainClass } }` | use `./gradlew :composeApp:run` |
+| iOS release link throws `OutOfMemoryError` | the Gradle/Kotlin daemon heap is too small for Kotlin/Native | raise `org.gradle.jvmargs` / `kotlin.daemon.jvmargs` in `gradle.properties` (4 GB ships by default) |
+| Penpot tool call says "No Penpot instance connected for user token" | the in-app plugin is not connected, or its token differs from your client's by even one character | open Penpot → a design file → **File → MCP server → Connect**; regenerate the key under **Your account → Integrations** and update the client config; run `npm run preflight` |
+| A Penpot text exists in the structure but renders nothing | `lineHeight` is a **multiplier**, not pixels — `34` means 34× the font size | set `lineHeight = 1.4`; see `shared/plugin-api-gotchas.md` #19 |
 
 ---
 

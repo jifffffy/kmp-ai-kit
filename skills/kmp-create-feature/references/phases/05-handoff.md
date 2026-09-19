@@ -1,6 +1,6 @@
 # Phase 5: Handoff
 
-**Purpose**: Reconcile the living spec, run the deterministic checker, archive the OpenSpec change, and write the run ledger.
+**Purpose**: Reconcile the living spec, run the deterministic checker, **run the app**, archive the OpenSpec change, and write the run ledger.
 
 **Prerequisites**: All agents completed successfully, build passing.
 
@@ -13,9 +13,11 @@ Handoff Progress:
 - [ ] Step 5.1: Verify the living spec
 - [ ] Step 5.2: Guardrails (grep gate): Rule 11 + first-feature Welcome handoff
 - [ ] Step 5.3: Run the checker
-- [ ] Step 5.4: Archive the OpenSpec change
-- [ ] Step 5.5: Write the run ledger
-- [ ] Step 5.6: Generate final report
+- [ ] Step 5.4: Run the app (runtime gate)
+- [ ] Step 5.5: Reconcile tasks.md checkboxes
+- [ ] Step 5.6: Archive the OpenSpec change
+- [ ] Step 5.7: Write the run ledger
+- [ ] Step 5.8: Generate final report
 ```
 
 ---
@@ -80,7 +82,57 @@ python3 shared/scripts/kmp_check.py {featurename}
 
 ---
 
-## Step 5.4: Archive the OpenSpec Change
+## Step 5.4: Run the App (Runtime Gate)
+
+**The checker is static. It cannot see the composed Koin graph, a `@Serializable` contract against
+a real payload, or a cast that only executes at runtime.** A feature can pass `archTest` and every
+unit test and still crash the host app at launch on all three platforms. Read
+`shared/kmp-runtime-verification.md` — this step is that gate.
+
+```bash
+# FIRST RUN of the feature, or whenever DI / serialization changed:
+./gradlew :composeApp:run          # ← NOT :composeApp:desktopRun (it ignores mainClass)
+```
+
+The app must reach its start destination and render. A window that closes immediately, or a stack
+trace naming Koin / `MissingFieldException` / `ClassCastException`, **fails the gate** — do not
+archive.
+
+**When the window cannot be inspected** (headless, or the terminal lacks screen-recording
+permission): render the real `ScreenRoot` off-screen to `build/smoke/*.png` and **look at it**.
+Record the outcome as `render-smoke`, not `launched`.
+
+**When to run it:** a new feature; any change under `feature/**/di/`; any `@Serializable` model
+change; any change to a shared `core/` type (`Either`, `ErrorMessage`, `UiState`). For a pure
+UI-tweak with no DI/serialization change, the checker plus a build is enough — say so explicitly.
+
+Record the verdict in the ledger:
+
+```json
+"runtime": { "target": "desktop", "command": "./gradlew :composeApp:run", "result": "launched" }
+```
+
+`result: "not-run"` is a legitimate, honest outcome — record it and state it in the final report.
+An admitted `not-run` is worth more than an implied pass.
+
+---
+
+## Step 5.5: Reconcile `tasks.md`
+
+Every box in `openspec/changes/{change-id}/tasks.md` is either `- [x]` or explicitly struck
+through with a reason. Archiving with unticked boxes produces a "0/N tasks" warning, and forcing
+past it leaves a permanent false "incomplete" record in the archive.
+
+```bash
+grep -c '^- \[ \]' openspec/changes/{change-id}/tasks.md   # must be 0 (or only struck entries)
+```
+
+**If any box is unticked:** either finish the task, or strike it (`- [ ] ~~Task N: …~~ (skipped:
+<reason>)`). Never tick a box for work that did not happen.
+
+---
+
+## Step 5.6: Archive the OpenSpec Change
 
 ```bash
 /opsx-archive {change-id}
@@ -108,7 +160,7 @@ The ephemeral planning files — `proposal.md`, `design.md`, and `tasks.md` unde
 
 ---
 
-## Step 5.5: Write the Run Ledger
+## Step 5.7: Write the Run Ledger
 
 Update `.kmp/run.json` to `phase: done`, recording the reconciled spec path and the
 checker result, then release the feature-file guard:
@@ -121,7 +173,7 @@ See `shared/kmp-state.md`.
 
 ---
 
-## Step 5.6: Generate Final Report
+## Step 5.8: Generate Final Report
 
 ```markdown
 ## Feature Complete: {FeatureName}
@@ -132,6 +184,9 @@ See `shared/kmp-state.md`.
 ✅ Integration complete
 ✅ Build passing + ktlint formatted
 ✅ Checker green (`.kmp/check-report.json`)
+{✅ App launched on desktop (runtime gate)  |  ⚠️ Runtime gate NOT RUN — <reason>}
+{✅ render-smoke PNG written to build/smoke/  |  —}
+✅ `tasks.md` fully reconciled before archive
 
 ### Documentation
 ✅ Living spec: `openspec/specs/{featurename}/spec.md`

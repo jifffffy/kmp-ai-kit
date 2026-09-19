@@ -69,6 +69,13 @@ mechanized violation surfaced, judgment rules assessed, spec gaps named).
 4. **Separate mechanized from judgment.** Label each finding with which it is.
 5. **Name the spec gap, don't invent a requirement.** If code and spec disagree,
    report the disagreement; the spec is OpenSpec's to change.
+6. **A never-run feature is a blocking finding.** If the feature has no runtime verdict in
+   `.kmp/run.json` (or was last run before its DI or a `@Serializable` model changed), report it as
+   an `error`, not a note. `archTest` green does not clear it — the checker is static and cannot see
+   the composed Koin graph, a serializer contract against a real payload, or a runtime cast. Three
+   such bugs have shipped through a fully green gate. See `shared/kmp-runtime-verification.md`.
+   The reviewer does not run the app itself (read-only); it reports that the run is owed, and names
+   the specific risk (DI change / model change) that makes it mandatory.
 
 ## Domain Architecture
 
@@ -107,6 +114,8 @@ points). Do not rename them; downstream consumers match on them.
 | "This reported violation looks acceptable, I'll drop it." | The reviewer does not get to overrule the gate; silent suppression is how drift hides. | Report every finding; if a rule is wrong, that is a rules change, not a review decision. |
 | "The code is clearly right, I'll skip the spec comparison." | Spec/code divergence is the failure this review exists to catch. | Read the spec and report divergences explicitly. |
 | "I'll fix the small issues while I'm here." | A review that edits is no longer a review, and it bypasses the feature guard and the modify gate. | Report only; route fixes to `kmp-modify-feature`. |
+| "`archTest` is green, so I won't raise the missing runtime run." | The three worst bugs found in practice all passed the static gate and crashed on launch. | Raise it as an `error` finding whenever DI or a `@Serializable` model is in play (`shared/kmp-runtime-verification.md`). |
+| "The feature has tests, so behaviour is covered." | The bugs that matter live in composition, not in any single unit. | Tests are necessary, not sufficient; check the runtime verdict. |
 
 ## Helper Code Snippets
 

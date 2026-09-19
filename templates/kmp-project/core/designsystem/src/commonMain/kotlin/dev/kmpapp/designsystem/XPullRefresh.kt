@@ -1,52 +1,59 @@
 package dev.kmpapp.designsystem
 
-/*
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.PullRefreshState
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
-@OptIn(ExperimentalMaterialApi::class)
-fun Modifier.xPullRefresh(
-    state: XPullRefreshState,
-    enabled: Boolean = true,
-): Modifier {
-    return pullRefresh(
-        state = state.materialState,
-        enabled = enabled,
-    )
-}
-
+/**
+ * Design-system pull-to-refresh container.
+ *
+ * A thin, generic wrapper over Material 3's [PullToRefreshBox] so feature code never
+ * touches `androidx.compose.material3.pulltorefresh` directly (Rule 5). The caller owns
+ * the refresh state (typically an `isRefreshing` flag on its `*UiModel`) and passes the
+ * refresh action down as a callback.
+ *
+ * Usage:
+ * ```
+ * XPullRefreshBox(
+ *     refreshing = uiModel.isRefreshing,
+ *     onRefresh = onRefresh,
+ *     modifier = Modifier.fillMaxSize(),
+ * ) {
+ *     // scrollable content
+ * }
+ * ```
+ *
+ * @param refreshing whether a refresh is currently in flight; drives the indicator.
+ * @param onRefresh invoked when the user pulls past the trigger threshold.
+ * @param modifier applied to the container (the container already fills its content).
+ * @param indicator the indicator slot; defaults to the themed M3 indicator.
+ * @param content the scrollable content being refreshed.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@OptIn(ExperimentalMaterialApi::class)
-fun rememberXPullRefreshState(
+fun XPullRefreshBox(
     refreshing: Boolean,
     onRefresh: () -> Unit,
-): XPullRefreshState {
-    val state =
-        rememberPullRefreshState(
-            refreshing = refreshing,
-            onRefresh = onRefresh,
-        )
-    return remember(state) { XPullRefreshState(state) }
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-class XPullRefreshState internal constructor(internal val materialState: PullRefreshState)
-
-@Composable
-@OptIn(ExperimentalMaterialApi::class)
-fun XPullRefreshIndicator(
-    refreshing: Boolean,
-    state: XPullRefreshState,
     modifier: Modifier = Modifier,
+    indicator: @Composable BoxScope.() -> Unit = {
+        PullToRefreshDefaults.Indicator(
+            state = rememberPullToRefreshState(),
+            isRefreshing = refreshing,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+    },
+    content: @Composable BoxScope.() -> Unit,
 ) {
-    PullRefreshIndicator(
-        refreshing = refreshing,
-        state = state.materialState,
+    PullToRefreshBox(
+        isRefreshing = refreshing,
+        onRefresh = onRefresh,
         modifier = modifier,
+        indicator = indicator,
+        content = content,
     )
-}*/
+}

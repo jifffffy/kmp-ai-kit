@@ -129,6 +129,21 @@ Create `tasks.md` as overview:
 - [ ] Task 5: {title}
 ```
 
+**These checkboxes are the change's completion record — keep them true.** OpenSpec's archive step
+reads them: archiving with unchecked boxes warns "0/N tasks", and forcing past that warning leaves
+a permanent, false "work incomplete" record in the archived change. Tick a box in the **same step**
+that completes the task — never batch-tick at the end, and never tick a box for work that was
+skipped (mark it `- [ ] ~~Task 5: …~~ (skipped: <reason>)` and say so in the handoff instead).
+
+| When | Action |
+|---|---|
+| A task's work lands and its build + checker pass | mark `- [x]` immediately |
+| A task is deliberately dropped | leave the box unchecked, strike the text, name the reason |
+| Phase 5 handoff | every box is either `[x]` or explicitly struck-through — then archive |
+
+If you reach Phase 5 with unticked boxes, **do not archive yet**: either finish the task or
+explicitly strike it. Archiving an inconsistent `tasks.md` is worse than not archiving.
+
 ---
 
 ## Step 3.5: Request Confirmation

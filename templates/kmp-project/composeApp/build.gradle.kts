@@ -46,6 +46,23 @@ kotlin {
             implementation(project(":core:common"))
             implementation(project(":core:designsystem"))
         }
+
+        // The desktop target is declared above (`jvm("desktop")`); without a
+        // desktopMain block it has no compose-desktop runtime and the target can
+        // compile but never run.
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
+        }
+    }
+}
+
+// Desktop entry point. The task is `:composeApp:run` — NOT `:composeApp:desktopRun`,
+// which ignores this block and fails with "No main class specified".
+compose.desktop {
+    application {
+        mainClass = "dev.kmpapp.MainKt"
     }
 }
 

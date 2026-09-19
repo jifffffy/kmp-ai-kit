@@ -23,10 +23,13 @@ sealed interface ErrorModel {
         val message: String,
         val code: Int,
     ) : ErrorModel {
+        // `other !is MessageCode` (not `other as MessageCode`): `equals` is called with
+        // arbitrary objects — comparing a MessageCode to a Message, Exception or Resource
+        // is normal, and an unchecked cast threw ClassCastException instead of returning
+        // false. Any DataSource retry guard that compares error models hit this at runtime.
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-
-            other as MessageCode
+            if (other !is MessageCode) return false
 
             if (message != other.message) return false
             return code == other.code
@@ -50,7 +53,7 @@ sealed interface ErrorModel {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
 
-            other as Resource
+            if (other !is Resource) return false
 
             if (messageResId != other.messageResId) return false
             return args.contentEquals(other.args)

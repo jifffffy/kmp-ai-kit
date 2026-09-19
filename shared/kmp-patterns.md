@@ -224,6 +224,48 @@ val featureModule = module {
 
 **Visibility convention:** the aggregate (`{featurename}Module`, `commonModule`, `dataModule`) is **public** — it's the only module that crosses the module boundary. Leaf/sub-modules composed in via `includes()` (a `platformModule`, or `:core` leaves like `localeModule`/`binder`) are **`internal`** (incl. `internal expect`/`internal actual`). Encapsulation is the documented benefit of `includes()`; only expose the root.
 
+#### `viewModelOf` resolves EVERY constructor parameter — a Kotlin default does NOT exempt it
+
+`viewModelOf(::FeatureViewModel)` registers a constructor-injection recipe, and Koin resolves **all**
+parameters from its graph. A parameter with a Kotlin default value is still resolved — reflection
+does not skip it. So a ViewModel written to be conveniently testable:
+
+```kotlin
+class FeatureViewModel(
+    private val repository: Repository,
+    private val now: () -> Long = { Clock.System.now().toEpochMilliseconds() },  // ← trap
+) : ViewModel()
+```
+
+compiles, passes `archTest`, and **crashes the app at launch**: Koin looks for a `Function0<Long>`
+binding, finds none, and throws `NoDefinitionFoundException` from `startKoin`. It is not a
+UI-layer or feature-local failure — **every platform dies at startup**, and no unit test or static
+check catches it.
+
+Two correct shapes — pick one:
+
+```kotlin
+// 1. Bind the dependency so the graph can satisfy it (preferred: keeps viewModelOf)
+val featureModule = module {
+    single<() -> Long> { { Clock.System.now().toEpochMilliseconds() } }   // bind the clock itself
+    viewModelOf(::FeatureViewModel)
+}
+
+// 2. Construct explicitly when the parameter is a genuine test seam, not a dependency
+val featureModule = module {
+    viewModel { FeatureViewModel(get()) }
+}
+```
+
+**The rule for generated ViewModels:** every constructor parameter must either be bound in Koin, or
+be supplied at the registration site. Never rely on a default value to make a dependency optional —
+if the default references anything outside the class (a clock, a dispatcher, an `IdGenerator`), bind
+it or pass it explicitly.
+
+> **`archTest` is a static gate — it cannot see this.** The failure is in the composed Koin graph at
+> runtime. This is the canonical example of why `kmp-create-feature` Phase 4/5 requires an actual
+> run, not just a green checker (see `shared/kmp-runtime-verification.md`).
+
 ### Strings & Localization (Rule 12)
 
 Every user-facing string is a string resource. No English literals in composables or on `*UiModel`.

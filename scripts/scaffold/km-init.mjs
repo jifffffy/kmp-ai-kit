@@ -177,6 +177,9 @@ function renameTree(root, from, to) {
     for (const [, sentinel] of pairs) text = text.split(sentinel).join(to.pkg)
     text = text.split(id.name).join(to.name)
     text = text.split(`${fromLower}.`).join(`${toLower}.`)
+    // The desktop DataStore directory (`~/.kmpapp` → `~/.myapp`). Its literal has a
+    // leading dot and no trailing dot, so the rule above does not match it.
+    text = text.split(`".${fromLower}"`).join(`".${toLower}"`)
     if (text !== before) {
       writeFileSync(file, text)
       touched++

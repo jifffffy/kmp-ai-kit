@@ -67,6 +67,13 @@ production code beyond adding missing test dependencies) / **Acceptance criteria
 6. **The coverage gate applies to the ViewModel/Repository/DataSource/Screen
    subset** — see `shared/kmp-patterns.md`.
 7. **The architecture checker must still pass** after tests are added.
+8. **Never write a test that asserts a bug is correct.** When a generator finds behaviour that is
+   clearly wrong while writing a test, the correct output is a **failing test plus a reported
+   defect** — not a test that pins the wrong behaviour. `assertFailsWith<ClassCastException>` around
+   an unsafe cast in `equals()`, or a test asserting a crash, "characterizes" the bug: it turns a
+   regression into a specification, and after the fix it must be rewritten (or it blocks the fix).
+   Generator rule: assert the *intended* behaviour. If that fails, report the failure as a finding
+   and leave it red — do not downgrade it to match the code.
 
 ## Domain Architecture
 
@@ -109,6 +116,7 @@ the `Fixtures` suffix from the feature's test tree. Follow `shared/kmp-patterns.
 | "Coverage is close enough; I'll skip the gate." | The gate is the acceptance criterion, not a suggestion. | Report the actual number; do not claim done below the gate. |
 | "I'll adjust the ViewModel so the test passes." | Tests must fit the production shape; bending production code to tests is a spec change in disguise. | Stop. Do not change production behavior from this skill. |
 | "I'll run all six agents at once to save time." | Later stages depend on earlier shapes; parallelizing dependent work produces broken fixtures. | Stage them: fixtures → data → presentation/integration, awaiting each. |
+| "The code throws here, so I'll assert that it throws — the test passes." | That encodes the bug as the contract. After the fix the test fails, and it must be rewritten before the fix can land. | Assert the intended behaviour. If it fails, report the defect and leave the test red. |
 
 ## Helper Code Snippets
 

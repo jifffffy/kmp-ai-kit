@@ -19,6 +19,12 @@
 > `Gradient` fills and `penpot.uploadMediaUrl` (#18) are all **documented**; `Board.combineAsVariants(ids)`
 > is **listed** on the Board interface but was not exercised live (#9). Documented ≠ verified — the
 > deck/screen builders verify each in their first live run and record verdicts in the ledger.
+>
+> **#19–#23 are a post-mortem harvest** (Penpot 2.17.2 via the self-hosted Docker stack, 2026-09).
+> They are pure API semantics, not version-dependent bugs: `lineHeight` and `letterSpacing` units,
+> font-by-string, the stuck `textBounds`, `/` in names, and bare-number token values. Treat them as
+> standing facts. #19 in particular cost a full session of A/B/C creation sequences before it was
+> found — read it **before** the first text you place, not after.
 
 ## 1. Style arrays are immutable item-by-item — replace the whole array
 `fills`, `strokes`, `shadows` are arrays whose **individual items cannot be mutated**. To change a
@@ -242,3 +248,102 @@ is the whole recipe (remote mode; `import_image` exists only in local mode). Tra
   content (`shared/design-quality.md` §6).
 - `import_image` (local mode) and `uploadMediaData(name, Uint8Array, mime)` are alternatives when the
   bytes are already at hand; the verification rule is the same.
+
+## 19. `lineHeight` is a MULTIPLIER, not pixels — the single most expensive trap
+`text.lineHeight` is a **unitless ratio of `fontSize`** (CSS `line-height: 1.4`), **not a pixel
+value**. Setting `lineHeight = 34` intending "34 px" means **34× the font size**: the line box
+becomes enormous, glyphs are pushed far outside the shape's box, and the text **exists in the
+structure but renders nothing visible**. It is the most common cause of "my text disappeared".
+
+```js
+// WRONG — 34 × fontSize (≈ 540px tall line box); text is present but off-screen
+text.lineHeight = 34;
+// RIGHT — 1.4 × fontSize
+text.lineHeight = 1.4;
+```
+
+**Diagnosis before you rebuild anything.** When text is missing from an export, read the shape
+rather than recreating it — a multiplier mistake is visible in one call:
+
+```js
+const t = penpotUtils.findShape(s => s.type === "text" && s.name === NAME);
+return { fontSize: t.fontSize, lineHeight: t.lineHeight, height: t.height,
+         textBounds: { y: t.textBounds.y, h: t.textBounds.height } };
+```
+
+A `lineHeight` in the tens-to-hundreds while `fontSize` is in the teens is the confirmation. The
+same trap applies to `letterSpacing` (**pixels**, unlike line-height) and to any typography token
+value — units are inconsistent across the API, so check `penpot_api_info` for each one.
+
+**Do not confuse the trap with a `textBounds` defect** (#21) — a multiplier is a one-property fix;
+a stuck `textBounds` is not fixable at all.
+
+## 20. Assigning a font by string (`fontFamily = "Inter"`) renders nothing — use `applyToText`
+Setting `text.fontFamily = "Inter"` (or `fontId`, `fontVariantId`) as a string leaves the glyphs
+unrendered: the shape occupies space, exports empty. Resolve a real `Font` and apply it
+(see #13 / #13b):
+
+```js
+// WRONG — no glyphs
+text.fontFamily = "Inter";
+// RIGHT
+const font = penpot.fonts.all.find(f => f.name === "Inter");
+font.applyToText(text, font.variants.find(v => v.fontWeight === "400"));
+text.fontSize = 16; text.lineHeight = 1.4;   // re-assert: variant application can reset these
+```
+
+## 21. A stuck `textBounds` is not repairable — delete and recreate the text
+`textBounds` is computed, not settable, but it **can latch onto a stale value** after an early
+mistake (an out-of-range `lineHeight` is the usual trigger): reading it returns a frozen `y`, and
+`export_shape` on that single shape then hangs or times out. No combination of `resize()`,
+`growType`, re-assigning text, or re-applying tokens clears it.
+
+**Recovery:** record the text's `characters`, `name`, position, size and style, `remove()` the
+shape, and create a fresh one at the same place. Budget for this — do not spend a session trying
+to repair it. **Prevention:** set the style correctly (#19, #20) *before* the first read of
+`textBounds`; the latch is a consequence of an earlier bad value, not something that appears later
+on its own.
+
+## 22. Component names are truncated at `/` — `"Pointer / L"` becomes path `Pointer`, name `L`
+A `/` in a shape or component name is parsed as a **path separator**, so `createComponent([shape])`
+with the shape named `"Pointer / L"` yields a component whose `path` is `"Pointer"` and `name` is
+`"L"` — the group name is silently lost, and lookups by the full string fail.
+
+```js
+// WRONG — becomes path "Pointer", name "L"
+shape.name = "Pointer / L";
+// RIGHT — a non-slash separator keeps the name intact
+shape.name = "Pointer · L";
+```
+
+Use `·`, `-`, or `–`. Same rule for token names if you intend them to read as a single label
+(token names are dotted paths by design — there `/` is not the issue, but `.` is the separator).
+
+## 23. Dimension and spacing token values take a BARE NUMBER — `"4px"` is invalid
+Extends #8: token `value` is always a **string**, and for `dimension` / `spacing` (and
+`fontSizes`, `borderRadius`, `borderWidth`, `letterSpacing`) that string is a **bare number with no
+unit** — `"4"`, not `"4px"`; `"16"`, not `"16px"`. A unit suffix fails validation, and if the set is
+inactive (#8) the token silently resolves to nothing. Both conditions produce the same symptom —
+"the token exists but the shape did not change" — so check `set.active` **and** the value's form
+before concluding anything else.
+
+```js
+const set = penpot.library.local.tokens.addSet({ name: "spacing" });
+if (!set.active) set.toggleActive();                       // new sets are INACTIVE
+set.addToken({ type: "spacing", name: "space.1", value: "4" });
+```
+
+**Changing a token's value later:** the `Token` returned from `penpotUtils.findTokensByName(...)`
+is not reliably writable — `token.value = "8"` can fail silently or throw. Re-find the token
+**through its own set** and mutate that instance:
+
+```js
+// unreliable
+const t = penpotUtils.findTokensByName("space.1")[0]; t.value = "8";
+// reliable
+const set = penpot.library.local.tokens.sets.find(s => s.name === "spacing");
+const t = set.tokens.find(x => x.name === "space.1"); t.value = "8";
+```
+
+Then **verify in the next call** (`t.resolvedValue`) — token writes are asynchronous like
+application (#2).
