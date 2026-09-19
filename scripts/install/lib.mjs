@@ -164,6 +164,10 @@ export const KIT_EXCLUDE = new Set([
   // `.kmp` holds per-run build ledgers and checker reports (git-ignored). A run rewrites
   // them, which would flap the digest "stale" with no kit content change.
   ".kmp",
+  // Python bytecode cache: running the architecture checker creates it, and any cleanup
+  // removes it — so it would flap the digest exactly like `.kmp` does.
+  "__pycache__",
+  ".ruff_cache", ".mypy_cache", ".pytest_cache",
   ".penpot-kit-install.json", "install-manifest.json", SEED_PROVENANCE_FILE,
 ]);
 

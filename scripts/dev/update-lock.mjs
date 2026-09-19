@@ -21,12 +21,23 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const check = process.argv.includes("--check");
 
 function dirDigest(root) {
+  // Skip build/cache artifacts, or the digest flaps "stale" with no content change:
+  // running the architecture checker creates `__pycache__`, and `.kmp/` holds per-run
+  // ledgers and reports. Neither is kit content.
+  const SKIP_DIRS = new Set(["__pycache__", ".kmp", ".ruff_cache", ".mypy_cache", ".pytest_cache"]);
+  const SKIP_EXT = new Set([".pyc", ".pyo"]);
   const files = [];
   const walk = (dir) => {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (SKIP_DIRS.has(e.name)) continue;
       const p = join(dir, e.name);
       if (e.isDirectory()) walk(p);
-      else files.push(relative(root, p).split(sep).join("/"));
+      else {
+        const name = e.name;
+        const dot = name.lastIndexOf(".");
+        if (dot >= 0 && SKIP_EXT.has(name.slice(dot).toLowerCase())) continue;
+        files.push(relative(root, p).split(sep).join("/"));
+      }
     }
   };
   walk(root);
