@@ -34,6 +34,23 @@ No MCP, no code. This skill reads the OpenSpec spec and writes one markdown file
 verdict comes from `shared/scripts/kmp_route.py` (`.kmp/route.json`); the architecture rules it must
 respect are `shared/kmp-patterns.md`.
 
+**Who owns what — the artifact is OpenSpec's, the method is this skill's.**
+
+| Concern | Owner |
+|---|---|
+| that `domain` exists as an artifact, its path (`domain.md`), its place in the order (`requires: specs`), and that `tasks` requires it | the **`kmp` OpenSpec schema** (`openspec/schemas/kmp/schema.yaml`) |
+| the four archetypes, the six ordered steps, what goes in each section, the checkpoints | **this skill** + `shared/domain-modeling.md` |
+
+So the order is not a convention the model must remember — OpenSpec blocks `domain` until `specs`
+completes and blocks `tasks` until `domain` does. Start by reading the schema's own guidance for the
+artifact, which carries the required-section list:
+
+```bash
+openspec instructions domain --change <change-id>
+```
+
+Do not restate the order in your output; run the commands and let the tooling enforce it.
+
 ## The Token-Aware Brief Contract
 
 Restate before modeling: **Context** (capability, the change it belongs to) / **Objective** (one
@@ -63,8 +80,10 @@ Phase 5  write domain.md         (no checkpoint — writes only what C4 approved
 ```
 
 - **Phase 0 — read (read-only).** Locate the spec via `.kmp/route.json` (`artifacts.spec`) or the
-  change directory. Read its requirements and scenarios. If no spec exists, **stop** — the router
-  orders spec before domain, and there is nothing to model from. **Exit:** the spec is loaded.
+  change directory, and read the schema's own guidance for this artifact
+  (`openspec instructions domain --change <id>`). Read the spec's requirements and scenarios. If no
+  spec exists, **stop** — OpenSpec blocks `domain` until `specs` completes, and there is nothing to
+  model from. **Exit:** the spec is loaded.
 - **Phase 1 — Moment-Intervals.** Read the scenarios as *events*: what happens, what starts it, who
   participates and how many. **✋ C1.**
 - **Phase 2 — Roles → Parties/Places/Things → Descriptions.** Derive, in that order, each from the

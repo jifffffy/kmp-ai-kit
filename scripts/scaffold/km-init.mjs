@@ -566,6 +566,13 @@ if (withOpenspec) {
     // Replace OpenSpec's generic project config with the kit's KMP-aware one: the
     // planning artifacts should carry the build layer's context and per-artifact rules.
     cpSync(join(ROOT, "openspec/config.yaml"), join(destAbs, "openspec/config.yaml"))
+    // The kit's workflow schema. `config.yaml` sets `schema: kmp`, which adds the `domain`
+    // artifact between specs and tasks and makes `design` genuinely optional (it no longer
+    // gates the task list). One authored copy — the kit's own `openspec/schemas/kmp/`.
+    cpSync(join(ROOT, "openspec/schemas/kmp"), join(destAbs, "openspec/schemas/kmp"), {
+      recursive: true,
+      force: true,
+    })
   } catch (e) {
     console.error(`note: could not run \`openspec init\` (${String(e.message).split("\n")[0]}). Run it yourself in ${destAbs}.`)
   }

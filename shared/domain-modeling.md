@@ -110,6 +110,12 @@ Applying the mapping surfaces decisions the spec usually leaves ambiguous. Resol
 One per change, alongside `proposal.md` / `design.md` / `tasks.md`. **Not** a second spec: the spec
 says what the system must do; this says what the concepts are.
 
+Its existence, path and place in the order are declared by the kit's OpenSpec schema
+(`openspec/schemas/kmp/schema.yaml`), which makes `domain` require `specs` and makes `tasks` require
+`domain`. That is why the order is enforced rather than remembered: `openspec status` reports
+`domain (blocked by: specs)` until the spec is done. The schema carries the required-section list
+(`openspec instructions domain`); this file carries the method.
+
 ```markdown
 # Domain Model — <change>
 

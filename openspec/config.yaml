@@ -1,4 +1,4 @@
-schema: spec-driven
+schema: kmp
 
 # Project context — shown to the AI when creating OpenSpec artifacts.
 context: |
@@ -46,12 +46,6 @@ rules:
   specs:
     - Write requirements in Requirement + Scenario form; scenarios must be testable.
     - Include at least one scenario for the error/failure path, not only the happy path.
-  domain:
-    - This file (openspec/changes/<change-id>/domain.md) is produced by the kmp-domain-model skill using Coad's Color Modeling; see shared/domain-modeling.md for the method and the required sections.
-    - Moment-Intervals come first, derived from the spec's scenarios read as events — not from the spec's nouns.
-    - Mark every derived attribute (a count that is a sum, a rank that is a position). Never store a value that can go stale.
-    - "A Role is not a new entity: if a 'new' concept shares most attributes with another, model it as a field or nested object."
-    - "If the capability has no domain concepts, write `Domain model: none` with one sentence why — never omit the file silently."
   design:
     - Reference the KMP architecture rules in shared/kmp-patterns.md rather than restating them.
     - Call out which of the 14 architecture rules the change is most likely to violate, and how it avoids that.

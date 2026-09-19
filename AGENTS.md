@@ -18,12 +18,14 @@ Routing: ask `kmp-router` for build work, `penpot-router` for design work. The s
 over code; the design always wins over a build guess. A feature's living requirements live in
 `openspec/specs/<capability>/spec.md` — there is no second spec copy in the code tree.
 
-**The chain is `spec → domain → design?(UI) → build`, and it is not a judgment call.**
-`shared/scripts/kmp_route.py` computes it and writes `.kmp/route.json` (`gaps`, `next`, `chain`);
-read that file instead of re-deriving. A missing spec is **blocking** and is fixed first. A missing
-domain model is **blocking** for create/modify — it decides what the concepts are and, critically,
-which attributes are *derived* rather than stored. Never model from the spec's nouns; Moment-Intervals
-come first (`shared/domain-modeling.md`).
+**The chain is `spec → domain → design?(UI) → build`, and it is not a judgment call.** The kit's
+OpenSpec schema (`openspec/schemas/kmp/schema.yaml`) declares it: `domain` requires `specs`, and
+`tasks` requires `domain` (design does not gate tasks — it is optional). `shared/scripts/kmp_route.py`
+reads the artifact states from `openspec status` and writes `.kmp/route.json` (`gaps`, `next`,
+`chain`); read that file instead of re-deriving. A missing spec is **blocking** and is fixed first. A
+missing domain model is **blocking** for create/modify — it decides what the concepts are and,
+critically, which attributes are *derived* rather than stored. Never model from the spec's nouns;
+Moment-Intervals come first (`shared/domain-modeling.md`).
 
 Architecture rules for the build layer are `shared/kmp-patterns.md`, and the deterministic checker
 is `shared/scripts/kmp_check.py`. Editing `feature/**` directly is blocked by

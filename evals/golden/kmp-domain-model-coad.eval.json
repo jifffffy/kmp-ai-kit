@@ -3,7 +3,9 @@
   "skill": "kmp-domain-model",
   "expected": {
     "must_do": [
-      "read the spec first and stop if it is missing — the router orders spec before domain",
+      "read the spec first and stop if it is missing — OpenSpec blocks the domain artifact until `specs` completes",
+      "read the schema's own guidance for the artifact (openspec instructions domain --change <id>) rather than restating the required sections from memory",
+      "treat the artifact's existence, path and ordering as the schema's concern (domain requires specs; tasks requires domain) and not re-derive it",
       "identify the Moment-Intervals first (read the spec's scenarios as events), and get that list approved (C1) before deriving anything else",
       "stop for approval at all four checkpoints (C1 MIs, C2 concepts, C3 attributes+links, C4 mapping) — none is skipped for being a small model",
       "at C3 show the attributes table with an explicit stored/derived column, and the links table with multiplicity and togetherness",

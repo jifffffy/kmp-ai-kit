@@ -81,14 +81,18 @@ work has UI, and **name exactly one target skill**.
 
 ## Ordering — spec first, always
 
-The order between missing artifacts is **not** a judgment call, and the router does not make it:
+The order between missing artifacts is **not** a judgment call, and the router does not make it. It is
+declared by the kit's OpenSpec schema (`openspec/schemas/kmp/schema.yaml`), which makes `domain`
+require `specs` and `tasks` require `domain`:
 
 ```
 spec (required) → domain (required for create/modify) → design (optional, UI only) → build
 ```
 
-`route.json` carries this as `gaps` (each with a `blocking` flag), `next`, and `chain`. When a gap
-is blocking, the router's answer is that gap's fix — **not** the build skill. Specifically:
+`route.json` carries this as `gaps` (each with a `blocking` flag), `next`, and `chain`, and it reads
+the artifact states from `openspec status` — so the schema is the single source of truth for what
+exists and in what order. When a gap is blocking, the router's answer is that gap's fix — **not** the
+build skill. Specifically:
 
 - **No spec → `/opsx-propose` first.** Requirements are OpenSpec's and only OpenSpec's. The build
   skills refuse to infer them, so routing to a build skill here only moves the refusal later.

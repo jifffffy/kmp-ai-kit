@@ -13,7 +13,7 @@ mechanical half deterministic and writes the verdict where every later step can 
 
 Writes `.kmp/route.json` (tooling output; `.kmp/` is git-ignored).
 
-What is decided here (mechanical, from the file system):
+What is decided here (mechanical, from the file system and from OpenSpec):
   managed         is this a kit project at all
   action          create | modify | review | test | init  (inferred when not given)
   target          the one skill that owns the work
@@ -21,6 +21,10 @@ What is decided here (mechanical, from the file system):
   active_changes  in-flight OpenSpec changes, with task progress and age
   gaps            what is missing, in the order it must be filled
   next            the single next command, and which layer owns it
+
+Artifact states come from `openspec status --change <id> --json`, so the **schema** owns the
+artifact ids, their paths and their order — the kit hard-codes none of them. `design` here means
+the *Penpot* handoff (`DESIGN.md`), which is found by search, not OpenSpec's `design.md` artifact.
 
 What is NOT decided here (the model's job): reading the request, choosing the capability slug,
 classifying the intent, and doing any of the work the target skill owns. This script never mutates
@@ -38,6 +42,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -91,7 +96,12 @@ def find_matching(root: Path, parents: list[str], want: str) -> str | None:
 
 
 def find_design(root: Path, capability: str) -> str | None:
-    """A Penpot handoff for this capability, wherever the design layer put it."""
+    """The Penpot handoff for this capability, wherever the design layer put it.
+
+    Note this is NOT OpenSpec's `design` artifact (`design.md`, the technical design doc).
+    The build needs the *Penpot* handoff, which is a `DESIGN.md` the design layer emits
+    outside the change directory — so it is found by search, not by the schema.
+    """
     target = norm(capability)
     for p in sorted(root.rglob("DESIGN.md")):
         if any(part.startswith(".") or part == "build" for part in p.parts):
@@ -100,6 +110,32 @@ def find_design(root: Path, capability: str) -> str | None:
         if norm(parent) == target or target in norm(str(p)):
             return p.relative_to(root).as_posix()
     return None
+
+
+def openspec_status(root: Path, change_id: str) -> dict | None:
+    """Artifact states for a change, from OpenSpec itself.
+
+    The schema defines the artifact ids, their paths and their dependency order, so the kit
+    must not hard-code any of them — this replaces the file-probing the router used to do.
+    Returns `None` when the CLI is unavailable or the call fails, so the caller falls back.
+    """
+    try:
+        r = subprocess.run(
+            ["openspec", "status", "--change", change_id, "--json"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if r.returncode != 0:
+            return None
+        data = json.loads(r.stdout)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+    return {
+        a["id"]: {"status": a.get("status"), "outputPath": a.get("outputPath")}
+        for a in data.get("artifacts", [])
+    }
 
 
 def active_changes(root: Path) -> list[dict]:
@@ -121,7 +157,6 @@ def active_changes(root: Path) -> list[dict]:
             {
                 "id": d.name,
                 "tasks": {"done": done, "total": total},
-                "domain": "domain.md" in [f.name for f in d.iterdir() if f.is_file()],
                 "age_hours": age_h,
                 # Not yet started and untouched for a day: worth a user decision, not a silent resume.
                 "stale": total > 0 and done == 0 and age_h > 24,
@@ -180,9 +215,27 @@ def compute(root: Path, capability: str | None, action: str | None, ui: bool) ->
         }
 
     # ---- artifacts ----------------------------------------------------------
-    spec = find_matching(root, ["openspec/specs"], capability) if capability else None
+    # The schema owns the artifact ids, their paths and their order; OpenSpec reports the
+    # states. Nothing here may hard-code an artifact filename.
     change_dir = find_matching(root, ["openspec/changes"], capability) if capability else None
-    domain = f"{change_dir}/domain.md" if change_dir and (root / change_dir / "domain.md").is_file() else None
+    living_spec = find_matching(root, ["openspec/specs"], capability) if capability else None
+    art = openspec_status(root, Path(change_dir).name) if change_dir else {}
+
+    def artifact_path(aid: str) -> str | None:
+        """Repo-relative path of a completed artifact, per the schema's own outputPath."""
+        info = art.get(aid)
+        if not info or info.get("status") != "done":
+            return None
+        out = info.get("outputPath") or ""
+        if not out or "*" in out:  # glob artifacts (e.g. `specs/**/*.md`) have no single file
+            return None
+        return f"{change_dir}/{out}"
+
+    # A capability is specced when the change's `specs` artifact is complete, or a living
+    # spec already exists (the change has been archived).
+    spec = living_spec or (f"{change_dir}/specs" if art.get("specs", {}).get("status") == "done" else None)
+    domain = artifact_path("domain")
+    # `design` here means the PENPOT handoff (DESIGN.md), not OpenSpec's design.md artifact.
     design = find_design(root, capability) if capability else None
 
     # ---- action inference ---------------------------------------------------

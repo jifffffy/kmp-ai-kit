@@ -14,9 +14,11 @@ The spec always wins over code. The design always wins over a build guess. A fea
 requirements live in exactly one place — `openspec/specs/<capability>/spec.md` — never in
 the code tree.
 
-The chain is **`spec → domain → design?(UI) → build`**, and the order is not a judgment call:
-`shared/scripts/kmp_route.py` computes it, writes `.kmp/route.json`, and every step reads that file
-instead of re-deriving. A missing spec is always blocking and is fixed first.
+The chain is **`spec → domain → design?(UI) → build`**, and the order is not a judgment call: the
+kit's OpenSpec schema (`openspec/schemas/kmp/schema.yaml`) declares it, so OpenSpec itself blocks
+`domain` until the spec is done and blocks `tasks` until the domain model is. `shared/scripts/kmp_route.py`
+reads those artifact states and writes `.kmp/route.json`; every step reads that file instead of
+re-deriving. A missing spec is always blocking and is fixed first.
 
 > **Requirements:** this kit targets [opencode](https://opencode.ai) only. It does not carry
 > Claude Code hooks, plugin manifests or namespaced commands, and none are needed.
@@ -381,7 +383,7 @@ GithubLeaderboard/
 │   ├── commands/opsx-*    OpenSpec commands
 │   ├── skills/openspec-*  OpenSpec skills
 │   └── plugins/protect-feature.ts
-├── openspec/              specs/ + changes/ + config.yaml
+├── openspec/              specs/ + changes/ + config.yaml + schemas/kmp/
 ├── feature/               created by kmp-create-feature, one module per feature
 ├── core/{common,data,designsystem}
 ├── composeApp/  androidApp/  iosApp/
