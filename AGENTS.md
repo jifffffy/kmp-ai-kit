@@ -161,4 +161,5 @@ The design rules above govern the Penpot layer. The build layer has its own, equ
 ---
 
 **Layered model:** Instructions (this file) → Skills (`skills/`) → Workflows (`workflows/`) → MCP
-tools/context → Policies (`policies/`) → Evals (`evals/`). See `docs/architecture.md`.
+tools/context → Policies (`policies/`) → Evals (`evals/`). See `docs/architecture.md`; settled
+architecture questions are recorded in `docs/decisions/`.
