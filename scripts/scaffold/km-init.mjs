@@ -301,7 +301,9 @@ are copied in, so nothing here points outside the repository.
 ## Run it
 
 \`\`\`bash
-./gradlew assembleDebug      # Android
+./gradlew :androidApp:assembleDebug   # Android  (note: NOT :composeApp — it has no assembleDebug)
+./gradlew :composeApp:run             # desktop  (NOT :composeApp:desktopRun — it ignores mainClass)
+./gradlew :composeApp:run             # the runtime gate: shares the same Koin graph + serialization
 # iOS: open iosApp/iosApp.xcodeproj
 \`\`\`
 

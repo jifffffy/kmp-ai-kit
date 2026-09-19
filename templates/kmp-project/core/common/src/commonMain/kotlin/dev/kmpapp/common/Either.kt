@@ -24,7 +24,10 @@ sealed class Either<out T> {
     ) : Either<Nothing>() {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-            other as Failure
+            // `other !is Failure` (not `other as Failure`): comparing a Failure to a Success —
+            // or to any unrelated value — is normal, and an unchecked cast threw
+            // ClassCastException instead of returning false.
+            if (other !is Failure) return false
             return error == other.error
         }
 

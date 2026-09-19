@@ -63,6 +63,16 @@ kotlin {
             }
         }
 
+        // Ktor engines are per-source-set: the Android engine is not visible to desktop.
+        // Without this the desktop target does not compile at all, because
+        // `RemoteDataSourceModule.desktop.kt` builds an engine the shared `HttpClient(get())`
+        // binding resolves. OkHttp is JVM-native, so it serves both.
+        val desktopMain by getting {
+            dependencies {
+                implementation(libs.ktor.client.okhttp)
+            }
+        }
+
         iosMain {
             dependencies {
                 implementation(libs.ktor.client.darwin)
